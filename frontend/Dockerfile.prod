@@ -1,0 +1,61 @@
+#build
+FROM node:20-alpine AS base
+ARG BUILD_CONTEXT
+
+FROM  base AS deps
+ARG BUILD_CONTEXT
+WORKDIR /base
+COPY package.json yarn.lock .yarnrc.yml tsconfig.json ./
+COPY .yarn ./.yarn
+COPY /packages ./packages
+COPY /frontend-packages ./frontend-packages
+COPY /$BUILD_CONTEXT/package.json  ./$BUILD_CONTEXT/package.json
+RUN yarn set version berry
+
+WORKDIR /base/$BUILD_CONTEXT
+RUN yarn install --network-timeout 1200000
+
+FROM base AS builder
+ARG BUILD_CONTEXT
+ARG SSR_LANG_LEARNING_ENV_JSON
+ARG NEXT_PUBLIC_LANG_LEARNING_ENV_JSON
+
+WORKDIR /base
+COPY --from=deps /base/node_modules ./node_modules
+COPY --from=deps /base/package.json /base/.yarnrc.yml /base/yarn.lock /base/tsconfig.json ./
+COPY --from=deps /base/.yarn ./.yarn
+COPY --from=deps /base/packages ./packages
+COPY --from=deps /base/frontend-packages ./frontend-packages
+COPY /$BUILD_CONTEXT ./$BUILD_CONTEXT
+RUN yarn set version berry
+
+WORKDIR /base/$BUILD_CONTEXT
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN SSR_LANG_LEARNING_ENV_JSON=$SSR_LANG_LEARNING_ENV_JSON NEXT_PUBLIC_LANG_LEARNING_ENV_JSON=$NEXT_PUBLIC_LANG_LEARNING_ENV_JSON yarn build
+
+
+#webserver
+FROM base AS runner
+ARG BUILD_CONTEXT
+WORKDIR /base
+
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+
+COPY --from=builder --chown=nextjs:nodejs /base/$BUILD_CONTEXT/.next/standalone/$BUILD_CONTEXT ./$BUILD_CONTEXT
+COPY --from=builder --chown=nextjs:nodejs /base/$BUILD_CONTEXT/.next/standalone/node_modules ./$BUILD_CONTEXT/node_modules
+COPY --from=builder --chown=nextjs:nodejs /base/$BUILD_CONTEXT/public ./$BUILD_CONTEXT/public
+COPY --from=builder --chown=nextjs:nodejs /base/$BUILD_CONTEXT/.next/static ./$BUILD_CONTEXT/.next/static
+COPY /frontend/ecosystem.config.cjs ./frontend/ecosystem.config.cjs
+COPY /$BUILD_CONTEXT/ecosystem.config.cjs ./$BUILD_CONTEXT/ecosystem.config.cjs
+
+
+WORKDIR /base/$BUILD_CONTEXT
+RUN npm install -g pm2
+USER nextjs
+CMD ["pm2-runtime", "./ecosystem.config.cjs"]

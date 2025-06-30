@@ -1,0 +1,48 @@
+services:
+  boilerplate-mongo:
+    image: mongo
+    restart: always
+    ports:
+      - '57017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev-admin
+      MONGO_INITDB_ROOT_PASSWORD: secretSecret
+      MONGO_INITDB_DATABASE: woojoolearn
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - boilerplate-mongo-data:/data/db
+
+  boilerplate-api-gateway:
+    container_name: boilerplate-api-gateway
+    build:
+      context: ../../backend/api-gateway
+      dockerfile: Dockerfile.local
+    ports:
+      - '5300:80'
+    restart: 'always'
+    volumes:
+      - ../../backend/api-gateway/gateway.conf:/etc/nginx/conf.d/default.conf
+
+  service-boilerplate:
+    container_name: service-boilerplate
+    build:
+      context: ../../
+      dockerfile: ./backend/Dockerfile.local
+      args:
+        - BUILD_CONTEXT=backend/service-boilerplate
+    ports:
+      - '5340:4100'
+    restart: 'always'
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /base/keys/gcp-dev-key.json
+    volumes:
+      - ../keys:/base/keys:ro
+      - ../../packages:/base/packages
+      - ../../backend/service-boilerplate/src:/base/backend/service-boilerplate/src
+    env_file:
+      - ./local.env
+
+volumes:
+  boilerplate-mongo-data:
+networks:
+  default:

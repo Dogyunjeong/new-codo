@@ -1,0 +1,25 @@
+services:
+  # BACKEND
+  deploy-api-gateway:
+    container_name: deploy-api-gateway
+    build:
+      context: ../../backend/api-gateway
+      dockerfile: Dockerfile.local
+    ports:
+      - '5300:80'
+    restart: 'always'
+    volumes:
+      - ../../backend/api-gateway/gateway.conf:/etc/nginx/conf.d/default.conf
+
+  service-boilerplate:
+    container_name: service-boilerplate
+    build:
+      context: ../../
+      dockerfile: ./backend/Dockerfile.prod
+      args:
+        - BUILD_CONTEXT=backend/service-boilerplate
+    ports:
+      - '5340:4100'
+    restart: 'always'
+    env_file:
+      - ./deploy-test.env

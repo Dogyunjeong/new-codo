@@ -1,0 +1,25 @@
+
+# unused Zero-Install
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+*.env
+.env.local
+.env
+./**/*.env
+
+# Build & dependencies
+build/
+node_modules
+dist/
+keys/
+logs/
+
+.test/
+.generating_results/
+
+.react-router/

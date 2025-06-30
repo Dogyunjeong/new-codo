@@ -1,0 +1,12 @@
+## modules
+node_modules
+README.md
+.next
+npm-debug.log
+README.md
+.git
+**.env
+
+## build
+build
+dist

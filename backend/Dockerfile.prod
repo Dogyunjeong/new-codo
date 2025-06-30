@@ -1,0 +1,56 @@
+#build
+FROM node:22-alpine AS base
+ARG BUILD_CONTEXT
+
+FROM base AS deps
+WORKDIR /base
+COPY package.json yarn.lock .yarnrc.yml tsconfig.json ./
+COPY .yarn ./.yarn
+COPY ./packages ./packages
+COPY ./$BUILD_CONTEXT ./$BUILD_CONTEXT
+COPY ./backend/ecosystem.config.cjs ./backend/ecosystem.config.cjs
+RUN yarn set version stable
+
+WORKDIR /base/$BUILD_CONTEXT
+RUN yarn install --network-timeout 1000000
+RUN yarn build
+
+# FROM base AS builder
+# ARG BUILD_CONTEXT
+
+# WORKDIR /base
+# COPY --from=deps /base/node_modules ./node_modules
+# COPY --from=deps /base/package.json /base/.yarnrc.yml /base/yarn.lock /base/tsconfig.json ./
+# COPY --from=deps /base/backend/webpack.base.config.mjs /base/backend/tsconfig.json ./backend/
+# COPY --from=deps /base/.yarn ./.yarn
+# COPY --from=deps /base/packages ./packages
+# COPY --from=deps /base/$BUILD_CONTEXT ./$BUILD_CONTEXT
+# RUN yarn set version berry
+
+# WORKDIR /base/$BUILD_CONTEXT
+# RUN yarn build
+
+
+#webserver
+# FROM node:22-alpine
+# ARG BUILD_CONTEXT
+
+
+FROM base AS runner
+ARG BUILD_CONTEXT
+ENV NODE_ENV production
+
+WORKDIR /base
+COPY --from=deps /base/package.json /base/.yarnrc.yml /base/yarn.lock ./
+COPY --from=deps /base/.yarn /base/.yarn
+COPY --from=deps /base/packages ./packages
+COPY --from=deps /base/$BUILD_CONTEXT/dist ./$BUILD_CONTEXT/dist
+COPY --from=deps /base/$BUILD_CONTEXT/package.json ./$BUILD_CONTEXT/package.json
+COPY --from=deps /base/$BUILD_CONTEXT/ecosystem.config.cjs ./$BUILD_CONTEXT/ecosystem.config.cjs
+COPY --from=deps /base/backend/ecosystem.config.cjs ./backend/ecosystem.config.cjs
+
+
+WORKDIR /base/$BUILD_CONTEXT
+RUN yarn install --network-timeout 1000000
+RUN npm install -g pm2
+CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]

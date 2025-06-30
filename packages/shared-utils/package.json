@@ -1,0 +1,42 @@
+{
+  "name": "@base/shared-utils",
+  "version": "0.1.0",
+  "packageManager": "yarn@4.0.2",
+  "description": "Shared utils",
+  "main": "index.mts",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./index.mts",
+      "import": "./index.mts"
+    },
+    "./error": {
+      "types": "./src/error/index.mts",
+      "import": "./src/error/index.mts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@base/shared-types": "workspace:^",
+    "ajv": "8.17.1",
+    "axios": "^1.8.4",
+    "bluebird": "^3.7.2",
+    "dotenv": "^16.5.0",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
+    "query-string": "^9.1.1"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.42",
+    "@types/lodash": "^4.17.16",
+    "@types/lodash-es": "^4.17.12",
+    "vitest": "^3.1.1"
+  }
+}

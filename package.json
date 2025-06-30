@@ -1,0 +1,33 @@
+{
+  "name": "ziririt",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.9"
+  },
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "frontend/*",
+      "backend/*"
+    ]
+  },
+  "devDependencies": {
+    "@vitest/coverage-c8": "^0.33.0",
+    "@vitest/ui": "^3.1.1",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.3.3",
+    "vitest": "^3.1.1"
+  },
+  "dependencies": {
+    "pm2": "^6.0.5"
+  },
+  "packageManager": "yarn@4.9.2"
+}
