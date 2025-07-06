@@ -1,8 +1,8 @@
 config:
-  gcp:project: lang-learning-prod
+  gcp:project: base-project
   gcp:region: us-central1
-  lang-learning:appPath: app
-  lang-learning:concurrency: '50'
-  lang-learning:containerPort: '8080'
-  lang-learning:cpu: '4'
-  lang-learning:memory: 4Gi
+  base:appPath: app
+  base:concurrency: '50'
+  base:containerPort: '8080'
+  base:cpu: '4'
+  base:memory: 4Gi

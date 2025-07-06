@@ -1527,6 +1527,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"base-project@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "base-project@workspace:."
+  dependencies:
+    "@vitest/coverage-c8": "npm:^0.33.0"
+    "@vitest/ui": "npm:^3.1.1"
+    concurrently: "npm:^9.1.2"
+    nodemon: "npm:^3.1.9"
+    pm2: "npm:^6.0.5"
+    typescript: "npm:^5.3.3"
+    vitest: "npm:^3.1.1"
+  languageName: unknown
+  linkType: soft
+
 "base-server@workspace:^, base-server@workspace:packages/base-server":
   version: 0.0.0-use.local
   resolution: "base-server@workspace:packages/base-server"
@@ -6384,17 +6398,3 @@ __metadata:
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
   languageName: node
   linkType: hard
-
-"ziririt@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "ziririt@workspace:."
-  dependencies:
-    "@vitest/coverage-c8": "npm:^0.33.0"
-    "@vitest/ui": "npm:^3.1.1"
-    concurrently: "npm:^9.1.2"
-    nodemon: "npm:^3.1.9"
-    pm2: "npm:^6.0.5"
-    typescript: "npm:^5.3.3"
-    vitest: "npm:^3.1.1"
-  languageName: unknown
-  linkType: soft

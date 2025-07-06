@@ -1,5 +1,5 @@
 {
-  "name": "ziririt",
+  "name": "base-project",
   "private": true,
   "version": "0.1.0",
   "main": "index.js",
@@ -25,6 +25,9 @@
     "nodemon": "^3.1.9",
     "typescript": "^5.3.3",
     "vitest": "^3.1.1"
+  },
+  "scripts": {
+    "init-project": "node init-project.js"
   },
   "dependencies": {
     "pm2": "^6.0.5"

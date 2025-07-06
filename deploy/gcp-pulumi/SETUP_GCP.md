@@ -31,7 +31,7 @@ Configure with OIDC for github
 1. set up project Id
 
 ```
-export PROJECT_ID="lang-learning-prod"
+export PROJECT_ID="base-project"
 ```
 
 2. create new service account
@@ -102,7 +102,7 @@ gcloud iam workload-identity-pools providers create-oidc "my-provider" \
 8. Allow authentications from the Workload Identity Provider originating from your repository to impersonate the Service Account created above:
 
 ```
-export REPO="Lang-learning-with-reading/lang-learning"
+export REPO="base-project"
 ```
 
 ```
@@ -127,7 +127,6 @@ gcloud iam workload-identity-pools providers describe "github-actions" \
 (check)[./DEPLOY.md]
 
 1. Enable all the related gcp products on gcp console or with cli command
-
    1. e.g `artifact registry, cloud run, secret manager and etc`
 
 2. Authenticate artifact registry to upload docker image

@@ -1,12 +1,12 @@
 {
-  "name": "lang-learning",
+  "name": "base-pulumi",
   "devDependencies": {
     "@types/node": "^22",
     "@types/uuid": "^10.0.0"
   },
   "scripts": {
-    "dev-up": "GOOGLE_APPLICATION_CREDENTIALS=\"../keys/gcp-dev-key.json\" DEPLOY_TARGET=development pulumi up --diff --stack Dogyunjeong/lang-learning/lang-learning-dev",
-    "prod-refresh": "GOOGLE_APPLICATION_CREDENTIALS=\"../keys/gcp-prod-key.json\" DEPLOY_TARGET=production pulumi refresh --stack Dogyunjeong/lang-learning/lang-learning-prod"
+    "dev-up": "GOOGLE_APPLICATION_CREDENTIALS=\"../keys/gcp-dev-key.json\" DEPLOY_TARGET=development pulumi up --diff --stack base-dev",
+    "prod-refresh": "GOOGLE_APPLICATION_CREDENTIALS=\"../keys/gcp-prod-key.json\" DEPLOY_TARGET=production pulumi refresh --stack base-project"
   },
   "dependencies": {
     "@pulumi/docker": "^4.5.5",

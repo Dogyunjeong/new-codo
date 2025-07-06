@@ -1,0 +1,1 @@
+- ignore files according to [.gitignore](./../.gitignore)

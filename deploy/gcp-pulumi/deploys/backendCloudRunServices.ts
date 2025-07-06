@@ -10,7 +10,7 @@ import {
 const IS_PRODUCTION = process.env.DEPLOY_TARGET === 'production';
 const usCentral = gcp.config.region || 'us-central1';
 
-export const BACKEND_BASE_SECRET_NAME = 'lang-learning-backend-base-env';
+export const BACKEND_BASE_SECRET_NAME = 'base-project-backend-env';
 
 const setUpBackend = () => {
   const backendBaseSecret = new gcp.secretmanager.Secret(
@@ -81,7 +81,7 @@ const setUpBackend = () => {
   });
 
   // Open the service to public unrestricted access
-  const iamDialogueService = new gcp.cloudrun.IamMember('lang-learning-dialogue-service', {
+  const iamDialogueService = new gcp.cloudrun.IamMember('boilerplate-service', {
     service: wjlLearningPathService.name,
     location: usCentral,
     role: 'roles/run.invoker',
