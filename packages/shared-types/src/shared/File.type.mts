@@ -7,8 +7,15 @@ export interface GCSUploadOptions {
   fileName: string;
 }
 
+export enum MediaType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+}
+
 export interface UploadedMediaFile {
   originalUrl?: string;
+  type: MediaType;
   gcsUrl?: string;
   uploadedGCSKey?: string;
 }
