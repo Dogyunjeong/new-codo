@@ -7,10 +7,13 @@
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+# Environment files (keep .env.example)
 *.env
 .env.local
 .env
 ./**/*.env
+!.env.example
 
 # Build & dependencies
 build/
@@ -23,3 +26,54 @@ logs/
 .generating_results/
 
 .react-router/
+
+# Docker & Database
+docker-compose.override.yml
+postgres_data/
+mongodb_data/
+redis_data/
+
+# Media uploads (local development)
+media/
+uploads/
+storage/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+TMEP_*
+temp_*
+*.tmp
+*.log
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Backend services
+backend/ziririt-*/node_modules/
+backend/ziririt-*/dist/
+backend/ziririt-*/build/
+backend/ziririt-*/.env
+backend/ziririt-*/logs/
+
+# React Native
+frontend/app_client/node_modules/
+frontend/app_client/.expo/
+frontend/app_client/dist/
+frontend/app_client/web-build/
