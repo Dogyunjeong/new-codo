@@ -21,6 +21,14 @@ This is yarn workspace mono repo.
 - `./packages/shared-controllers` defines to communicate with microservices in `./backend`
 - `./packages/shared-services` defines base models and base service logics for entities. Because our backend msa is for easing development
 
+### shared controllers
+
+This is to call api from other services or frontend.
+It will be used for test purpose too
+
+- `./packages/shared-controllers/src/[upper-domain]/[domain].controller.mts`
+  this is file to call api. host url will be passed from each service or frontend
+
 ## `./backend`
 
 backend will be consisted with micro services. These microservices are just for easing development with separate concerns by domain levels
@@ -31,6 +39,35 @@ there is `./backend/api-gateway` to ease communications
 
 - all backend services must meet type definitions in `./packages/shared-types`
 - communicate backend endpoints with `./packages/shared-controllers`
+
+### Service
+
+#### Architecture
+
+Based on onion architecture and domain driven architecture
+My focusing is modularizing codes
+There are base services and models which can be used in specific services.
+
+##### Shared models and services
+
+Theses are most primitive service and models and should be located in `./packages/shared-services`
+
+- basic user service logic and models should be located in here
+
+##### Services
+
+Use Domain and concern focused architecture.
+
+- folder structure
+  - `./backend/*/src/api/[domain]`
+    - `[domain].routes.mts`
+    - `[domain].handler.mts`
+    - `[domain/concern].service.mts`
+      - every concern will be a service.
+        - e.g `UserSignUp.service.mts`, `UserSSO.service.mts`
+          - user sign up service import `UserService` and `UserModel` from `./packages/shared-services`
+      - higher level service can be existing over certain concern services.
+        - `*.2nd.service.mts`, `*.3rd.service.mts`
 
 ## `./frontend`
 
@@ -54,6 +91,23 @@ there is a `./deploy/deploy-test` to check build docker images with `./*/Dockerf
 - `./*/Dockerfile.local` is used for local docker build to reduce image size and sync files.
 - `./deploy/local/local.env` is env file to contains docker local environments
   - environments should one json string, therefore, it could be easily manageable with GCP secret manager.
+
+## test
+
+### unit test
+
+unit test will be located next to testing target file name with `*.test.mts`
+unit test will be ran by vite test
+
+### e2e test
+
+There will be two types of e2e test
+one is for api calls and one is for frontend
+
+#### backend e2e test
+
+this will be located in `./e2e_test/api/*`
+It will be set of end to end test with `./packages/shared-controllers`
 
 # Feature Implementation guideline
 
