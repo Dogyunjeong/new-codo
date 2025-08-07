@@ -1,5 +1,5 @@
 import { CloudTasksTypes } from '@base/shared-types';
-import Logger from '../../utils/logger.mjs';
+import Logger from '../../utils/logger.mts';
 import { CloudTasksClient as GoogleCloudTasksClient, protos } from '@google-cloud/tasks';
 import { ExpectedServerError } from '@base/shared-utils';
 

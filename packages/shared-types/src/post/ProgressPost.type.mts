@@ -1,6 +1,6 @@
-import type { GoalBase } from '../goals/Goal.type.mjs';
-import type { Inspiration } from '../inspirations/Inspiration.type.mjs';
-import type { Post, User, UploadedMediaFile } from './PostBasic.type.mjs';
+import type { GoalBase } from '../goals/Goal.type.mts';
+import type { Inspiration } from '../inspirations/Inspiration.type.mts';
+import type { Post, User, UploadedMediaFile } from './PostBasic.type.mts';
 
 export interface ProgressPost extends Post {
   goalId: string;

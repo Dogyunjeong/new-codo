@@ -1,5 +1,5 @@
-import { DatabaseConnection } from '../database/db.mjs';
-import { User, Follow, FollowResponse, RelationshipResponse } from '../types/profile.types.mjs';
+import { DatabaseConnection } from '../database/db.mts';
+import { User, Follow, FollowResponse, RelationshipResponse } from '../types/profile.types.mts';
 
 export class SocialService {
   private db: DatabaseConnection;

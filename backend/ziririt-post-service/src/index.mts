@@ -1,11 +1,12 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
-import { getAppConfig } from './configs/app.config.mjs';
-import { postRoutes } from './routes/post.routes.mjs';
-import { mediaRoutes } from './routes/media.routes.mjs';
-import { interactionRoutes } from './routes/interaction.routes.mjs';
-import { DatabaseConnection } from './database/db.mjs';
+import { getAppConfig } from './configs/app.config.mts';
+import { postRoutes } from './api/post/post.routes.mts';
+import { mediaRoutes } from './api/media/media.routes.mts';
+import { interactionRoutes } from './api/interaction/interaction.routes.mts';
+import { MongoConnectionService } from '@base/shared-services';
+import { MonitoringMiddleware } from '@base/shared-controllers';
 import fs from 'fs/promises';
 
 const appConfig = getAppConfig();
@@ -28,8 +29,49 @@ await server.register(multipart, {
   },
 });
 
-// Initialize database
-const db = DatabaseConnection.getInstance();
+// Initialize MongoDB
+const mongoConnection = MongoConnectionService.getInstance({ uri: appConfig.databaseUrl });
+
+// Initialize monitoring
+const monitoring = new MonitoringMiddleware({
+  serviceName: appConfig.serviceName,
+  enableRequestLogging: true,
+  enableMetrics: true,
+  enablePerformanceMonitoring: true,
+  slowRequestThresholdMs: 2000
+});
+
+// Register monitoring middleware
+server.addHook('preHandler', monitoring.requestMonitoring);
+server.setErrorHandler(monitoring.errorMonitoring);
+
+// Register monitoring endpoints
+server.get('/metrics', monitoring.getMetricsHandler);
+server.get('/health/monitoring', monitoring.getMonitoringHealthHandler);
+
+// Register basic health endpoint
+server.get('/health', async (request, reply) => {
+  try {
+    const dbHealthy = await mongoConnection.healthCheck();
+    return reply.code(200).send({
+      status: dbHealthy ? 'healthy' : 'unhealthy',
+      service: appConfig.serviceName,
+      timestamp: new Date().toISOString(),
+      dependencies: {
+        mongodb: {
+          status: dbHealthy ? 'healthy' : 'unhealthy'
+        }
+      }
+    });
+  } catch (error) {
+    return reply.code(503).send({
+      status: 'unhealthy',
+      service: appConfig.serviceName,
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 // Register routes
 server.register(postRoutes, { prefix: '/posts' });
@@ -40,10 +82,7 @@ server.register(interactionRoutes, { prefix: '/interactions' });
 const start = async (): Promise<void> => {
   try {
     // Connect to MongoDB
-    await db.connect();
-
-    // Initialize indexes
-    await db.initializeIndexes();
+    await mongoConnection.connect();
 
     // Create media storage directory if it doesn't exist
     try {
@@ -54,7 +93,7 @@ const start = async (): Promise<void> => {
     }
 
     // Check database health
-    const isHealthy = await db.healthCheck();
+    const isHealthy = await mongoConnection.healthCheck();
     if (!isHealthy) {
       throw new Error('MongoDB health check failed');
     }
@@ -64,6 +103,10 @@ const start = async (): Promise<void> => {
       port: appConfig.port 
     });
     console.log(`${appConfig.serviceName} running on port ${appConfig.port}`);
+
+    // Start system monitoring
+    monitoring.startSystemMonitoring(30000); // Every 30 seconds
+    monitoring.startOperationCleanup(60000);  // Every minute
   } catch (error) {
     console.error('Error starting post service:', error);
     process.exit(1);
@@ -73,13 +116,13 @@ const start = async (): Promise<void> => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('Received SIGINT, shutting down gracefully');
-  await db.close();
+  await mongoConnection.close();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('Received SIGTERM, shutting down gracefully');
-  await db.close();
+  await mongoConnection.close();
   process.exit(0);
 });
 

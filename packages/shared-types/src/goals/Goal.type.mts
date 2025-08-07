@@ -1,4 +1,4 @@
-import type { Post } from '../post/PostBasic.type.mjs';
+import type { Post } from '../post/PostBasic.type.mts';
 
 export interface GoalBase {
   id: string;

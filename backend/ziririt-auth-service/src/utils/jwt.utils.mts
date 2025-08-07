@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { getAppConfig } from '../configs/app.config.mjs';
-import { JWTPayload, RefreshTokenPayload, TokenVerificationResult } from '../types/auth.types.mjs';
+import { getAppConfig } from '../configs/app.config.mts';
+import { JWTPayload, RefreshTokenPayload, TokenVerificationResult } from '../types/auth.types.mts';
 
 const config = getAppConfig();
 

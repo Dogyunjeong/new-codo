@@ -1,1 +1,1 @@
-export { default as writeJsonFile } from './writeJsonFile.mjs';
+export { default as writeJsonFile } from './writeJsonFile.mts';

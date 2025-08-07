@@ -1,6 +1,6 @@
 import { handleError, handleResponse } from 'base-server';
 import { FastifyRequest, RouteHandler } from 'base-server/fastifyServer';
-import GeneratingDialogueService from './GeneratingDialogue.service.mjs';
+import GeneratingDialogueService from './GeneratingDialogue.service.mts';
 
 class GeneratingDialogueHandler {
   private _getDependencies = (req: FastifyRequest) => {

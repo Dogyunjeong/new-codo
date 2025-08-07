@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LanguageTypes } from '@base/shared-types';
-import LocaleUtil from './locale.util.mjs';
+import LocaleUtil from './locale.util.mts';
 
 describe('LocaleUtil', () => {
   describe('getAcceptLanguages', () => {

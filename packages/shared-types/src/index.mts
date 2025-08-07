@@ -1,12 +1,12 @@
-export * from './admin/index.mjs';
-export * from './shared/index.mjs';
+export * from './admin/index.mts';
+export * from './shared/index.mts';
 
-export * as LanguageTypes from './language/Language.type.mjs';
+export * as LanguageTypes from './language/Language.type.mts';
 
 // Goal Progress App Types
-export * from './auth/index.mjs';
-export * from './goals/index.mjs';
-export * from './post/index.mjs';
-export * from './inspirations/index.mjs';
-export * from './social/index.mjs';
-export * from './feed/index.mjs';
+export * from './auth/index.mts';
+export * from './goals/index.mts';
+export * from './post/index.mts';
+export * from './inspirations/index.mts';
+export * from './social/index.mts';
+export * from './feed/index.mts';

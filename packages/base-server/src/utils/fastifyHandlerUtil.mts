@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { ExpectedServerError } from '@base/shared-utils';
-import envConfig from '../configs/baseEnv.config.mjs';
+import envConfig from '../configs/baseEnv.config.mts';
 
 const minifyStackTrace = (error: Error) => {
   return error?.stack

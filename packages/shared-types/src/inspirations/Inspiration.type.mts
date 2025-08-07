@@ -1,5 +1,5 @@
-import type { User } from '../auth/User.type.mjs';
-import type { Post } from '../post/ProgressPost.type.mjs';
+import type { User } from '../auth/User.type.mts';
+import type { Post } from '../post/ProgressPost.type.mts';
 
 export interface Inspiration {
   id: string;

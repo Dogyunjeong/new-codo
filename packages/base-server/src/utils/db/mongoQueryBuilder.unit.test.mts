@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import mongoQueryBuilder from './mongoQueryBuilder.mjs';
+import mongoQueryBuilder from './mongoQueryBuilder.mts';
 
 describe('mongo query builder', () => {
   describe('buildAddToSetUpdateQuery', () => {

@@ -10,6 +10,13 @@
 2. modularizing
 3. workable solution
 
+# Environment
+
+## local environment
+
+- backend services and db should be ran in docker containers
+- frontend should be run on local
+
 # project structure
 
 This is yarn workspace mono repo.
@@ -24,6 +31,7 @@ This is yarn workspace mono repo.
 ### shared controllers
 
 This is to call api from other services or frontend.
+All communication should be done with shared controllers
 It will be used for test purpose too
 
 - `./packages/shared-controllers/src/[upper-domain]/[domain].controller.mts`
@@ -99,7 +107,7 @@ there is a `./deploy/deploy-test` to check build docker images with `./*/Dockerf
 unit test will be located next to testing target file name with `*.test.mts`
 unit test will be ran by vite test
 
-### e2e test
+### test
 
 There will be two types of e2e test
 one is for api calls and one is for frontend

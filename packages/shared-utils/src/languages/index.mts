@@ -1,1 +1,1 @@
-export { default as LocaleUtil } from './locale.util.mjs';
+export { default as LocaleUtil } from './locale.util.mts';

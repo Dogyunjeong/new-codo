@@ -1,6 +1,6 @@
 import jsonwebtoken from "jsonwebtoken";
 
-import baseKeyConfig from "../configs/baseKey.config.mjs";
+import baseKeyConfig from "../configs/baseKey.config.mts";
 namespace UserTypes {
   export interface User {}
 }

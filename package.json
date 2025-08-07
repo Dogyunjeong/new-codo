@@ -15,7 +15,8 @@
     "packages": [
       "packages/*",
       "frontend/*",
-      "backend/*"
+      "backend/*",
+      "test/*"
     ]
   },
   "devDependencies": {
@@ -27,7 +28,10 @@
     "vitest": "^3.1.1"
   },
   "scripts": {
-    "init-project": "node init-project.js"
+    "init-project": "node init-project.js",
+    "test": "cd test/api-tests && yarn test",
+    "test:ui": "cd test/api-tests && yarn test:ui",
+    "test:coverage": "cd test/api-tests && yarn test:coverage"
   },
   "dependencies": {
     "pm2": "^6.0.5"

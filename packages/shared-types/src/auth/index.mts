@@ -1,1 +1,1 @@
-export * from './User.type.mjs';
+export * from './User.type.mts';

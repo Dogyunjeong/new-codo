@@ -1,8 +1,8 @@
-import type { User } from '../auth/User.type.mjs';
-import type { Goal } from '../goals/Goal.type.mjs';
-import type { Post } from '../post/ProgressPost.type.mjs';
-import type { Inspiration, TrendingChain } from '../inspirations/Inspiration.type.mjs';
-import type { SocialStats } from '../post/PostBasic.type.mjs';
+import type { User } from '../auth/User.type.mts';
+import type { Goal } from '../goals/Goal.type.mts';
+import type { Post } from '../post/ProgressPost.type.mts';
+import type { Inspiration, TrendingChain } from '../inspirations/Inspiration.type.mts';
+import type { SocialStats } from '../post/PostBasic.type.mts';
 
 export interface FeedItem {
   id: string;

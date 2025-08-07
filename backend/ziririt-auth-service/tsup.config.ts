@@ -11,8 +11,8 @@ export default defineConfig({
   splitting: false,
   treeshake: true,
   dts: false,
-  external: ['@base/shared-types'],
-  noExternal: [],
+  external: ['fastify', '@fastify/cors', 'bcryptjs', 'google-auth-library', 'jsonwebtoken', 'pg', 'pino', 'pino-pretty', 'uuid', 'mongodb'],
+  noExternal: ['@base/shared-types', '@base/shared-services', '@base/shared-controllers', '@base/shared-utils'],
   esbuildOptions(options) {
     options.mainFields = ['module', 'main'];
   },

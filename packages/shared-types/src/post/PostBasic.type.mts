@@ -1,4 +1,4 @@
-import type { UploadedMediaFile } from '../shared/File.type.mjs';
+import type { UploadedMediaFile } from '../shared/File.type.mts';
 
 // Base Post type for all post-like content
 export interface PostBase {

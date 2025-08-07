@@ -1,5 +1,5 @@
-import { DatabaseConnection } from '../database/db.mjs';
-import { Profile, User, UpdateProfileRequest } from '../types/profile.types.mjs';
+import { DatabaseConnection } from '../database/db.mts';
+import { Profile, User, UpdateProfileRequest } from '../types/profile.types.mts';
 
 export class ProfileService {
   private db: DatabaseConnection;

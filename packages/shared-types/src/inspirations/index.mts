@@ -1,1 +1,1 @@
-export * from './Inspiration.type.mjs';
+export * from './Inspiration.type.mts';

@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { SocialService } from '../services/social.service.mjs';
+import { SocialService } from '../services/social.service.mts';
 
 const socialService = new SocialService();
 

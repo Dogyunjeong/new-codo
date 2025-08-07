@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { DatabaseConnection } from '../database/db.mjs';
-import { Like, Comment, CreateCommentRequest, CommentWithUser, LikeWithUser, PaginatedResponse } from '../types/post.types.mjs';
-import { PostService } from './post.service.mjs';
+import { DatabaseConnection } from '../database/db.mts';
+import { Like, Comment, CreateCommentRequest, CommentWithUser, LikeWithUser, PaginatedResponse } from '../types/post.types.mts';
+import { PostService } from './post.service.mts';
 
 export class InteractionService {
   private db: DatabaseConnection;

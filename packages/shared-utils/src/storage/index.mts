@@ -1,1 +1,1 @@
-export { default as GCSFilePathUtil } from './gcsFilePath.util.mjs';
+export { default as GCSFilePathUtil } from './gcsFilePath.util.mts';

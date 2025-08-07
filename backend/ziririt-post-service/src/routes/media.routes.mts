@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { MediaService } from '../services/media.service.mjs';
-import { MediaUploadRequest } from '../types/post.types.mjs';
+import { MediaService } from '../services/media.service.mts';
+import { MediaUploadRequest } from '../types/post.types.mts';
 
 const mediaService = new MediaService();
 

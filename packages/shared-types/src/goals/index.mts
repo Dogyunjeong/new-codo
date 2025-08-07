@@ -1,1 +1,1 @@
-export * from './Goal.type.mjs';
+export * from './Goal.type.mts';

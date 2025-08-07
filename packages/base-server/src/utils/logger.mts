@@ -2,7 +2,7 @@ import { Log, Logging } from '@google-cloud/logging';
 import chalk from 'chalk';
 import { setTimeout } from 'timers/promises';
 
-import envConfig from '../configs/baseEnv.config.mjs';
+import envConfig from '../configs/baseEnv.config.mts';
 
 interface LogEntry {
   message?: string;

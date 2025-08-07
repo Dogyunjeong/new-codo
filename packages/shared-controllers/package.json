@@ -7,7 +7,12 @@
     ".": "./src/index.mts"
   },
   "dependencies": {
+    "@base/shared-services": "workspace:*",
     "@base/shared-types": "workspace:^",
-    "@base/shared-utils": "workspace:^"
+    "@base/shared-utils": "workspace:^",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1"
   }
 }

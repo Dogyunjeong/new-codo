@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { GoalService } from '../services/goal.service.mjs';
-import { CreateGoalRequest, UpdateGoalRequest } from '../types/profile.types.mjs';
+import { GoalService } from '../services/goal.service.mts';
+import { CreateGoalRequest, UpdateGoalRequest } from '../types/profile.types.mts';
 
 const goalService = new GoalService();
 

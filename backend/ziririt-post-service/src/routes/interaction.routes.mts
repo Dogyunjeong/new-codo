@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { InteractionService } from '../services/interaction.service.mjs';
-import { CreateCommentRequest } from '../types/post.types.mjs';
+import { InteractionService } from '../services/interaction.service.mts';
+import { CreateCommentRequest } from '../types/post.types.mts';
 
 const interactionService = new InteractionService();
 

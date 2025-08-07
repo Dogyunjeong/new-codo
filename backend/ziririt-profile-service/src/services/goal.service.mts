@@ -1,5 +1,5 @@
-import { DatabaseConnection } from '../database/db.mjs';
-import { Goal, CreateGoalRequest, UpdateGoalRequest } from '../types/profile.types.mjs';
+import { DatabaseConnection } from '../database/db.mts';
+import { Goal, CreateGoalRequest, UpdateGoalRequest } from '../types/profile.types.mts';
 
 export class GoalService {
   private db: DatabaseConnection;

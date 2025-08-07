@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-import ExpectedServerError from '../error/ExpectedServerError.mjs';
+import ExpectedServerError from '../error/ExpectedServerError.mts';
 
 export interface ResponseType<T> extends Partial<AxiosResponse<T>> {
   data: T;

@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
-import GeneratingDialogueHandler from "./GeneratingDialogue.handler.mjs";
+import GeneratingDialogueHandler from "./GeneratingDialogue.handler.mts";
 
 const generatingDialogueHandler = new GeneratingDialogueHandler();
 

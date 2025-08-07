@@ -1,10 +1,11 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { getAppConfig } from './configs/app.config.mjs';
-import { profileRoutes } from './routes/profile.routes.mjs';
-import { goalRoutes } from './routes/goal.routes.mjs';
-import { socialRoutes } from './routes/social.routes.mjs';
-import { DatabaseConnection } from './database/db.mjs';
+import { getAppConfig } from './configs/app.config.mts';
+import { profileRoutes } from './api/profile/profile.routes.mts';
+import { goalRoutes } from './api/goal/goal.routes.mts';
+import { socialRoutes } from './api/social/social.routes.mts';
+import { PostgresConnectionService } from '@base/shared-services';
+import { HealthController } from '@base/shared-controllers';
 
 const appConfig = getAppConfig();
 
@@ -20,7 +21,43 @@ await server.register(cors, {
 });
 
 // Initialize database
-const db = DatabaseConnection.getInstance();
+const db = PostgresConnectionService.getInstance({ connectionString: appConfig.databaseUrl });
+
+// Register simple health route first to test
+server.get('/health', async (request, reply) => {
+  try {
+    const dbHealthy = await db.healthCheck();
+    return reply.code(200).send({
+      status: dbHealthy ? 'healthy' : 'unhealthy',
+      service: appConfig.serviceName,
+      timestamp: new Date().toISOString(),
+      dependencies: {
+        database: {
+          status: dbHealthy ? 'healthy' : 'unhealthy'
+        }
+      }
+    });
+  } catch (error) {
+    return reply.code(503).send({
+      status: 'unhealthy',
+      service: appConfig.serviceName,
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Initialize health controller
+const healthController = new HealthController(appConfig.serviceName, [
+  {
+    name: 'database',
+    check: () => db.healthCheck()
+  }
+]);
+
+// Register additional health routes
+server.get('/health/ready', healthController.readiness.bind(healthController));
+server.get('/health/live', healthController.liveness.bind(healthController));
 
 // Register routes
 server.register(profileRoutes, { prefix: '/profiles' });

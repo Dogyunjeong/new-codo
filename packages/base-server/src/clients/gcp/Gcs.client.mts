@@ -1,5 +1,5 @@
-import Logger from '../../utils/logger.mjs';
-import gcsUtil from '../../utils/gcp/gcs.util.mjs';
+import Logger from '../../utils/logger.mts';
+import gcsUtil from '../../utils/gcp/gcs.util.mts';
 import { Storage } from '@google-cloud/storage';
 
 const READ_SIGNED_URL_EXPIRATION = 1 * 60 * 60 * 1000; // 1 hour

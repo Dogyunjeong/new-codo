@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { ProfileService } from '../services/profile.service.mjs';
-import { UpdateProfileRequest } from '../types/profile.types.mjs';
+import { ProfileService } from '../services/profile.service.mts';
+import { UpdateProfileRequest } from '../types/profile.types.mts';
 
 const profileService = new ProfileService();
 

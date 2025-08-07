@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { AuthService } from '../services/auth.service.mjs';
-import { JWTUtils } from '../utils/jwt.utils.mjs';
-import { GoogleOAuthRequest, AppleOAuthRequest } from '../types/auth.types.mjs';
+import { AuthService } from '../services/auth.service.mts';
+import { JWTUtils } from '../utils/jwt.utils.mts';
+import { GoogleOAuthRequest, AppleOAuthRequest } from '../types/auth.types.mts';
 
 const authService = new AuthService();
 

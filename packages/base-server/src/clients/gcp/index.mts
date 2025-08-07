@@ -1,4 +1,4 @@
-import GcsClient from './Gcs.client.mjs';
-import CloudTasksClient, { ICloudTask } from './CloudTasks.client.mjs';
+import GcsClient from './Gcs.client.mts';
+import CloudTasksClient, { ICloudTask } from './CloudTasks.client.mts';
 
 export { GcsClient, CloudTasksClient, ICloudTask };

@@ -1,7 +1,7 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
-import { getAppConfig } from '../configs/app.config.mjs';
+import { getAppConfig } from '../configs/app.config.mts';
 
 export class DatabaseConnection {
   private pool: Pool;

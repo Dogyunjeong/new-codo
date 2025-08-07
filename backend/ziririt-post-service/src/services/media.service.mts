@@ -2,8 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
-import { getAppConfig } from '../configs/app.config.mjs';
-import { MediaFile, MediaUploadRequest } from '../types/post.types.mjs';
+import { getAppConfig } from '../configs/app.config.mts';
+import { MediaFile, MediaUploadRequest } from '../types/post.types.mts';
 
 export class MediaService {
   private config = getAppConfig();

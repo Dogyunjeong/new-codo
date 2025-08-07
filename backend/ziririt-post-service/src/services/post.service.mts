@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { DatabaseConnection } from '../database/db.mjs';
-import { Post, CreatePostRequest, UpdatePostRequest, PostWithUser, PaginatedResponse } from '../types/post.types.mjs';
+import { DatabaseConnection } from '../database/db.mts';
+import { Post, CreatePostRequest, UpdatePostRequest, PostWithUser, PaginatedResponse } from '../types/post.types.mts';
 
 export class PostService {
   private db: DatabaseConnection;

@@ -1,2 +1,2 @@
-export * as CustomSettingTypes from './CustomSetting.type.mjs';
-export * as CloudTasksTypes from './CloudTasks.type.mjs';
+export * as CustomSettingTypes from './CustomSetting.type.mts';
+export * as CloudTasksTypes from './CloudTasks.type.mts';

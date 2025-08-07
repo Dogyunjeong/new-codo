@@ -1,5 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb';
-import { getAppConfig } from '../configs/app.config.mjs';
+import { getAppConfig } from '../configs/app.config.mts';
 
 export class DatabaseConnection {
   private client: MongoClient;

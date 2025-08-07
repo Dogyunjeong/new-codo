@@ -1,6 +1,6 @@
 import { OAuth2Client } from 'google-auth-library';
-import { getAppConfig } from '../configs/app.config.mjs';
-import { GoogleOAuthRequest } from '../types/auth.types.mjs';
+import { getAppConfig } from '../configs/app.config.mts';
+import { GoogleOAuthRequest } from '../types/auth.types.mts';
 
 export interface GoogleUserInfo {
   id: string;

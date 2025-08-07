@@ -1,4 +1,4 @@
-import type * as Types from '../@types/index.mjs';
+import type * as Types from '../@types/index.mts';
 import helmet from '@fastify/helmet';
 import Fastify, {
   FastifyInstance,
@@ -8,7 +8,7 @@ import Fastify, {
 } from 'fastify';
 import fp from 'fastify-plugin';
 import cors from '@fastify/cors';
-import Logger from '../utils/logger.mjs';
+import Logger from '../utils/logger.mts';
 import { urlUtil } from '@base/shared-utils';
 
 export type {

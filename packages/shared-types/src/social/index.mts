@@ -1,1 +1,1 @@
-export * from './Interaction.type.mjs';
+export * from './Interaction.type.mts';

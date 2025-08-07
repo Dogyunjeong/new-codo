@@ -1,5 +1,5 @@
 import FastifyRequest from 'fastify';
-import Logger from '../utils/logger.mjs';
+import Logger from '../utils/logger.mts';
 import { UserTypes } from '@base/shared-types';
 
 declare module 'fastify' {

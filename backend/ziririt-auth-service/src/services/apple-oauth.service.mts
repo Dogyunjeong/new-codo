@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { getAppConfig } from '../configs/app.config.mjs';
-import { AppleOAuthRequest } from '../types/auth.types.mjs';
+import { getAppConfig } from '../configs/app.config.mts';
+import { AppleOAuthRequest } from '../types/auth.types.mts';
 
 export interface AppleUserInfo {
   id: string;

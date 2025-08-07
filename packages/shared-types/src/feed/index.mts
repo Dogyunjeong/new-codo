@@ -1,1 +1,1 @@
-export * from './Feed.type.mjs';
+export * from './Feed.type.mts';

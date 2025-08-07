@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { PostService } from '../services/post.service.mjs';
-import { CreatePostRequest, UpdatePostRequest } from '../types/post.types.mjs';
+import { PostService } from '../services/post.service.mts';
+import { CreatePostRequest, UpdatePostRequest } from '../types/post.types.mts';
 
 const postService = new PostService();
 

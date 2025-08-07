@@ -1,1 +1,1 @@
-export * from "./sample.validator.mjs";
+export * from "./sample.validator.mts";

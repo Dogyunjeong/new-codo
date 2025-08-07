@@ -1,4 +1,4 @@
-import type { User, Like, Comment, CommentWithDetails, SocialStats } from '../post/PostBasic.type.mjs';
+import type { User, Like, Comment, CommentWithDetails, SocialStats } from '../post/PostBasic.type.mts';
 
 // Re-export shared types
 export { Like, Comment, CommentWithDetails, SocialStats };

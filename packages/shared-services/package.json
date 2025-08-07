@@ -17,6 +17,15 @@
   "dependencies": {
     "@base/shared-types": "workspace:*",
     "@base/shared-utils": "workspace:*",
-    "base-server": "workspace:^"
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.3.0",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^22.14.1",
+    "@types/pg": "^8.10.9",
+    "@types/uuid": "^9.0.8"
   }
 }

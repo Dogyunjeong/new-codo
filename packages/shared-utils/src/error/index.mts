@@ -1,1 +1,1 @@
-export { default as ExpectedServerError } from "./ExpectedServerError.mjs";
+export { default as ExpectedServerError } from "./ExpectedServerError.mts";

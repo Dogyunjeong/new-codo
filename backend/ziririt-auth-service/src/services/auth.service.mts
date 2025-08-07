@@ -1,7 +1,7 @@
-import { DatabaseConnection } from '../database/db.mjs';
-import { GoogleOAuthService, GoogleUserInfo } from './google-oauth.service.mjs';
-import { AppleOAuthService, AppleUserInfo } from './apple-oauth.service.mjs';
-import { JWTUtils } from '../utils/jwt.utils.mjs';
+import { DatabaseConnection } from '../database/db.mts';
+import { GoogleOAuthService, GoogleUserInfo } from './google-oauth.service.mts';
+import { AppleOAuthService, AppleUserInfo } from './apple-oauth.service.mts';
+import { JWTUtils } from '../utils/jwt.utils.mts';
 import { 
   User, 
   RefreshToken, 
@@ -9,7 +9,7 @@ import {
   GoogleOAuthRequest, 
   AppleOAuthRequest,
   JWTPayload 
-} from '../types/auth.types.mjs';
+} from '../types/auth.types.mts';
 
 export class AuthService {
   private db = DatabaseConnection.getInstance();

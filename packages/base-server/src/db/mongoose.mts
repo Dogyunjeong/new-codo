@@ -1,4 +1,4 @@
-import Logger from '../utils/logger.mjs';
+import Logger from '../utils/logger.mts';
 import mongoose, { Schema as MongooseSchema } from 'mongoose';
 import type { Model, FilterQuery, UpdateQuery } from 'mongoose';
 type MongooseConnection = mongoose.Connection;

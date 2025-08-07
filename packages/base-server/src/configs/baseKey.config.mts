@@ -1,4 +1,4 @@
-import { getBaseEnvironment } from '../utils/getEnvironment.mjs';
+import { getBaseEnvironment } from '../utils/getEnvironment.mts';
 
 const baseEnv = getBaseEnvironment();
 

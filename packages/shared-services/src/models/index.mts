@@ -1,1 +1,1 @@
-export * from './boilerplate.model.mjs';
+export * from './boilerplate.model.mts';

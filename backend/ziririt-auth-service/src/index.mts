@@ -1,8 +1,8 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { getAppConfig } from './configs/app.config.mjs';
-import { authRoutes } from './routes/auth.routes.mjs';
-import { DatabaseConnection } from './database/db.mjs';
+import { getAppConfig } from './configs/app.config.mts';
+import { authRoutes } from './api/auth/auth.routes.mts';
+import { PostgresConnectionService } from '@base/shared-services';
 
 const appConfig = getAppConfig();
 
@@ -18,7 +18,7 @@ await server.register(cors, {
 });
 
 // Initialize database
-const db = DatabaseConnection.getInstance();
+const db = PostgresConnectionService.getInstance({ connectionString: appConfig.databaseUrl });
 
 // Register routes
 server.register(authRoutes);
@@ -54,7 +54,7 @@ process.on('SIGINT', async () => {
 });
 
 process.on('SIGTERM', async () => {
-  console.log('Received SIGTERM, shutting down gracefully');
+  console.log('Received SIGTERM, shutting down gracefully');  
   await db.close();
   process.exit(0);
 });

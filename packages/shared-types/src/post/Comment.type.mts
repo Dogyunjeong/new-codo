@@ -1,5 +1,5 @@
-// Re-export comment types from shared location
-export * from '../shared/PostBasic.type.mjs';
+// Re-export comment types from post basic types
+export * from './PostBasic.type.mts';
 
 // This file is kept for backward compatibility
-// All comment types are now in shared/PostBasic.type.mts
+// All comment types are now in PostBasic.type.mts
