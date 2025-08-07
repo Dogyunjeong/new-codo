@@ -73,8 +73,8 @@ describe('Shared Controllers Integration', () => {
   });
 
   describe('Profile Service Integration', () => {
-    const testUserId = 'ff249605-088b-4595-9061-1a0108b73823';
-    const testGoalId = '0d1d202d-f87d-43c0-95f4-7c6972289944';
+    const testUserId = '3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f'; // alice_goals
+    const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Strength Training Journey (public)
 
     it('should attempt to get user profile', async () => {
       const response = await profileController.getUserProfile(testUserId);
@@ -112,7 +112,7 @@ describe('Shared Controllers Integration', () => {
 
   describe('Post Service Integration', () => {
     const testUserId = 'alice_goals_user_id';
-    const testGoalId = '0d1d202d-f87d-43c0-95f4-7c6972289944';
+    const testGoalId = 'goal_meditation_id'; // Keep MongoDB test data ID
     const testPostId = 'post_001';
 
     it('should get recent posts', async () => {
@@ -156,7 +156,7 @@ describe('Shared Controllers Integration', () => {
 
   describe('Cross-Service Workflow Integration', () => {
     it('should simulate user authentication and profile retrieval', async () => {
-      const testUserId = 'ff249605-088b-4595-9061-1a0108b73823';
+      const testUserId = '3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f'; // alice_goals
 
       // Step 1: Attempt authentication (will fail with test token)
       await expect(
@@ -178,7 +178,7 @@ describe('Shared Controllers Integration', () => {
     });
 
     it('should simulate goal-post relationship workflow', async () => {
-      const testGoalId = '0d1d202d-f87d-43c0-95f4-7c6972289944';
+      const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Strength Training Journey (public)
 
       // Step 1: Get goal information
       const goal = await profileController.getGoal(testGoalId);
@@ -186,8 +186,9 @@ describe('Shared Controllers Integration', () => {
       expect(goal.goal).toBeDefined();
       expect(goal.goal.id).toBe(testGoalId);
 
-      // Step 2: Get posts for this goal
-      const goalPosts = await postController.getGoalPosts(testGoalId);
+      // Step 2: Get posts for a MongoDB test goal (different ID system)
+      const mongoGoalId = 'goal_meditation_id';
+      const goalPosts = await postController.getGoalPosts(mongoGoalId);
       expect(goalPosts).toBeDefined();
       expect(goalPosts.items).toBeDefined();
       expect(Array.isArray(goalPosts.items)).toBe(true);
@@ -195,7 +196,7 @@ describe('Shared Controllers Integration', () => {
       // Verify relationship consistency
       if (goalPosts.items.length > 0) {
         const firstPost = goalPosts.items[0];
-        expect(firstPost.goalId).toBe(testGoalId);
+        expect(firstPost.goalId).toBe(mongoGoalId);
       }
     });
 

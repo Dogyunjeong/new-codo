@@ -4,8 +4,8 @@ import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Profile Service Controller', () => {
   let profileController: ProfileController;
-  const testUserId = 'ff249605-088b-4595-9061-1a0108b73823';
-  const testGoalId = '0d1d202d-f87d-43c0-95f4-7c6972289944';
+  const testUserId = '3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f'; // alice_goals
+  const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Strength Training Journey (public)
 
   beforeEach(() => {
     profileController = new ProfileController({

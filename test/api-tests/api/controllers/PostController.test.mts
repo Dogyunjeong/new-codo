@@ -5,8 +5,8 @@ import { TEST_CONFIG } from '../../setup.mts';
 describe('Post Service Controller', () => {
   let postController: PostController;
   const testUserId = 'alice_goals_user_id';
-  const testGoalId = '0d1d202d-f87d-43c0-95f4-7c6972289944';
-  const testPostId = 'post_001';
+  const testGoalId = 'goal_meditation_id'; // Keep MongoDB test data ID
+  const testPostId = 'post_001'; // Keep MongoDB test data ID
 
   beforeEach(() => {
     postController = new PostController({

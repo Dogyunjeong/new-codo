@@ -46,8 +46,8 @@ describe('Cross-Service Integration Tests', () => {
   let profileController: ProfileServiceController;
   let postController: PostServiceController;
 
-  const testUserId = 'ff249605-088b-4595-9061-1a0108b73823';
-  const testGoalId = '0d1d202d-f87d-43c0-95f4-7c6972289944';
+  const testUserId = '3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f'; // alice_goals
+  const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Strength Training Journey (public)
 
   beforeEach(() => {
     authController = new AuthServiceController();
@@ -100,8 +100,9 @@ describe('Cross-Service Integration Tests', () => {
       expect(goal.data.goal).toBeDefined();
       expect(goal.data.goal.id).toBe(testGoalId);
 
-      // Get posts for the same goal from Post service
-      const goalPosts = await postController.getGoalPosts(testGoalId);
+      // Get posts for a MongoDB test goal (different ID system)
+      const mongoGoalId = 'goal_meditation_id';
+      const goalPosts = await postController.getGoalPosts(mongoGoalId);
       expect(goalPosts.data).toBeDefined();
       expect(goalPosts.data.items).toBeDefined();
       expect(Array.isArray(goalPosts.data.items)).toBe(true);
@@ -110,7 +111,7 @@ describe('Cross-Service Integration Tests', () => {
       if (goalPosts.data.items.length > 0) {
         const firstPost = goalPosts.data.items[0];
         expect(firstPost).toHaveProperty('goalId');
-        expect(firstPost.goalId).toBe(testGoalId);
+        expect(firstPost.goalId).toBe(mongoGoalId);
       }
     });
 
@@ -125,8 +126,9 @@ describe('Cross-Service Integration Tests', () => {
       const hasTestGoal = userGoals.data.goals.some((goal: any) => goal.id === testGoalId);
       expect(hasTestGoal).toBe(true);
       
-      // If user has this goal, there should be posts endpoint available for it
-      const goalPosts = await postController.getGoalPosts(testGoalId);
+      // For posts, use MongoDB test goal ID
+      const mongoGoalId = 'goal_meditation_id';
+      const goalPosts = await postController.getGoalPosts(mongoGoalId);
       expect(goalPosts.data).toBeDefined();
       expect(goalPosts.data.items).toBeDefined();
       expect(Array.isArray(goalPosts.data.items)).toBe(true);
@@ -163,8 +165,9 @@ describe('Cross-Service Integration Tests', () => {
       const postBaseUrl = TEST_CONFIG.POST_SERVICE_URL;
       expect(postBaseUrl).toContain('4103'); // Post service port
 
-      // Test domain-specific endpoints exist
-      const goalPosts = await postController.getGoalPosts(testGoalId);
+      // Test domain-specific endpoints exist with MongoDB test data
+      const mongoGoalId = 'goal_meditation_id';
+      const goalPosts = await postController.getGoalPosts(mongoGoalId);
       expect(goalPosts.data).toBeDefined();
     });
   });
