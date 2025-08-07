@@ -5,6 +5,7 @@ const TEST_CONFIG = {
   AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'http://localhost:4101',
   PROFILE_SERVICE_URL: process.env.PROFILE_SERVICE_URL || 'http://localhost:4102',
   POST_SERVICE_URL: process.env.POST_SERVICE_URL || 'http://localhost:4103',
+  FEED_SERVICE_URL: process.env.FEED_SERVICE_URL || 'http://localhost:4104',
   TEST_TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000
@@ -17,6 +18,7 @@ beforeAll(async () => {
   console.log(`  - Auth Service: ${TEST_CONFIG.AUTH_SERVICE_URL}`);
   console.log(`  - Profile Service: ${TEST_CONFIG.PROFILE_SERVICE_URL}`);  
   console.log(`  - Post Service: ${TEST_CONFIG.POST_SERVICE_URL}`);
+  console.log(`  - Feed Service: ${TEST_CONFIG.FEED_SERVICE_URL}`);
   
   // Wait for services to be ready (optional)
   await new Promise(resolve => setTimeout(resolve, 2000));

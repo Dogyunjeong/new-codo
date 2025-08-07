@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AuthController, ProfileController, PostController } from '@base/shared-controllers';
+import { AuthController, ProfileController, PostController, FeedController } from '@base/shared-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Shared Controllers Integration', () => {
   let authController: AuthController;
   let profileController: ProfileController;
   let postController: PostController;
+  let feedController: FeedController;
 
   beforeEach(() => {
     authController = new AuthController({
@@ -19,6 +20,10 @@ describe('Shared Controllers Integration', () => {
     postController = new PostController({
       baseURL: TEST_CONFIG.POST_SERVICE_URL,
     });
+
+    feedController = new FeedController({
+      baseURL: TEST_CONFIG.FEED_SERVICE_URL,
+    });
   });
 
   describe('Controller Initialization', () => {
@@ -26,11 +31,13 @@ describe('Shared Controllers Integration', () => {
       expect(authController).toBeInstanceOf(AuthController);
       expect(profileController).toBeInstanceOf(ProfileController);
       expect(postController).toBeInstanceOf(PostController);
+      expect(feedController).toBeInstanceOf(FeedController);
 
       // Check private properties exist
       expect(authController['_httpRequest']).toBeDefined();
       expect(profileController['_httpRequest']).toBeDefined();
       expect(postController['_httpRequest']).toBeDefined();
+      expect(feedController['_httpRequest']).toBeDefined();
     });
 
     it('should allow dynamic configuration changes', () => {
@@ -38,15 +45,18 @@ describe('Shared Controllers Integration', () => {
         auth: 'http://auth-service:4101',
         profile: 'http://profile-service:4102',
         post: 'http://post-service:4103',
+        feed: 'http://feed-service:4104',
       };
 
       authController.setBaseUrl(newUrls.auth);
       profileController.setBaseUrl(newUrls.profile);
       postController.setBaseUrl(newUrls.post);
+      feedController.setBaseUrl(newUrls.feed);
 
       expect(authController['_httpRequest']).toBeDefined();
       expect(profileController['_httpRequest']).toBeDefined();
       expect(postController['_httpRequest']).toBeDefined();
+      expect(feedController['_httpRequest']).toBeDefined();
     });
   });
 
@@ -248,6 +258,93 @@ describe('Shared Controllers Integration', () => {
     });
   });
 
+  describe('Feed Service Integration', () => {
+    const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Public goal from test data
+    const testUserId = '3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f'; // Alice's user ID
+
+    it('should get home feed successfully', async () => {
+      const response = await feedController.getHomeFeed(1, 10);
+      expect(response).toBeDefined();
+      expect((response as any).items).toBeDefined();
+      expect(Array.isArray((response as any).items)).toBe(true);
+      expect((response as any).page).toBe(1);
+      expect(typeof (response as any).hasMore).toBe('boolean');
+    });
+
+    it('should get goal timeline successfully', async () => {
+      // Use MongoDB goal ID since feed service reads from MongoDB
+      const mongoGoalId = 'goal_meditation_id';
+      const response = await feedController.getGoalTimeline(mongoGoalId, 1, 10);
+      expect(response).toBeDefined();
+      expect((response as any).items).toBeDefined();
+      expect(Array.isArray((response as any).items)).toBe(true);
+    });
+
+    it('should refresh feed successfully', async () => {
+      const response = await feedController.refreshFeed();
+      expect(response).toBeDefined();
+      expect((response as any).message).toBe('Feed refreshed successfully');
+    });
+
+    it('should validate feed response structure', async () => {
+      const response = await feedController.getHomeFeed(1, 5);
+      const items = (response as any).items;
+      
+      if (items.length > 0) {
+        const firstItem = items[0];
+        expect(firstItem).toBeDefined();
+        expect(firstItem.id).toBeDefined();
+        expect(firstItem.type).toBe('post');
+        expect(firstItem.content).toBeDefined();
+        expect(firstItem.user).toBeDefined();
+        expect(firstItem.user.id).toBeDefined();
+        expect(firstItem.timestamp).toBeDefined();
+        expect(firstItem.socialStats).toBeDefined();
+        expect(typeof firstItem.socialStats.likesCount).toBe('number');
+        expect(typeof firstItem.socialStats.commentsCount).toBe('number');
+      }
+    });
+  });
+
+  describe('Cross-Service Feed Integration', () => {
+    it('should integrate posts from post service into feed', async () => {
+      // Get posts from post service
+      const posts = await postController.getRecentPosts();
+      expect(posts).toBeDefined();
+      
+      // Get feed from feed service
+      const feed = await feedController.getHomeFeed();
+      expect(feed).toBeDefined();
+      
+      // Both should return post data (feed aggregates posts)
+      expect((posts as any).items).toBeDefined();
+      expect((feed as any).items).toBeDefined();
+    });
+
+    it('should maintain data consistency between services', async () => {
+      const mongoGoalId = 'goal_meditation_id';
+      
+      // Get posts for a goal from post service
+      const goalPosts = await postController.getGoalPosts(mongoGoalId);
+      
+      // Get timeline for same goal from feed service
+      const goalTimeline = await feedController.getGoalTimeline(mongoGoalId);
+      
+      expect(goalPosts).toBeDefined();
+      expect(goalTimeline).toBeDefined();
+      
+      // Both should return data for the same goal
+      const postItems = (goalPosts as any).items;
+      const timelineItems = (goalTimeline as any).items;
+      
+      if (postItems.length > 0 && timelineItems.length > 0) {
+        // Should have posts for the same goal
+        expect(postItems[0].goalId).toBe(mongoGoalId);
+        expect(timelineItems[0].content.goalId).toBe(mongoGoalId);
+      }
+    });
+  });
+
   describe('Token Management Integration', () => {
     it('should propagate access tokens correctly', () => {
       const testToken = 'test-jwt-token-123';
@@ -255,11 +352,13 @@ describe('Shared Controllers Integration', () => {
       authController.setAccessToken(testToken);
       profileController.setAccessToken(testToken);
       postController.setAccessToken(testToken);
+      feedController.setAccessToken(testToken);
 
       // Verify token is set (private property check)
       expect(authController['_httpRequest']).toBeDefined();
       expect(profileController['_httpRequest']).toBeDefined();
       expect(postController['_httpRequest']).toBeDefined();
+      expect(feedController['_httpRequest']).toBeDefined();
     });
 
     it('should handle token refresh scenarios', async () => {
@@ -271,6 +370,7 @@ describe('Shared Controllers Integration', () => {
       // authController.setAccessToken(newToken);
       // profileController.setAccessToken(newToken);
       // postController.setAccessToken(newToken);
+      // feedController.setAccessToken(newToken);
     });
   });
 });

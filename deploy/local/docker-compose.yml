@@ -124,6 +124,38 @@ services:
     networks:
       - ziririt-network
 
+  # Feed Service
+  ziririt-feed-service:
+    build:
+      context: ../../
+      dockerfile: backend/Dockerfile.local
+      args:
+        BUILD_CONTEXT: backend/ziririt-feed-service
+    container_name: ziririt-feed-service
+    environment:
+      - NODE_ENV=development
+      - PORT=4104
+      - SERVICE_NAME=ziririt-feed-service
+      - MONGODB_URI=mongodb://ziririt_user:ziririt_password@mongodb:27017/ziririt_posts?authSource=admin
+      - REDIS_URL=redis://:ziririt_password@redis:6379
+      - AUTH_SERVICE_URL=http://ziririt-auth-service:4101
+      - PROFILE_SERVICE_URL=http://ziririt-profile-service:4102
+      - POST_SERVICE_URL=http://ziririt-post-service:4103
+      - FEED_CACHE_TTL=300
+    ports:
+      - "4104:4104"
+    volumes:
+      - ../../backend/ziririt-feed-service/src:/base/backend/ziririt-feed-service/src
+      - ../../packages:/base/packages
+    depends_on:
+      - mongodb
+      - redis
+      - ziririt-auth-service
+      - ziririt-profile-service
+      - ziririt-post-service
+    networks:
+      - ziririt-network
+
   # API Gateway Service
   ziririt-api-gateway:
     build:

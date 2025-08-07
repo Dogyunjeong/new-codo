@@ -2,6 +2,7 @@
 export { default as AuthController } from './Auth.controller.mts';
 export { default as ProfileController } from './Profile.controller.mts';
 export { default as PostController } from './Post.controller.mts';
+export { default as FeedController } from './Feed.controller.mts';
 
 // Legacy controller
 export { default as BoilerPlateController } from './Boilerplate.controller.mts';

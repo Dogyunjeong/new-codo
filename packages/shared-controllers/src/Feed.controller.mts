@@ -1,0 +1,59 @@
+import { HttpRequest, IRequest } from '@base/shared-utils';
+
+class FeedController {
+  private readonly _httpRequest: IRequest;
+  private readonly _isCached: boolean;
+
+  constructor({
+    baseURL,
+    httpRequest,
+    isCached,
+  }: { baseURL?: string; httpRequest?: IRequest; isCached?: boolean } = {}) {
+    const url = isCached ? `${baseURL}/cached-api` : `${baseURL}`;
+    httpRequest?.setBaseUrl(url);
+    this._httpRequest = httpRequest || new HttpRequest({ baseURL: url });
+    this._isCached = isCached || false;
+  }
+
+  public setBaseUrl = (baseUrl: string): void => {
+    this._httpRequest.setBaseUrl(baseUrl);
+  };
+
+  public setAccessToken = (accessToken: string): void => {
+    this._httpRequest.setAccessToken(accessToken);
+  };
+
+  // Health Check
+  public healthCheck = async (): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>('/health');
+    return response.data;
+  };
+
+  // Feed Domain
+  public getHomeFeed = async (page: number = 1, limit: number = 20): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/feed/home?page=${page}&limit=${limit}`);
+    return response.data;
+  };
+
+  public getGoalTimeline = async (goalId: string, page: number = 1, limit: number = 20): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/feed/goal/${goalId}?page=${page}&limit=${limit}`);
+    return response.data;
+  };
+
+  public getUserFeed = async (userId: string, page: number = 1, limit: number = 20): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/feed/user/${userId}?page=${page}&limit=${limit}`);
+    return response.data;
+  };
+
+  public getHashtagFeed = async (hashtag: string, page: number = 1, limit: number = 20): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/feed/hashtag/${hashtag}?page=${page}&limit=${limit}`);
+    return response.data;
+  };
+
+  public refreshFeed = async (): Promise<unknown> => {
+    const response = await this._httpRequest.post<unknown>('/feed/refresh', {});
+    return response.data;
+  };
+}
+
+export default FeedController;

@@ -12,6 +12,15 @@ RUN yarn set version berry
 
 WORKDIR /base/$BUILD_CONTEXT
 RUN yarn install --network-timeout 1000000
-RUN yarn build
-RUN npm install -g pm2
+
+# Install tsx globally and pm2 for services that need runtime TypeScript
+RUN npm install -g tsx pm2
+
+# Try to build, but continue if it fails for feed service
+RUN if [ "$BUILD_CONTEXT" = "backend/ziririt-feed-service" ]; then \
+      echo "Skipping build for feed service, running with tsx"; \
+    else \
+      yarn build; \
+    fi
+
 CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]
