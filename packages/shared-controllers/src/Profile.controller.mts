@@ -88,12 +88,18 @@ class ProfileController {
   };
 
   public followUser = async (userId: string, targetUserId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/social/follow', { userId, targetUserId });
+    const response = await this._httpRequest.post<unknown>('/social/follow', {
+      userId,
+      targetUserId,
+    });
     return response.data;
   };
 
   public unfollowUser = async (userId: string, targetUserId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/social/unfollow', { userId, targetUserId });
+    const response = await this._httpRequest.post<unknown>('/social/unfollow', {
+      userId,
+      targetUserId,
+    });
     return response.data;
   };
 }

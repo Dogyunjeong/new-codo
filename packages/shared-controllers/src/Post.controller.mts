@@ -103,17 +103,24 @@ class PostController {
   };
 
   public addComment = async (postId: string, commentData: any): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>(`/interactions/posts/${postId}/comments`, commentData);
+    const response = await this._httpRequest.post<unknown>(
+      `/interactions/posts/${postId}/comments`,
+      commentData,
+    );
     return response.data;
   };
 
   public likePost = async (postId: string, userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>(`/interactions/posts/${postId}/like`, { userId });
+    const response = await this._httpRequest.post<unknown>(`/interactions/posts/${postId}/like`, {
+      userId,
+    });
     return response.data;
   };
 
   public unlikePost = async (postId: string, userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/interactions/posts/${postId}/like`, { userId });
+    const response = await this._httpRequest.delete<unknown>(`/interactions/posts/${postId}/like`, {
+      userId,
+    });
     return response.data;
   };
 }

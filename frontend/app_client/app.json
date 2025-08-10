@@ -2,6 +2,7 @@
   "expo": {
     "name": "app_client",
     "slug": "app_client",
+    "scheme": "ziririt",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

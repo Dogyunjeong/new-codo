@@ -1,6 +1,14 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "paths": {
+      "@base/shared-controllers": ["../../packages/shared-controllers/src/index.mts"],
+      "@base/shared-types": ["../../packages/shared-types/src/index.mts"],
+      "@base/shared-utils": ["../../packages/shared-utils/src/index.mts"]
+    }
   }
 }

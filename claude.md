@@ -14,8 +14,10 @@
 
 ## local environment
 
-- backend services and db should be ran in docker containers
-- frontend should be run on local
+- **IMPORTANT**: ALL backend services and databases MUST be run in Docker containers for both development and testing
+- Backend services are accessed via exposed ports (auth: 4101, profile: 4102, post: 4103, feed: 4104)
+- Frontend should be run on local (not in Docker)
+- Use `docker compose -f deploy/local/docker-compose.yml` to manage all backend services
 
 # project structure
 
@@ -83,6 +85,7 @@ frontend will contains all frontend services for clients or admin.
 
 - all frontend services must meet type definitions in `./packages/shared-types`
 - communicate backend endpoints with `./packages/shared-controllers`
+- **IMPORTANT**: Whenever a feature is added in frontend, corresponding e2e test codes MUST be added
 
 ## `./plans`
 
@@ -107,15 +110,28 @@ there is a `./deploy/deploy-test` to check build docker images with `./*/Dockerf
 unit test will be located next to testing target file name with `*.test.mts`
 unit test will be ran by vite test
 
-### test
+### API tests
 
-There will be two types of e2e test
-one is for api calls and one is for frontend
+All API and integration tests are located in `./test/api-tests/`
 
-#### backend e2e test
+#### Test Structure
+- `./test/api-tests/api/controllers/` - Tests using shared controllers (preferred method)
+- `./test/api-tests/api/direct/` - Direct HTTP API tests for caching, performance, and low-level behavior
+- `./test/api-tests/api/integration/` - Cross-service integration tests
+- `./test/api-tests/api/examples/` - Service usage examples
 
-this will be located in `./e2e_test/api/*`
-It will be set of end to end test with `./packages/shared-controllers`
+#### Testing Guidelines
+- **IMPORTANT**: Whenever a backend feature is added, corresponding API tests MUST be added
+- Use shared controllers from `@base/shared-controllers` for most API testing
+- Use direct HTTP tests only for testing caching behavior, performance benchmarks, or low-level HTTP features
+- All API tests should include performance validation (response time targets)
+- Tests should cover error handling and edge cases
+
+### frontend test
+
+Frontend tests will be located in `./test/frontend/` (to be created)
+Every frontend feature implementation MUST include corresponding tests
+Tests should cover user interactions and expected outcomes
 
 # Feature Implementation guideline
 
