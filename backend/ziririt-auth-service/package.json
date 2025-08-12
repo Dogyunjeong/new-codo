@@ -16,11 +16,11 @@
     "migrate": "node dist/utils/migrate.js"
   },
   "dependencies": {
-    "@base/shared-controllers": "workspace:*",
-    "@base/shared-services": "workspace:*",
+    "@base/server-base": "workspace:*",
+    "@base/server-services": "workspace:*",
+    "@base/shared-api-controllers": "workspace:*",
     "@base/shared-types": "workspace:*",
     "@fastify/cors": "^9.0.1",
-    "base-server": "workspace:*",
     "bcryptjs": "^2.4.3",
     "fastify": "^4.28.1",
     "google-auth-library": "^9.6.3",

@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { BaseUserService } from '@base/shared-services';
+import { BaseUserService } from '@base/server-services';
 
 export interface Profile {
   userId: string;

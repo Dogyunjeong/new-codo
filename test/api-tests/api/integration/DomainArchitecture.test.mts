@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BaseServiceController, HttpServiceRequest } from '@base/shared-controllers';
+import { BaseServiceController, HttpServiceRequest } from '@base/shared-api-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Domain-Driven Architecture Validation', () => {
@@ -134,7 +134,7 @@ describe('Domain-Driven Architecture Validation', () => {
 
     it('should validate dependency inversion principle', () => {
       // Custom service request implementation
-      class MockServiceRequest implements import('@base/shared-controllers').IServiceRequest {
+      class MockServiceRequest implements import('@base/shared-api-controllers').IServiceRequest {
         setBaseUrl(url: string): void {}
         setAccessToken(token: string): void {}
         async get<T>(path: string, config?: any): Promise<{ data: T }> {
@@ -236,7 +236,7 @@ describe('Domain-Driven Architecture Validation', () => {
   });
 
   describe('Shared Infrastructure Validation', () => {
-    it('should validate shared-controllers package structure', () => {
+    it('should validate shared-api-controllers package structure', () => {
       // Base classes should be reusable across all services
       expect(BaseServiceController).toBeDefined();
       expect(HttpServiceRequest).toBeDefined();

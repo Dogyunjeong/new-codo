@@ -10,7 +10,7 @@ const config = getDefaultConfig(projectRoot);
 // If your monorepo tooling can give you the list of monorepo workspaces linked
 // in your app workspace, you can automate this list instead of hardcoding them.
 const monorepoPackages = {
-  '@base/shared-controllers': path.resolve(monorepoRoot, 'packages/shared-controllers'),
+  '@base/shared-api-controllers': path.resolve(monorepoRoot, 'packages/shared-api-controllers'),
   '@base/shared-types': path.resolve(monorepoRoot, 'packages/shared-types'),
   '@base/shared-utils': path.resolve(monorepoRoot, 'packages/shared-utils'),
 };

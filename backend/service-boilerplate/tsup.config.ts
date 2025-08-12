@@ -5,7 +5,7 @@ export default defineConfig(() => {
     entry: ['src/index.mts'],
     target: 'node22',
     format: ['esm'],
-    noExternal: [/@base\/.+$/, 'base-server'],
+    noExternal: [/@base\/.+$/],
     splitting: false,
     sourcemap: true,
     platform: 'node',

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { FeedController } from '@base/shared-controllers';
+import { FeedController } from '@base/shared-api-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Feed Service Controller', () => {

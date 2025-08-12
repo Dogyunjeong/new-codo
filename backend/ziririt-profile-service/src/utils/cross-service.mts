@@ -2,7 +2,7 @@ import { authServiceController } from '../services/auth.controller.mts';
 
 /**
  * Cross-service utilities for Profile Service
- * Uses shared-controllers for consistent service communication
+ * Uses shared-api-clients for consistent service communication
  */
 
 /**

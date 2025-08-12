@@ -1,4 +1,4 @@
-import { AuthController } from '@base/shared-controllers';
+import { AuthController } from '@base/shared-api-controllers';
 
 // Create auth service controller for cross-service communication
 export const authServiceController = new AuthController({

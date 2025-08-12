@@ -3,7 +3,7 @@ import { profileServiceController } from '../services/profile.controller.mts';
 
 /**
  * Cross-service utilities for Post Service
- * Uses shared-controllers for consistent service communication
+ * Uses shared-api-clients for consistent service communication
  */
 
 /**

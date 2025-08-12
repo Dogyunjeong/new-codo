@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { SocialHandler } from './social.handler.mts';
 import { FollowManagementService } from './FollowManagement.service.mts';
-import { PostgresConnectionService } from '@base/shared-services';
+import { PostgresConnectionService } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Auth middleware - simplified for now

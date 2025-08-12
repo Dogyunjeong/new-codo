@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { ProfileManagementService, UpdateProfileData } from './ProfileManagement.service.mts';
-import { BaseHandler } from '@base/shared-controllers';
+import { BaseHandler } from '@base/server-base';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

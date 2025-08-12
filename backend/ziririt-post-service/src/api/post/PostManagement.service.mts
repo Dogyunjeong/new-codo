@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Post, CreatePostRequest, UpdatePostRequest, PaginatedResponse } from '../../types/post.types.mts';
-import { MongoConnectionService, PerformanceMonitorService, LoggerService } from '@base/shared-services';
+import { MongoConnectionService, PerformanceMonitorService, LoggerService } from '@base/server-services';
 
 export class PostManagementService {
   private mongoConnection: MongoConnectionService;

@@ -4,7 +4,7 @@ import {
   AuthServiceClient,
   PostServiceClient,
   LoggerService
-} from '@base/shared-services';
+} from '@base/server-services';
 
 export class ServiceIntegrationManager {
   private serviceRegistry: ServiceRegistryService;

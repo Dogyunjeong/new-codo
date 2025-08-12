@@ -3,10 +3,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@base/shared-controllers": ["../packages/shared-controllers/src"],
-      "@base/shared-controllers/*": ["../packages/shared-controllers/src/*"],
-      "@base/shared-services": ["../packages/shared-services/src"],
-      "@base/shared-services/*": ["../packages/shared-services/src/*"],
+      "@base/shared-api-controllers": ["../packages/shared-api-controllers/src"],
+      "@base/shared-api-controllers/*": ["../packages/shared-api-controllers/src/*"],
+      "@base/server-services": ["../packages/server-services/src"],
+      "@base/server-services/*": ["../packages/server-services/src/*"],
       "@base/shared-types": ["../packages/shared-types/src"],
       "@base/shared-types/*": ["../packages/shared-types/src/*"]
     },

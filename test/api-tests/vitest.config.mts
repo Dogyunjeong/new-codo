@@ -24,8 +24,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@base/shared-controllers': '/Users/dogyun/projects/ziririt-1/packages/shared-controllers/src',
-      '@base/shared-services': '/Users/dogyun/projects/ziririt-1/packages/shared-services/src',
+      '@base/shared-api-controllers': '/Users/dogyun/projects/ziririt-1/packages/shared-api-controllers/src',
+      '@base/server-services': '/Users/dogyun/projects/ziririt-1/packages/server-services/src',
       '@base/shared-types': '/Users/dogyun/projects/ziririt-1/packages/shared-types/src'
     }
   }

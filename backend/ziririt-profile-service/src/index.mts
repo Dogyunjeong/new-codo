@@ -4,8 +4,8 @@ import { getAppConfig } from './configs/app.config.mts';
 import { profileRoutes } from './api/profile/profile.routes.mts';
 import { goalRoutes } from './api/goal/goal.routes.mts';
 import { socialRoutes } from './api/social/social.routes.mts';
-import { PostgresConnectionService } from '@base/shared-services';
-import { HealthController } from '@base/shared-controllers';
+import { PostgresConnectionService } from '@base/server-services';
+import { HealthController } from '@base/server-base';
 
 const appConfig = getAppConfig();
 

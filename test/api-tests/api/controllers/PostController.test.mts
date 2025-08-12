@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { PostController } from '@base/shared-controllers';
+import { PostController } from '@base/shared-api-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Post Service Controller', () => {

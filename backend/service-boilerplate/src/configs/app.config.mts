@@ -1,4 +1,4 @@
-import { getBaseEnvironment } from 'base-server';
+import { getBaseEnvironment } from "@base/server-base";
 
 const baseEnv = getBaseEnvironment();
 const appConfig = {

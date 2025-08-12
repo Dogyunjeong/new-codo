@@ -1,6 +1,6 @@
-import { AuthController } from './packages/shared-controllers/src/Auth.controller.mts';
-import { ProfileController } from './packages/shared-controllers/src/Profile.controller.mts';
-import { PostController } from './packages/shared-controllers/src/Post.controller.mts';
+import { AuthController } from './packages/shared-api-clients/src/Auth.controller.mts';
+import { ProfileController } from './packages/shared-api-clients/src/Profile.controller.mts';
+import { PostController } from './packages/shared-api-clients/src/Post.controller.mts';
 
 console.log('Testing shared controllers...');
 

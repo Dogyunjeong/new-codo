@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { BaseServiceController } from '@base/shared-controllers';
+import { BaseServiceController } from '@base/shared-api-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 // Import individual service controllers

@@ -1,1 +1,1 @@
-export { default as ProfileController } from '@base/shared-controllers/src/Profile.controller.mts';
+export { default as ProfileController } from '@base/shared-api-controllers/src/Profile.controller.mts';

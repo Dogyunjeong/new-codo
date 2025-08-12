@@ -1,0 +1,16 @@
+{
+  "name": "@base/shared-api-controllers",
+  "packageManager": "yarn@4.0.2",
+  "type": "module",
+  "main": "./src/index.mts",
+  "exports": {
+    ".": "./src/index.mts"
+  },
+  "dependencies": {
+    "@base/shared-types": "workspace:^",
+    "@base/shared-utils": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1"
+  }
+}

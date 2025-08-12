@@ -19,5 +19,5 @@
     "outDir": "./dist",
     "typeRoots": ["./src/@types"]
   },
-  "include": ["./src/**/*", "./src/@types", "../base-server/src/utils/getEnvironment.mts"]
+  "include": ["./src/**/*", "./src/@types", "../server-base/src/utils/getEnvironment.mts"]
 }

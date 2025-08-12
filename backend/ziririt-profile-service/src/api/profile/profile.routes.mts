@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { ProfileHandler } from './profile.handler.mts';
 import { ProfileManagementService } from './ProfileManagement.service.mts';
-import { PostgresConnectionService } from '@base/shared-services';
+import { PostgresConnectionService } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas

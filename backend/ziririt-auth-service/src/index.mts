@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { getAppConfig } from './configs/app.config.mts';
 import { authRoutes } from './api/auth/auth.routes.mts';
-import { PostgresConnectionService } from '@base/shared-services';
+import { PostgresConnectionService } from '@base/server-services';
 
 const appConfig = getAppConfig();
 

@@ -1,4 +1,4 @@
-import { FastifyServer } from 'base-server';
+import { FastifyServer } from "@base/server-base";
 import 'dotenv/config';
 
 import appConfig from './configs/app.config.mjs';

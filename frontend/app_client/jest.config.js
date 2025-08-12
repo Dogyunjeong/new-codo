@@ -9,7 +9,7 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^react-native$': '<rootDir>/jest.mocks.js',
-    '^@base/shared-controllers$': '<rootDir>/../../packages/shared-controllers/src/index.mts',
+    '^@base/shared-api-controllers$': '<rootDir>/../../packages/shared-api-controllers/src/index.mts',
     '^@base/shared-types$': '<rootDir>/../../packages/shared-types/src/index.mts',
     '^@base/shared-utils$': '<rootDir>/../../packages/shared-utils/index.mts',
   },

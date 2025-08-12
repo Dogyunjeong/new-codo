@@ -1,4 +1,4 @@
-import { Route } from 'base-server';
+import { Route } from "@base/server-base";
 import FeedHandler from './feed.handler.mjs';
 
 const feedHandler = new FeedHandler();

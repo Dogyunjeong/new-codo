@@ -7,8 +7,8 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
-    "@base/shared-controllers": "workspace:*",
-    "@base/shared-services": "workspace:*",
+    "@base/server-services": "workspace:*",
+    "@base/shared-api-controllers": "workspace:*",
     "@base/shared-types": "workspace:*"
   },
   "devDependencies": {

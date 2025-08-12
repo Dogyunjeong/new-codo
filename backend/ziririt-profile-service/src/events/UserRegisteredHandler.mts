@@ -1,6 +1,6 @@
-import { BaseEventHandler, DomainEvent, EventTypes } from '@base/shared-services';
+import { BaseEventHandler, DomainEvent, EventTypes } from '@base/server-services';
 import { ProfileManagementService } from '../api/profile/ProfileManagement.service.mts';
-import { PostgresConnectionService } from '@base/shared-services';
+import { PostgresConnectionService } from '@base/server-services';
 
 interface UserRegisteredData {
   userId: string;

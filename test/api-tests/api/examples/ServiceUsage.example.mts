@@ -1,9 +1,9 @@
 /**
- * Examples of using shared-controllers in backend services
+ * Examples of using shared-api-controllers in backend services
  * This file demonstrates how to integrate the controllers in your services
  */
 
-import { AuthController, ProfileController, PostController } from '@base/shared-controllers';
+import { AuthController, ProfileController, PostController } from '@base/shared-api-controllers';
 
 // Example 1: Initialize controllers with service URLs
 const authController = new AuthController({

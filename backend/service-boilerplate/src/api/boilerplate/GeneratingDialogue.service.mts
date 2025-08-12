@@ -1,4 +1,4 @@
-import { Logger } from "base-server";
+import { Logger } from "@base/server-base";
 
 class GeneratingDialogueService {
   private _logger: Logger;

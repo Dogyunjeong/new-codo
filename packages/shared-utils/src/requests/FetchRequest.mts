@@ -1,5 +1,6 @@
-import { ExpectedServerError, type IRequest } from '@base/shared-utils';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import ExpectedServerError from '../error/ExpectedServerError.mts';
+import { type IRequest } from './HttpRequest.mts';
 import qs from 'query-string';
 
 class FetchRequest implements IRequest {
@@ -42,6 +43,10 @@ class FetchRequest implements IRequest {
 
   public setBaseUrl = (baseUrl: string) => {
     this._baseUrl = baseUrl;
+  };
+
+  public getBaseUrl = () => {
+    return this._baseUrl || '';
   };
 
   public setAccessToken = (accessToken: string) => {

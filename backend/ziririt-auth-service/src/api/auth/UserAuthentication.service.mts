@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
-import { JWTService, TokenResponse } from '@base/shared-services';
+import { JWTService, TokenResponse } from '@base/server-services';
 import { UserRegistrationService } from './UserRegistration.service.mts';
 import { RefreshTokenService } from './RefreshToken.service.mts';
 import { GoogleOAuthService, GoogleAuthData } from '../oauth/GoogleOAuth.service.mts';

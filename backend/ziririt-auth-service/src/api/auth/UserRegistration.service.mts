@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { BaseUserService, User, CreateUserData } from '@base/shared-services';
+import { BaseUserService, User, CreateUserData } from '@base/server-services';
 import { GoogleUserInfo } from '../oauth/GoogleOAuth.service.mts';
 import { AppleUserInfo } from '../oauth/AppleOAuth.service.mts';
 

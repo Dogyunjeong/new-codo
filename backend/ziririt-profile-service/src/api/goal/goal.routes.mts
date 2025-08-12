@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { GoalHandler } from './goal.handler.mts';
 import { GoalManagementService } from './GoalManagement.service.mts';
-import { PostgresConnectionService } from '@base/shared-services';
+import { PostgresConnectionService } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas

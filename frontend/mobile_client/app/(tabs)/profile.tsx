@@ -8,6 +8,7 @@ import {
   Animated,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from 'react-native'
 import { ProfileHeader } from '../../src/components/profile/ProfileHeader'
 import { ProfileStats } from '../../src/components/profile/ProfileStats'
@@ -16,26 +17,11 @@ import { JourneySection } from '../../src/components/profile/JourneySection'
 import { StepCard, StepData } from '../../src/components/profile/StepCard'
 import { JourneyData } from '../../src/components/profile/JourneyCard'
 import { theme } from '../../src/constants/theme'
+import { useAuth } from '../../src/contexts/AuthContext'
 
 const { height: screenHeight } = Dimensions.get('window')
 const HEADER_HEIGHT = 400
 const TAB_BAR_HEIGHT = 50
-
-// Mock data matching the design exactly
-const profileData = {
-  user: {
-    name: 'Jamie Wilson',
-    username: '@jamiewilson',
-    bio: 'Documenting my journey through career change, mindfulness, and personal growth. Finding my path one step at a time.',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-  },
-  stats: {
-    steps: 24,
-    following: 156,
-    followers: 432,
-  },
-  tags: ['Career Change', 'Mindfulness', 'Writing'],
-}
 
 const journeys: JourneyData[] = [
   {
@@ -116,6 +102,23 @@ const tabs = [
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState('my-steps')
   const scrollY = useRef(new Animated.Value(0)).current
+  const { user, logout } = useAuth()
+
+  // Use actual user data from auth context, with fallbacks
+  const profileData = {
+    user: {
+      name: user?.name || 'User',
+      username: user?.username || '@user',
+      bio: user?.bio || 'Welcome to HeroJourney! Share your story.',
+      avatar: user?.avatar || 'https://i.pravatar.cc/150?img=5',
+    },
+    stats: {
+      steps: 24,
+      following: 156,
+      followers: 432,
+    },
+    tags: ['Career Change', 'Mindfulness', 'Writing'],
+  }
 
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, HEADER_HEIGHT / 2],
@@ -148,7 +151,27 @@ export default function ProfileScreen() {
   }
 
   const handleSettingsPress = () => {
-    console.log('Settings')
+    Alert.alert(
+      'Settings',
+      'What would you like to do?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Logout',
+              'Are you sure you want to logout?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Logout', style: 'destructive', onPress: logout }
+              ]
+            )
+          }
+        }
+      ]
+    )
   }
 
   const handleViewAllJourneys = () => {

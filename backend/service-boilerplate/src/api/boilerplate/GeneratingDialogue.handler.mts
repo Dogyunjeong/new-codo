@@ -1,4 +1,4 @@
-import { handleError, handleResponse } from 'base-server';
+import { handleError, handleResponse } from "@base/server-base";
 import { FastifyRequest, RouteHandler } from 'base-server/fastifyServer';
 import GeneratingDialogueService from './GeneratingDialogue.service.mjs';
 

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Like, Comment, CreateCommentRequest, PaginatedResponse } from '../../types/post.types.mts';
-import { MongoConnectionService } from '@base/shared-services';
+import { MongoConnectionService } from '@base/server-services';
 
 export class InteractionManagementService {
   private mongoConnection: MongoConnectionService;

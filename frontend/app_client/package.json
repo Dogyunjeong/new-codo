@@ -12,7 +12,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@base/shared-controllers": "workspace:*",
+    "@base/shared-api-controllers": "workspace:*",
     "@base/shared-types": "workspace:*",
     "@base/shared-utils": "workspace:*",
     "@react-navigation/bottom-tabs": "^6.6.1",

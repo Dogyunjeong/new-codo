@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AuthController, ProfileController, PostController, FeedController } from '@base/shared-controllers';
+import { AuthController, ProfileController, PostController, FeedController } from '@base/shared-api-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Shared Controllers Integration', () => {

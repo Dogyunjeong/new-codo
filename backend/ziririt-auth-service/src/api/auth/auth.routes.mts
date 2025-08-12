@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { AuthHandler } from './auth.handler.mts';
 import { UserAuthenticationService } from './UserAuthentication.service.mts';
-import { PostgresConnectionService } from '@base/shared-services';
+import { PostgresConnectionService } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas

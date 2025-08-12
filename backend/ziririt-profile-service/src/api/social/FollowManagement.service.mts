@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { User } from '@base/shared-services';
+import { User } from '@base/server-services';
 
 export interface Follow {
   id: string;

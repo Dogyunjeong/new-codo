@@ -26,29 +26,93 @@ This is yarn workspace mono repo.
 
 ## `./packages`
 
-- `./packages/shared-types` defines entities or complex data structures which can be used in `./frontend` or `./backend`
-- `./packages/shared-controllers` defines to communicate with microservices in `./backend`
-- `./packages/shared-services` defines base models and base service logics for entities. Because our backend msa is for easing development
+### Package Naming Convention and Rules
 
-### shared controllers
+**CRITICAL**: Packages must follow strict naming conventions to ensure proper separation of concerns:
 
-This is to call api from other services or frontend.
-All communication should be done with shared controllers
-It will be used for test purpose too
+#### Naming Prefixes:
+- `shared-*`: Platform-agnostic packages that can run in ANY JavaScript environment
+  - MUST NOT include Node.js standard library (fs, path, crypto, etc.)
+  - MUST NOT include browser-specific APIs (DOM, window, localStorage)
+  - MUST NOT include React Native specific APIs
+  - MUST NOT import from `server-*` or `front-*` packages
+  - CAN only use pure JavaScript/TypeScript
+  - CAN only depend on other `shared-*` packages
+  - Examples: `shared-types`, `shared-utils`, `shared-api-controllers`
 
-- `./packages/shared-controllers/src/[upper-domain]/[domain].controller.mts`
-  this is file to call api. host url will be passed from each service or frontend
+- `server-*`: Server-only packages for backend services
+  - CAN use Node.js standard library
+  - CAN use server frameworks (Fastify, Express, etc.)
+  - CAN use database drivers (MongoDB, PostgreSQL, etc.)
+  - MUST NOT be imported by frontend packages
+  - Examples: `server-base`, `server-services`, `server-handlers`
+
+- `front-*`: Frontend-only packages for client applications
+  - CAN use React/React Native APIs
+  - CAN use browser APIs (for web) or React Native APIs (for mobile)
+  - CAN use frontend frameworks and libraries
+  - MUST NOT use Node.js standard library
+  - MUST NOT be imported by backend packages
+  - Examples: `front-components`, `front-utils`, `front-hooks`
+
+### Dependency Injection for Shared Packages
+
+When shared packages need platform-specific functionality:
+- Use dependency injection through constructor parameters or configuration objects
+- Define interfaces for platform-specific services (e.g., ILogger, IStorage)
+- Allow consumers to provide their own implementations
+- Provide sensible defaults that work across platforms when possible
+
+Example:
+```typescript
+// In shared package - define interface
+interface ILogger {
+  error(message: string, error?: any): void;
+  info(message: string, context?: any): void;
+}
+
+// Consumer provides implementation
+const logger = isServer ? new ServerLogger() : new BrowserLogger();
+const client = new ApiClient({ logger });
+```
+
+### Current Package Structure:
+
+- `./packages/shared-types` - Pure TypeScript type definitions
+  - Used by both frontend and backend
+  - No runtime code, only types and interfaces
+
+- `./packages/shared-api-controllers` - API controller implementations
+  - Used to communicate with backend microservices
+  - Must be platform-agnostic (works in browser, React Native, and Node.js)
+  - Uses fetch or axios for HTTP requests
+
+- `./packages/server-services` - Backend service implementations
+  - Base models and service logic for backend
+  - Node.js specific implementations
+
+- `./packages/server-base` - Base server infrastructure
+  - Fastify server setup, handlers, middleware
+  - Database connections and utilities
+  - Server-specific utilities
+
+### API Controllers
+
+API controllers are used to call backend services from frontend or other services:
+- Located in `./packages/shared-api-controllers/src/[Domain].controller.mts`
+- Host URL is passed from each service or frontend
+- Must be isomorphic (work in all JavaScript environments)
 
 ## `./backend`
 
 backend will be consisted with micro services. These microservices are just for easing development with separate concerns by domain levels
 in the beginning, will be separated by domain levels and in the future it will be separated by concerns
 
-backend MSA endpoints will be defined and can be used in `./packages/shared-controllers` to communicate in between frontend and services.
+backend MSA endpoints will be defined and can be used in `./packages/shared-api-controllers` to communicate in between frontend and services.
 there is `./backend/api-gateway` to ease communications
 
 - all backend services must meet type definitions in `./packages/shared-types`
-- communicate backend endpoints with `./packages/shared-controllers`
+- communicate backend endpoints with `./packages/shared-api-controllers`
 
 ### Service
 
@@ -60,7 +124,7 @@ There are base services and models which can be used in specific services.
 
 ##### Shared models and services
 
-Theses are most primitive service and models and should be located in `./packages/shared-services`
+Theses are most primitive service and models and should be located in `./packages/server-services`
 
 - basic user service logic and models should be located in here
 
@@ -75,7 +139,7 @@ Use Domain and concern focused architecture.
     - `[domain/concern].service.mts`
       - every concern will be a service.
         - e.g `UserSignUp.service.mts`, `UserSSO.service.mts`
-          - user sign up service import `UserService` and `UserModel` from `./packages/shared-services`
+          - user sign up service import `UserService` and `UserModel` from `./packages/server-services`
       - higher level service can be existing over certain concern services.
         - `*.2nd.service.mts`, `*.3rd.service.mts`
 
@@ -84,8 +148,63 @@ Use Domain and concern focused architecture.
 frontend will contains all frontend services for clients or admin.
 
 - all frontend services must meet type definitions in `./packages/shared-types`
-- communicate backend endpoints with `./packages/shared-controllers`
+- communicate backend endpoints with `./packages/shared-api-controllers`
 - **IMPORTANT**: Whenever a feature is added in frontend, corresponding e2e test codes MUST be added
+
+### Frontend Page Creation Methodology
+
+#### Design Analysis Phase (When Design Files Provided)
+
+1. **Analyze Design Files First**
+   - If screenshots, mockups, or design files are provided, analyze them thoroughly before any coding
+   - Identify all UI components, layouts, interactions, and visual elements
+   - Understand the user flow and navigation patterns
+   - Note color schemes, typography, spacing, and responsive behavior
+   - Document any animations, transitions, or micro-interactions
+
+#### Component-First Development Approach
+
+1. **Component Structure Planning**
+   - Break down the page/screen into logical component hierarchy
+   - Identify reusable components vs page-specific components
+   - Plan component interfaces (props) and data flow
+   - Consider component composition and nesting relationships
+   - Document component responsibilities and dependencies
+
+2. **Component Requirements Definition**
+   - Define props interface for each component
+   - Specify component behavior and interactions
+   - Plan state management requirements
+   - Identify API integration points
+   - Document accessibility requirements
+   - Plan loading states and error handling
+
+3. **Component Implementation Order**
+   - Start with the most primitive/reusable components
+   - Build components from bottom-up (leaf components first)
+   - Implement components in dependency order
+   - Create components with proper TypeScript interfaces
+   - Add proper styling and responsive behavior
+   - Include loading indicators and error states
+
+4. **Page/Screen Assembly**
+   - Compose the page using the created components
+   - Implement page-level state management
+   - Add page-specific logic and API calls
+   - Implement navigation and routing
+   - Add page-level error boundaries
+   - Ensure proper accessibility and SEO
+
+#### Implementation Guidelines
+
+- **Component Structure**: Use functional components with explicit props interfaces
+- **Styling**: Use Tailwind CSS with component-specific class naming
+- **State Management**: Use React hooks for local state, consider context for shared state
+- **API Integration**: Use shared controllers from `@base/shared-controllers`
+- **Loading States**: Always include loading indicators for async operations
+- **Error Handling**: Implement proper error boundaries and user feedback
+- **Accessibility**: Follow WCAG guidelines and include proper ARIA attributes
+- **Testing**: Create unit tests for components and integration tests for pages
 
 ## `./plans`
 
@@ -115,14 +234,16 @@ unit test will be ran by vite test
 All API and integration tests are located in `./test/api-tests/`
 
 #### Test Structure
+
 - `./test/api-tests/api/controllers/` - Tests using shared controllers (preferred method)
 - `./test/api-tests/api/direct/` - Direct HTTP API tests for caching, performance, and low-level behavior
 - `./test/api-tests/api/integration/` - Cross-service integration tests
 - `./test/api-tests/api/examples/` - Service usage examples
 
 #### Testing Guidelines
+
 - **IMPORTANT**: Whenever a backend feature is added, corresponding API tests MUST be added
-- Use shared controllers from `@base/shared-controllers` for most API testing
+- Use shared API controllers from `@base/shared-api-controllers` for most API testing
 - Use direct HTTP tests only for testing caching behavior, performance benchmarks, or low-level HTTP features
 - All API tests should include performance validation (response time targets)
 - Tests should cover error handling and edge cases

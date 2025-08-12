@@ -1,4 +1,4 @@
-import { ProfileController } from '@base/shared-controllers';
+import { ProfileController } from '@base/shared-api-controllers';
 
 // Create profile service controller for cross-service communication
 export const profileServiceController = new ProfileController({

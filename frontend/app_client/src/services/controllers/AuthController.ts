@@ -1,1 +1,1 @@
-export { default as AuthController } from '@base/shared-controllers/src/Auth.controller.mts';
+export { default as AuthController } from '@base/shared-api-controllers/src/Auth.controller.mts';

@@ -6,7 +6,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "paths": {
-      "@base/shared-controllers": ["../../packages/shared-controllers/src/index.mts"],
+      "@base/shared-api-controllers": ["../../packages/shared-api-controllers/src/index.mts"],
       "@base/shared-types": ["../../packages/shared-types/src/index.mts"],
       "@base/shared-utils": ["../../packages/shared-utils/src/index.mts"]
     }

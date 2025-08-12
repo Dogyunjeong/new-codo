@@ -1,4 +1,4 @@
-import { ServiceRegistryService, AuthServiceClient, ServiceClientFactory } from '@base/shared-services';
+import { ServiceRegistryService, AuthServiceClient, ServiceClientFactory } from '@base/server-services';
 
 export class AuthServiceClientManager {
   private registry: ServiceRegistryService;

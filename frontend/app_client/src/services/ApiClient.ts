@@ -3,7 +3,7 @@ import {
   ProfileController,
   PostController,
   FeedController,
-} from '@base/shared-controllers';
+} from '@base/shared-api-controllers';
 import { API_CONFIG } from '../config/api.config';
 
 export class ApiClient {

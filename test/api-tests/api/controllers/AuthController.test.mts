@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AuthController } from '@base/shared-controllers';
+import { AuthController } from '@base/shared-api-controllers';
 import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Auth Service Controller', () => {

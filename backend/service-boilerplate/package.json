@@ -13,7 +13,7 @@
     "dev:watch": "yarn install && concurrently \"yarn dev:build\" \"yarn dev:run\""
   },
   "dependencies": {
-    "base-server": "workspace:^",
+    "@base/server-base": "workspace:^",
     "dotenv": "^16.5.0",
     "pm2": "^6.0.5"
   },

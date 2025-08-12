@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { PostHandler } from './post.handler.mts';
 import { PostManagementService } from './PostManagement.service.mts';
-import { MongoConnectionService } from '@base/shared-services';
+import { MongoConnectionService } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 const createPostSchema = {

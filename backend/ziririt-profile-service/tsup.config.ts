@@ -12,7 +12,7 @@ export default defineConfig({
   treeshake: true,
   dts: false,
   external: ['fastify', '@fastify/cors', 'bcryptjs', 'google-auth-library', 'jsonwebtoken', 'pg', 'pino', 'pino-pretty', 'uuid', 'mongodb'],
-  noExternal: ['@base/shared-types', '@base/shared-services', '@base/shared-controllers', '@base/shared-utils'],
+  noExternal: ['@base/shared-types', '@base/server-services', '@base/shared-api-controllers', '@base/shared-utils'],
   esbuildOptions(options) {
     options.mainFields = ['module', 'main'];
   },
