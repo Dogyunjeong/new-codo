@@ -563,11 +563,40 @@ export class AuthService {
     displayName: string,
     isVerified: boolean = true,
   ): AuthResponse {
+    // Generate proper JWT-formatted mock tokens
+    const now = Math.floor(Date.now() / 1000);
+    const userId = 'mock-user-' + Math.random().toString(36).substr(2, 9);
+    
+    // Create mock JWT payload
+    const payload = {
+      userId,
+      email,
+      exp: now + 3600, // 1 hour expiry
+      iat: now,
+      iss: 'mock-auth-service',
+    };
+    
+    // Create mock JWT token (base64 encoded but not signed)
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const body = btoa(JSON.stringify(payload));
+    const signature = 'mock-signature';
+    const mockToken = `${header}.${body}.${signature}`;
+    
+    // Create mock refresh token
+    const refreshPayload = {
+      userId,
+      exp: now + 86400 * 7, // 7 days expiry
+      iat: now,
+      type: 'refresh',
+    };
+    const refreshBody = btoa(JSON.stringify(refreshPayload));
+    const mockRefreshToken = `${header}.${refreshBody}.${signature}`;
+    
     return {
-      token: 'mock-jwt-token-' + Date.now(),
-      refreshToken: 'mock-refresh-token-' + Date.now(),
+      token: mockToken,
+      refreshToken: mockRefreshToken,
       user: {
-        userId: 'mock-user-' + Math.random().toString(36).substr(2, 9),
+        userId,
         email,
         displayName,
         isVerified,

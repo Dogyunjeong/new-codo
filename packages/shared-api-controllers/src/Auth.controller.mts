@@ -83,6 +83,12 @@ class AuthController {
     return response.data;
   };
 
+  // Alias for refreshToken to maintain compatibility
+  public refreshSession = async (data: { refreshToken: string; deviceId?: string }): Promise<any> => {
+    const response = await this._httpRequest.post<unknown>('/refresh', data);
+    return response;
+  };
+
   // Authentication Domain - Logout
   public logout = async (refreshToken: string): Promise<unknown> => {
     const response = await this._httpRequest.post<unknown>('/logout', { refreshToken });
