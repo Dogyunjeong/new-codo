@@ -5,6 +5,7 @@ import { UserRegistrationService } from './UserRegistration.service.mts';
 import { RefreshTokenService } from './RefreshToken.service.mts';
 import { GoogleOAuthService, GoogleAuthData } from '../oauth/GoogleOAuth.service.mts';
 import { AppleOAuthService, AppleAuthData } from '../oauth/AppleOAuth.service.mts';
+import { EmailPasswordAuthService, EmailPasswordAuthData, EmailPasswordSignupData } from './EmailPasswordAuth.service.mts';
 
 export interface AuthConfig {
   jwtSecret: string;
@@ -15,12 +16,22 @@ export interface AuthConfig {
   appleClientId: string;
 }
 
+export interface FirebaseUserData {
+  firebaseUid: string;
+  email: string | null;
+  displayName: string | null;
+  photoUrl: string | null;
+  provider: string;
+  emailVerified: boolean;
+}
+
 export class UserAuthenticationService {
   private userRegistrationService: UserRegistrationService;
   private refreshTokenService: RefreshTokenService;
   private jwtService: JWTService;
   private googleOAuthService: GoogleOAuthService;
   private appleOAuthService: AppleOAuthService;
+  private emailPasswordAuthService: EmailPasswordAuthService;
 
   constructor(pool: Pool, config: AuthConfig) {
     this.userRegistrationService = new UserRegistrationService(pool);
@@ -33,6 +44,7 @@ export class UserAuthenticationService {
     });
     this.googleOAuthService = new GoogleOAuthService(config.googleClientId);
     this.appleOAuthService = new AppleOAuthService(config.appleClientId);
+    this.emailPasswordAuthService = new EmailPasswordAuthService(pool);
   }
 
   async authenticateWithGoogle(authData: GoogleAuthData): Promise<TokenResponse> {
@@ -138,11 +150,124 @@ export class UserAuthenticationService {
     }
   }
 
+  async authenticateWithEmailPassword(authData: EmailPasswordAuthData): Promise<TokenResponse> {
+    try {
+      // Authenticate user with email and password
+      const user = await this.emailPasswordAuthService.login(authData);
+
+      // Generate tokens
+      const tokenId = uuidv4();
+      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+
+      // Store refresh token
+      await this.refreshTokenService.create({
+        userId: user.id,
+        token: tokenResponse.refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      });
+
+      return {
+        ...tokenResponse,
+        user: {
+          userId: user.id,
+          email: user.email,
+          displayName: user.display_name,
+          isVerified: user.is_verified,
+        },
+      };
+    } catch (error) {
+      throw new Error(`Email/password authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async signupWithEmailPassword(signupData: EmailPasswordSignupData): Promise<TokenResponse> {
+    try {
+      // Create user with email and password
+      const user = await this.emailPasswordAuthService.signup(signupData);
+
+      // Generate tokens
+      const tokenId = uuidv4();
+      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+
+      // Store refresh token
+      await this.refreshTokenService.create({
+        userId: user.id,
+        token: tokenResponse.refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      });
+
+      return {
+        ...tokenResponse,
+        user: {
+          userId: user.id,
+          email: user.email,
+          displayName: user.display_name,
+          isVerified: user.is_verified,
+        },
+      };
+    } catch (error) {
+      throw new Error(`Signup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   async getUserById(userId: string) {
     return this.userRegistrationService.findById(userId);
   }
 
   verifyAccessToken(token: string) {
     return this.jwtService.verifyAccessToken(token);
+  }
+
+  async findOrCreateByFirebaseUid(userData: FirebaseUserData) {
+    try {
+      // Try to find existing user by Firebase UID
+      let user = await this.userRegistrationService.findByFirebaseUid(userData.firebaseUid);
+      
+      if (!user && userData.email) {
+        // Try to find by email (for existing users migrating to Firebase)
+        user = await this.userRegistrationService.findByEmail(userData.email);
+        
+        if (user) {
+          // Update existing user with Firebase UID
+          await this.userRegistrationService.updateFirebaseUid(user.id, userData.firebaseUid);
+        }
+      }
+      
+      if (!user) {
+        // Create new user
+        user = await this.userRegistrationService.createFromFirebase(userData);
+      } else {
+        // Update user info from Firebase
+        await this.userRegistrationService.updateFromFirebase(user.id, userData);
+      }
+      
+      return user;
+    } catch (error) {
+      throw new Error(`Failed to find or create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateLastLogin(userId: string): Promise<void> {
+    await this.userRegistrationService.updateLastLogin(userId);
+  }
+
+  generateAccessToken(user: any): string {
+    const tokenId = uuidv4();
+    const tokenData = {
+      userId: user.id,
+      email: user.email,
+      displayName: user.display_name || user.displayName,
+      isVerified: user.email_verified || user.emailVerified || false,
+    };
+    return this.jwtService.generateAccessToken(tokenData, tokenId);
+  }
+
+  generateRefreshToken(user: any): string {
+    const tokenId = uuidv4();
+    const tokenData = {
+      userId: user.id,
+      email: user.email,
+    };
+    return this.jwtService.generateRefreshToken(tokenData, tokenId);
   }
 }

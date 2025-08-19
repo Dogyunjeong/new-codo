@@ -9,7 +9,7 @@ interface LogContext {
 
 export enum LogLevel {
   ERROR = 'error',
-  WARN = 'warn', 
+  WARN = 'warn',
   INFO = 'info',
   DEBUG = 'debug'
 }

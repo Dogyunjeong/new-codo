@@ -12,9 +12,14 @@
     "dev": "tsup-node --watch --sourcemap inline --onSuccess 'node dist/index.js'",
     "dev:build": "tsup-node --watch --sourcemap",
     "dev:run": "NODE_OPTIONS='--enable-source-maps' nodemon dist/index.js --watch dist",
-    "dev:watch": "yarn install && concurrently \"yarn dev:build\" \"yarn dev:run\""
+    "dev:watch": "yarn install && concurrently \"yarn dev:build\" \"yarn dev:run\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@base/server-base": "workspace:*",
     "@base/server-services": "workspace:*",
     "@base/shared-api-controllers": "workspace:*",
     "@base/shared-types": "workspace:*",

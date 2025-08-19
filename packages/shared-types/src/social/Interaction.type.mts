@@ -1,7 +1,7 @@
 import type { User, Like, Comment, CommentWithDetails, SocialStats } from '../post/PostBasic.type.mts';
 
 // Re-export shared types
-export { Like, Comment, CommentWithDetails, SocialStats };
+export type { Like, Comment, CommentWithDetails, SocialStats };
 
 export interface Follow {
   id: string;

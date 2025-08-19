@@ -5,10 +5,26 @@ import { useAuth } from '../../src/contexts/AuthContext'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
+  const { signInWithEmail, signInWithGoogle, signInWithApple } = useAuth()
 
   const handleLogin = async (email: string, password: string) => {
-    await login(email, password)
+    await signInWithEmail(email, password)
+    // Navigation is handled by the auth context
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Directly use the native Google Sign-In
+      await signInWithGoogle()
+      // Navigation is handled by the auth context
+    } catch (error) {
+      // Error is handled by LoginScreen
+      throw error
+    }
+  }
+
+  const handleAppleLogin = async () => {
+    await signInWithApple()
     // Navigation is handled by the auth context
   }
 
@@ -25,6 +41,8 @@ export default function LoginPage() {
       onLogin={handleLogin}
       onSignup={handleSignup}
       onForgotPassword={handleForgotPassword}
+      onGoogleLogin={handleGoogleLogin}
+      onAppleLogin={handleAppleLogin}
     />
   )
 }

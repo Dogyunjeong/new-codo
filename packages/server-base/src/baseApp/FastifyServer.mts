@@ -1,6 +1,7 @@
 import type * as Types from '../@types/index.mts';
 import helmet from '@fastify/helmet';
-import Fastify, {
+import Fastify from 'fastify';
+import type {
   FastifyInstance,
   FastifyPluginAsync,
   FastifyPluginCallback,

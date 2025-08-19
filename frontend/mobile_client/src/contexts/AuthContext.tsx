@@ -1,13 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
+import { getFirebaseAuth } from '../services/firebase/firebase.init'
 import { SecureStorage } from '../services/storage/SecureStorage'
-import { AuthService } from '../services/AuthService'
+import { AuthService, AuthUser, AuthProvider as AuthProviderType, AuthResponse } from '../services/AuthService'
+import { BiometricAuthService } from '../services/auth/BiometricAuthService'
+import { TokenManager } from '../services/auth/TokenManager'
+import { AuthInterceptor } from '../services/api/AuthInterceptor'
+import { Alert } from 'react-native'
 
-interface User {
-  id: string
-  email: string
-  name: string
+interface User extends AuthUser {
   username?: string
-  avatar?: string
   bio?: string
 }
 
@@ -15,11 +17,29 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string, name: string) => Promise<void>
-  logout: () => Promise<void>
+  firebaseUser: FirebaseUser | null
+  // Email/Password auth
+  signInWithEmail: (email: string, password: string) => Promise<void>
+  signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>
+  // OAuth auth
+  signInWithGoogle: () => Promise<void>
+  signInWithApple: () => Promise<void>
+  // Auth management
+  signOut: () => Promise<void>
   refreshSession: () => Promise<void>
   updateUser: (userData: Partial<User>) => void
+  // Password management
+  sendPasswordReset: (email: string) => Promise<void>
+  sendEmailVerification: () => Promise<void>
+  // Biometric auth
+  enableBiometric: () => Promise<boolean>
+  disableBiometric: () => Promise<void>
+  isBiometricEnabled: () => Promise<boolean>
+  authenticateWithBiometric: () => Promise<boolean>
+  // Provider management
+  linkProvider: (provider: AuthProviderType) => Promise<void>
+  unlinkProvider: (provider: AuthProviderType) => Promise<void>
+  getLinkedProviders: () => string[]
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -38,150 +58,229 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const authService = new AuthService()
+  
+  // Use refs to ensure singleton instances are created only once
+  const authService = React.useRef(AuthService.getInstance()).current
+  const tokenManager = React.useRef(TokenManager.getInstance()).current
+  const authInterceptor = React.useRef(AuthInterceptor.getInstance()).current
 
-  // Initialize auth state on app start
+  // Initialize auth state and Firebase listener
   useEffect(() => {
-    checkAuthStatus()
+    initializeAuth()
+    
+    // Set up auth interceptor handlers
+    authInterceptor.setHandlers({
+      onAuthenticationRequired: () => {
+        // Navigate to login screen
+        setIsAuthenticated(false)
+        setUser(null)
+      },
+      onTokenRefresh: async () => {
+        // Token refreshed successfully
+        console.log('Token refreshed via interceptor')
+      },
+    })
+
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), handleAuthStateChange)
+    
+    return () => {
+      unsubscribe()
+      authService.cleanup()
+    }
   }, [])
 
-  const checkAuthStatus = async () => {
+  const initializeAuth = async () => {
     try {
       setIsLoading(true)
+      
+      // Check for stored tokens
       const token = await SecureStorage.getAuthToken()
       const userData = await SecureStorage.getUserData()
       
       if (token && userData) {
-        // Verify token is still valid
+        // Set token for API calls
         authService.setAccessToken(token)
+        
+        // Verify token validity
         const isValid = await authService.verifyToken()
         
         if (isValid) {
-          setUser(userData)
+          setUser(userData as User)
           setIsAuthenticated(true)
+          
+          // Initialize token manager
+          await tokenManager.initialize()
         } else {
-          // Token might be expired, try to refresh
-          await refreshSession()
+          // Try to refresh
+          try {
+            await refreshSession()
+          } catch (error) {
+            console.error('Failed to refresh session:', error)
+            await clearAuthData()
+          }
         }
       }
     } catch (error) {
-      console.error('Error checking auth status:', error)
+      console.error('Error initializing auth:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const handleAuthStateChange = async (firebaseUser: FirebaseUser | null) => {
+    setFirebaseUser(firebaseUser)
+    
+    if (firebaseUser) {
+      console.log('Firebase user signed in:', firebaseUser.email)
+      // User data will be set by sign-in methods
+    } else {
+      console.log('Firebase user signed out')
+      // Clear auth data if not already cleared
+      if (isAuthenticated) {
+        await clearAuthData()
+      }
+    }
+  }
+
+  const signInWithEmail = async (email: string, password: string) => {
     try {
       setIsLoading(true)
       
-      // Call auth service
-      const response = await authService.login({ email, password })
-      
-      // Store tokens and user data
-      await SecureStorage.setAuthToken(response.token)
-      if (response.refreshToken) {
-        await SecureStorage.setRefreshToken(response.refreshToken)
+      // Check if biometric is enabled and use it
+      const biometricEnabled = await BiometricAuthService.isBiometricEnabled()
+      if (biometricEnabled) {
+        const biometricResult = await BiometricAuthService.authenticate(
+          'Authenticate to sign in'
+        )
+        if (!biometricResult.success) {
+          throw new Error(biometricResult.error || 'Biometric authentication failed')
+        }
       }
-      await SecureStorage.setUserData(response.user)
       
-      // Set token for future requests
-      authService.setAccessToken(response.token)
-      
-      setUser(response.user)
-      setIsAuthenticated(true)
+      // Sign in with Firebase
+      const response = await authService.signInWithEmail(email, password)
+      await handleAuthSuccess(response)
     } catch (error: any) {
-      console.error('Login error:', error)
-      throw new Error(error.message || 'Failed to login')
+      console.error('Email sign-in error:', error)
+      throw new Error(error.message || 'Failed to sign in')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
     try {
       setIsLoading(true)
       
-      // Call auth service
-      const response = await authService.signup({ email, password, name })
+      // Sign up with Firebase
+      const response = await authService.signUpWithEmail({
+        email,
+        password,
+        displayName,
+      })
       
-      // Store tokens and user data
-      await SecureStorage.setAuthToken(response.token)
-      if (response.refreshToken) {
-        await SecureStorage.setRefreshToken(response.refreshToken)
+      await handleAuthSuccess(response)
+      
+      // Send verification email
+      try {
+        await authService.sendEmailVerification()
+        Alert.alert(
+          'Verify Your Email',
+          'A verification email has been sent to your email address. Please verify to access all features.',
+          [{ text: 'OK' }]
+        )
+      } catch (error) {
+        console.error('Failed to send verification email:', error)
       }
-      await SecureStorage.setUserData(response.user)
-      
-      // Set token for future requests
-      authService.setAccessToken(response.token)
-      
-      setUser(response.user)
-      setIsAuthenticated(true)
     } catch (error: any) {
-      console.error('Signup error:', error)
+      console.error('Email sign-up error:', error)
       throw new Error(error.message || 'Failed to sign up')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const logout = async () => {
+  const signInWithGoogle = async () => {
     try {
       setIsLoading(true)
       
-      // Call logout endpoint if needed
-      const refreshToken = await SecureStorage.getRefreshToken()
-      if (refreshToken) {
-        try {
-          await authService.logout(refreshToken)
-        } catch (error) {
-          // Continue with local logout even if server logout fails
-          console.error('Server logout error:', error)
-        }
-      }
-      
-      // Clear local storage
-      await SecureStorage.clearAll()
-      
-      setUser(null)
-      setIsAuthenticated(false)
-    } catch (error) {
-      console.error('Logout error:', error)
+      // Sign in with Google using native module
+      const response = await authService.signInWithGoogle()
+      await handleAuthSuccess(response)
+    } catch (error: any) {
+      console.error('Google sign-in error:', error)
+      throw new Error(error.message || 'Failed to sign in with Google')
     } finally {
       setIsLoading(false)
     }
   }
 
+  const signInWithApple = async () => {
+    try {
+      setIsLoading(true)
+      const response = await authService.signInWithApple()
+      await handleAuthSuccess(response)
+    } catch (error: any) {
+      console.error('Apple sign-in error:', error)
+      throw new Error(error.message || 'Failed to sign in with Apple')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const signOut = async () => {
+    try {
+      setIsLoading(true)
+      await authService.signOut()
+      await clearAuthData()
+    } catch (error) {
+      console.error('Sign-out error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAuthSuccess = async (response: AuthResponse) => {
+    // Store tokens and user data
+    await SecureStorage.setAuthToken(response.token)
+    if (response.refreshToken) {
+      await SecureStorage.setRefreshToken(response.refreshToken)
+    }
+    
+    const userData: User = {
+      ...response.user,
+      username: response.user.displayName?.toLowerCase().replace(/\s+/g, '_'),
+    }
+    
+    await SecureStorage.setUserData(userData)
+    
+    // Set token for API calls
+    authService.setAccessToken(response.token)
+    
+    // Initialize token manager
+    await tokenManager.initialize()
+    
+    setUser(userData)
+    setIsAuthenticated(true)
+  }
+
+  const clearAuthData = async () => {
+    await SecureStorage.clearAll()
+    setUser(null)
+    setIsAuthenticated(false)
+  }
+
   const refreshSession = async () => {
     try {
-      const refreshToken = await SecureStorage.getRefreshToken()
-      if (!refreshToken) {
-        throw new Error('No refresh token available')
-      }
-      
-      const response = await authService.refreshToken(refreshToken)
-      
-      // Update stored tokens
-      await SecureStorage.setAuthToken(response.token)
-      if (response.refreshToken) {
-        await SecureStorage.setRefreshToken(response.refreshToken)
-      }
-      
-      // Set new token for future requests
-      authService.setAccessToken(response.token)
-      
-      if (response.user) {
-        await SecureStorage.setUserData(response.user)
-        setUser(response.user)
-      }
-      
-      setIsAuthenticated(true)
+      const response = await authService.refreshToken()
+      await handleAuthSuccess(response)
     } catch (error) {
       console.error('Session refresh error:', error)
-      // If refresh fails, logout the user
-      await logout()
+      await clearAuthData()
       throw error
     }
   }
@@ -194,17 +293,68 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
+  const sendPasswordReset = async (email: string) => {
+    await authService.sendPasswordResetEmail(email)
+  }
+
+  const sendEmailVerification = async () => {
+    await authService.sendEmailVerification()
+  }
+
+  const enableBiometric = async (): Promise<boolean> => {
+    const result = await BiometricAuthService.enableBiometric()
+    return result.success
+  }
+
+  const disableBiometric = async () => {
+    await BiometricAuthService.disableBiometric()
+  }
+
+  const isBiometricEnabled = async (): Promise<boolean> => {
+    return await BiometricAuthService.isBiometricEnabled()
+  }
+
+  const authenticateWithBiometric = async (): Promise<boolean> => {
+    const result = await BiometricAuthService.authenticate()
+    return result.success
+  }
+
+  const linkProvider = async (provider: AuthProviderType) => {
+    await authService.linkProvider(provider)
+  }
+
+  const unlinkProvider = async (provider: AuthProviderType) => {
+    await authService.unlinkProvider(provider)
+  }
+
+  const getLinkedProviders = (): string[] => {
+    if (!firebaseUser) return []
+    return firebaseUser.providerData.map(p => p.providerId)
+  }
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         isAuthenticated,
-        login,
-        signup,
-        logout,
+        firebaseUser,
+        signInWithEmail,
+        signUpWithEmail,
+        signInWithGoogle,
+        signInWithApple,
+        signOut,
         refreshSession,
         updateUser,
+        sendPasswordReset,
+        sendEmailVerification,
+        enableBiometric,
+        disableBiometric,
+        isBiometricEnabled,
+        authenticateWithBiometric,
+        linkProvider,
+        unlinkProvider,
+        getLinkedProviders,
       }}
     >
       {children}

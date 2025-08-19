@@ -138,6 +138,14 @@
 - [ ] Setup Redux Toolkit store with authSlice and feedSlice
 - [ ] Implement ApiClient class for backend service communication
 
+**Authentication Implementation (Priority: High)**
+- [ ] Implement authentication with GCP Identity Platform (see [Authentication Implementation Plan](./authentication_implementation.md))
+- [ ] Configure Firebase Authentication for OAuth providers
+- [ ] Setup Google Sign-In for iOS and Android
+- [ ] Setup Apple Sign-In for iOS
+- [ ] Implement secure token management with auto-refresh
+- [ ] Create maintainable environment variable system
+
 **Core Screens (Priority: High)**
 - [ ] Create authentication screens: LoginScreen and OnboardingScreen
 - [ ] Create main app screens: FeedScreen, GoalsScreen, ProfileScreen

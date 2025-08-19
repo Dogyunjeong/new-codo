@@ -12,24 +12,31 @@ import {
   Alert,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin'
 import { theme } from '../../constants/theme'
 
 interface LoginScreenProps {
   onLogin: (email: string, password: string) => Promise<void>
   onSignup: () => void
   onForgotPassword: () => void
+  onGoogleLogin?: () => Promise<void>
+  onAppleLogin?: () => Promise<void>
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLogin,
   onSignup,
   onForgotPassword,
+  onGoogleLogin,
+  onAppleLogin,
 }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isAppleLoading, setIsAppleLoading] = useState(false)
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -66,8 +73,45 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   }
 
-  const handleSocialLogin = (provider: 'google' | 'apple' | 'facebook') => {
-    Alert.alert('Coming Soon', `${provider} login will be available soon`)
+  const handleGoogleLogin = async () => {
+    if (!onGoogleLogin) {
+      Alert.alert('Error', 'Google Sign-In is not configured')
+      return
+    }
+    
+    setIsGoogleLoading(true)
+    try {
+      await onGoogleLogin()
+    } catch (error: any) {
+      Alert.alert(
+        'Google Sign-In Failed',
+        error.message || 'An error occurred during Google sign-in'
+      )
+    } finally {
+      setIsGoogleLoading(false)
+    }
+  }
+  
+  const handleAppleLogin = async () => {
+    if (onAppleLogin) {
+      setIsAppleLoading(true)
+      try {
+        await onAppleLogin()
+      } catch (error: any) {
+        Alert.alert(
+          'Apple Sign-In Failed',
+          error.message || 'An error occurred during Apple sign-in'
+        )
+      } finally {
+        setIsAppleLoading(false)
+      }
+    } else {
+      Alert.alert('Coming Soon', 'Apple login will be available soon')
+    }
+  }
+  
+  const handleFacebookLogin = () => {
+    Alert.alert('Coming Soon', 'Facebook login will be available soon')
   }
 
   return (
@@ -158,24 +202,34 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             </View>
 
             <View style={styles.socialButtons}>
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin('google')}
-              >
-                <Ionicons name="logo-google" size={24} color={theme.colors.primaryText} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin('apple')}
-              >
-                <Ionicons name="logo-apple" size={24} color={theme.colors.primaryText} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.socialButton}
-                onPress={() => handleSocialLogin('facebook')}
-              >
-                <Ionicons name="logo-facebook" size={24} color={theme.colors.primaryText} />
-              </TouchableOpacity>
+              <GoogleSigninButton
+                style={styles.googleButton}
+                size={GoogleSigninButton.Size.Wide}
+                color={GoogleSigninButton.Color.Dark}
+                onPress={handleGoogleLogin}
+                disabled={isGoogleLoading || isLoading}
+              />
+              
+              <View style={styles.otherSocialButtons}>
+                <TouchableOpacity
+                  style={[styles.socialButton, (isAppleLoading || isLoading) && styles.socialButtonDisabled]}
+                  onPress={handleAppleLogin}
+                  disabled={isAppleLoading || isLoading}
+                >
+                  {isAppleLoading ? (
+                    <ActivityIndicator size="small" color={theme.colors.primaryText} />
+                  ) : (
+                    <Ionicons name="logo-apple" size={24} color={theme.colors.primaryText} />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.socialButton, isLoading && styles.socialButtonDisabled]}
+                  onPress={handleFacebookLogin}
+                  disabled={isLoading}
+                >
+                  <Ionicons name="logo-facebook" size={24} color={theme.colors.primaryText} />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -295,6 +349,16 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.lg,
   },
   socialButtons: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: theme.spacing.lg,
+  },
+  googleButton: {
+    width: 260,
+    height: 48,
+    alignSelf: 'center',
+  },
+  otherSocialButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: theme.spacing.xl,
@@ -308,6 +372,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: theme.colors.background,
+  },
+  socialButtonDisabled: {
+    opacity: 0.6,
   },
   footer: {
     flexDirection: 'row',

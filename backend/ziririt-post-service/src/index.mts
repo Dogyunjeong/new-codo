@@ -6,7 +6,7 @@ import { postRoutes } from './api/post/post.routes.mts';
 import { mediaRoutes } from './api/media/media.routes.mts';
 import { interactionRoutes } from './api/interaction/interaction.routes.mts';
 import { MongoConnectionService } from '@base/server-services';
-import { MonitoringMiddleware } from '@base/shared-api-controllers';
+import { MonitoringMiddleware } from '@base/server-base';
 import fs from 'fs/promises';
 
 const appConfig = getAppConfig();

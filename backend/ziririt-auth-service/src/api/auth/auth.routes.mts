@@ -5,6 +5,29 @@ import { PostgresConnectionService } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas
+const verifyTokenSchema = {
+  type: 'object',
+  required: ['idToken'],
+  properties: {
+    idToken: { type: 'string' },
+    deviceId: { type: 'string' },
+    userAgent: { type: 'string' },
+    ipAddress: { type: 'string' },
+  },
+};
+
+const exchangeTokenSchema = {
+  type: 'object',
+  required: ['idToken'],
+  properties: {
+    idToken: { type: 'string' },
+    deviceId: { type: 'string' },
+    userAgent: { type: 'string' },
+    ipAddress: { type: 'string' },
+  },
+};
+
+// Legacy schemas (kept for backward compatibility, but will use Firebase)
 const googleAuthSchema = {
   type: 'object',
   required: ['idToken'],
@@ -21,6 +44,32 @@ const appleAuthSchema = {
   required: ['idToken'],
   properties: {
     idToken: { type: 'string' },
+    deviceId: { type: 'string' },
+    userAgent: { type: 'string' },
+    ipAddress: { type: 'string' },
+  },
+};
+
+const emailLoginSchema = {
+  type: 'object',
+  required: ['email', 'password'],
+  properties: {
+    email: { type: 'string', format: 'email' },
+    password: { type: 'string', minLength: 6 },
+    deviceId: { type: 'string' },
+    userAgent: { type: 'string' },
+    ipAddress: { type: 'string' },
+  },
+};
+
+const emailSignupSchema = {
+  type: 'object',
+  required: ['email', 'password', 'name'],
+  properties: {
+    email: { type: 'string', format: 'email' },
+    password: { type: 'string', minLength: 6 },
+    name: { type: 'string', minLength: 1 },
+    username: { type: 'string' },
     deviceId: { type: 'string' },
     userAgent: { type: 'string' },
     ipAddress: { type: 'string' },
@@ -71,16 +120,41 @@ export const authRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
   // Health check
   fastify.get('/health', authHandler.healthCheck.bind(authHandler));
 
-  // Google OAuth authentication
-  fastify.post('/google', {
-    schema: { body: googleAuthSchema },
-    handler: authHandler.googleAuth.bind(authHandler),
+  // GCP Identity Platform token verification and exchange
+  fastify.post('/verify', {
+    schema: { body: verifyTokenSchema },
+    handler: authHandler.verifyAndExchange.bind(authHandler),
   });
 
-  // Apple OAuth authentication
+  // Exchange GCP Identity Platform token for backend JWT
+  fastify.post('/exchange', {
+    schema: { body: exchangeTokenSchema },
+    handler: authHandler.exchangeToken.bind(authHandler),
+  });
+
+  // Legacy routes (will use Firebase behind the scenes)
+  // Email/Password authentication (deprecated - use Firebase on client)
+  fastify.post('/login', {
+    schema: { body: emailLoginSchema },
+    handler: authHandler.emailLogin.bind(authHandler),
+  });
+
+  // Email/Password signup (deprecated - use Firebase on client)
+  fastify.post('/signup', {
+    schema: { body: emailSignupSchema },
+    handler: authHandler.emailSignup.bind(authHandler),
+  });
+
+  // Google OAuth authentication (uses Firebase token)
+  fastify.post('/google', {
+    schema: { body: googleAuthSchema },
+    handler: authHandler.verifyAndExchange.bind(authHandler),
+  });
+
+  // Apple OAuth authentication (uses Firebase token)
   fastify.post('/apple', {
     schema: { body: appleAuthSchema },
-    handler: authHandler.appleAuth.bind(authHandler),
+    handler: authHandler.verifyAndExchange.bind(authHandler),
   });
 
   // Refresh access token
@@ -95,10 +169,10 @@ export const authRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
     handler: authHandler.logout.bind(authHandler),
   });
 
-  // Verify access token
-  fastify.get('/verify', {
+  // Get current session info
+  fastify.get('/session', {
     preHandler: authenticateToken,
-    handler: authHandler.verifyToken.bind(authHandler),
+    handler: authHandler.getSession.bind(authHandler),
   });
 
   // Get current user info

@@ -29,6 +29,32 @@ class AuthController {
     return response.data;
   };
 
+  // Email/Password Authentication
+  public emailLogin = async (credentials: {
+    email: string;
+    password: string;
+    deviceId?: string;
+    userAgent?: string;
+    ipAddress?: string;
+  }): Promise<unknown> => {
+    const response = await this._httpRequest.post<unknown>('/login', credentials);
+    return response.data;
+  };
+
+  // Email/Password Signup
+  public emailSignup = async (signupData: {
+    email: string;
+    password: string;
+    name: string;
+    username?: string;
+    deviceId?: string;
+    userAgent?: string;
+    ipAddress?: string;
+  }): Promise<unknown> => {
+    const response = await this._httpRequest.post<unknown>('/signup', signupData);
+    return response.data;
+  };
+
   // OAuth Domain - Google Authentication
   public googleAuth = async (authData: {
     idToken: string;

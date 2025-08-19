@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import ExpectedServerError from '../error/ExpectedServerError.mts';
 import { type IRequest } from './HttpRequest.mts';
 import qs from 'query-string';

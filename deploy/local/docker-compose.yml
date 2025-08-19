@@ -3,12 +3,10 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: ziririt-postgres
-    environment:
-      POSTGRES_DB: ziririt_db
-      POSTGRES_USER: ziririt_user
-      POSTGRES_PASSWORD: ziririt_password
+    env_file:
+      - ./local.env
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ../../scripts/db/postgres:/docker-entrypoint-initdb.d
@@ -19,12 +17,10 @@ services:
   mongodb:
     image: mongo:7.0
     container_name: ziririt-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ziririt_user
-      MONGO_INITDB_ROOT_PASSWORD: ziririt_password
-      MONGO_INITDB_DATABASE: ziririt_posts
+    env_file:
+      - ./local.env
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
       - mongodb_data:/data/db
       - ../../scripts/db/mongodb:/docker-entrypoint-initdb.d
@@ -37,7 +33,7 @@ services:
     container_name: ziririt-redis
     command: redis-server --requirepass ziririt_password
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
@@ -51,20 +47,17 @@ services:
       args:
         BUILD_CONTEXT: backend/ziririt-auth-service
     container_name: ziririt-auth-service
-    environment:
-      - NODE_ENV=development
-      - PORT=4101
-      - SERVICE_NAME=ziririt-auth-service
-      - DATABASE_URL=postgresql://ziririt_user:ziririt_password@postgres:5432/ziririt_db
-      - JWT_SECRET=your-jwt-secret-key-change-in-production
-      - JWT_REFRESH_SECRET=your-jwt-refresh-secret-key-change-in-production
-      - GOOGLE_CLIENT_ID=your-google-client-id
-      - GOOGLE_CLIENT_SECRET=your-google-client-secret
-      - APPLE_CLIENT_ID=your-apple-client-id
-      - APPLE_PRIVATE_KEY=your-apple-private-key
     ports:
-      - "4101:4101"
+      - '4101:4101'
+    env_file:
+      - ./local.env
+    environment:
+      NODE_ENV: development
+      PORT: 4101
+      SERVICE_NAME: ziririt-auth-service
+      GOOGLE_APPLICATION_CREDENTIALS: /base/keys/gcp-dev-key.json
     volumes:
+      - ../keys:/base/keys:ro
       - ../../backend/ziririt-auth-service/src:/base/backend/ziririt-auth-service/src
       - ../../packages:/base/packages
     depends_on:
@@ -80,14 +73,14 @@ services:
       args:
         BUILD_CONTEXT: backend/ziririt-profile-service
     container_name: ziririt-profile-service
+    env_file:
+      - ./local.env
     environment:
-      - NODE_ENV=development
-      - PORT=4102
-      - SERVICE_NAME=ziririt-profile-service
-      - DATABASE_URL=postgresql://ziririt_user:ziririt_password@postgres:5432/ziririt_db
-      - AUTH_SERVICE_URL=http://ziririt-auth-service:4101
+      NODE_ENV: development
+      PORT: 4102
+      SERVICE_NAME: ziririt-profile-service
     ports:
-      - "4102:4102"
+      - '4102:4102'
     volumes:
       - ../../backend/ziririt-profile-service/src:/base/backend/ziririt-profile-service/src
       - ../../packages:/base/packages
@@ -105,15 +98,14 @@ services:
       args:
         BUILD_CONTEXT: backend/ziririt-post-service
     container_name: ziririt-post-service
+    env_file:
+      - ./local.env
     environment:
-      - NODE_ENV=development
-      - PORT=4103
-      - SERVICE_NAME=ziririt-post-service
-      - MONGODB_URI=mongodb://ziririt_user:ziririt_password@mongodb:27017/ziririt_posts?authSource=admin
-      - AUTH_SERVICE_URL=http://ziririt-auth-service:4101
-      - MEDIA_STORAGE_PATH=/app/media
+      NODE_ENV: development
+      PORT: 4103
+      SERVICE_NAME: ziririt-post-service
     ports:
-      - "4103:4103"
+      - '4103:4103'
     volumes:
       - ../../backend/ziririt-post-service/src:/base/backend/ziririt-post-service/src
       - ../../packages:/base/packages
@@ -132,18 +124,14 @@ services:
       args:
         BUILD_CONTEXT: backend/ziririt-feed-service
     container_name: ziririt-feed-service
+    env_file:
+      - ./local.env
     environment:
-      - NODE_ENV=development
-      - PORT=4104
-      - SERVICE_NAME=ziririt-feed-service
-      - MONGODB_URI=mongodb://ziririt_user:ziririt_password@mongodb:27017/ziririt_posts?authSource=admin
-      - REDIS_URL=redis://:ziririt_password@redis:6379
-      - AUTH_SERVICE_URL=http://ziririt-auth-service:4101
-      - PROFILE_SERVICE_URL=http://ziririt-profile-service:4102
-      - POST_SERVICE_URL=http://ziririt-post-service:4103
-      - FEED_CACHE_TTL=300
+      NODE_ENV: development
+      PORT: 4104
+      SERVICE_NAME: ziririt-feed-service
     ports:
-      - "4104:4104"
+      - '4104:4104'
     volumes:
       - ../../backend/ziririt-feed-service/src:/base/backend/ziririt-feed-service/src
       - ../../packages:/base/packages
@@ -162,17 +150,14 @@ services:
       context: ../../backend/api-gateway
       dockerfile: Dockerfile.local
     container_name: ziririt-api-gateway
+    env_file:
+      - ./local.env
     environment:
-      - NODE_ENV=development
-      - PORT=8080
-      - SERVICE_NAME=ziririt-api-gateway
-      - AUTH_SERVICE_URL=http://ziririt-auth-service:4101
-      - PROFILE_SERVICE_URL=http://ziririt-profile-service:4102
-      - POST_SERVICE_URL=http://ziririt-post-service:4103
-      - CORS_ORIGIN=http://localhost:3000,http://localhost:8081
-      - RATE_LIMIT=100
+      NODE_ENV: development
+      PORT: 4100
+      SERVICE_NAME: ziririt-api-gateway
     ports:
-      - "8080:80"
+      - '8080:4100'
     volumes:
       - ../../backend/api-gateway/gateway.conf:/etc/nginx/conf.d/default.conf
     depends_on:

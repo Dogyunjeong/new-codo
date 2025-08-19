@@ -19,6 +19,63 @@
 - Frontend should be run on local (not in Docker)
 - Use `docker compose -f deploy/local/docker-compose.yml` to manage all backend services
 
+## Environment Configuration
+
+### **CRITICAL RULE: Backend Service Environment Variables**
+- **ALL backend service environment variables MUST be defined in a single `BASE_ENV_JSON` in `/deploy/local/local.env`**
+- **The `BASE_ENV_JSON` contains JSON stringified configuration for ALL services**
+- **Individual service `.env` files are NOT allowed in backend services**
+- **Services MUST use `@packages/server-base/src/utils/getEnvironment.mts` to parse BASE_ENV_JSON**
+- **Environment types are defined in `@packages/shared-types/src/shared/Env.type.mts`**
+- **Each service overrides only SERVICE_NAME and PORT in docker-compose.yml**
+
+### Environment Structure:
+```bash
+# In /deploy/local/local.env - Single BASE_ENV_JSON for all services
+BASE_ENV_JSON='{
+  "NODE_ENV": "development",
+  "APP_ENV": "local",
+  "HOST_URL": "0.0.0.0",
+  "HTTP_PORT": 4100,
+  "SERVICE_NAME": "ziririt-services",
+  "AUTH_SERVICE_URL": "http://ziririt-auth-service:4101",
+  "PROFILE_SERVICE_URL": "http://ziririt-profile-service:4102",
+  "DATABASE_URL": "postgresql://...",
+  "MONGODB_URL": "mongodb://...",
+  ...all other configs...
+}'
+```
+
+### Docker Compose Configuration:
+```yaml
+# Each service gets the same BASE_ENV_JSON but overrides SERVICE_NAME and PORT
+ziririt-auth-service:
+  env_file:
+    - ./local.env  # Gets BASE_ENV_JSON
+  environment:
+    NODE_ENV: development
+    PORT: 4101  # Service-specific port override
+    SERVICE_NAME: ziririt-auth-service  # Service-specific name override
+```
+
+### Service Usage:
+```typescript
+// In any backend service
+import { getBaseEnvironment } from '@base/server-base/utils';
+
+// Get environment (PORT and SERVICE_NAME are overridden by Docker)
+const env = getBaseEnvironment();
+console.log(env.SERVICE_NAME); // 'ziririt-auth-service' (from Docker override)
+console.log(env.AUTH_SERVICE_URL); // 'http://ziririt-auth-service:4101' (from BASE_ENV_JSON)
+```
+
+### Benefits:
+- **Simplified maintenance**: One JSON config for all services
+- **Easy deployment**: Change one file to update all services
+- **No conflicts**: All services share the same base configuration
+- **Service-specific overrides**: Docker handles PORT and SERVICE_NAME per service
+- **Type-safe**: Full TypeScript support via shared-types
+
 # project structure
 
 This is yarn workspace mono repo.
@@ -271,3 +328,46 @@ typescript is used for frontend, backend, and IaC
 ## backend
 
 always using micro service approach. Current building is MVP building. Therefore, micro service concern is splitting domain concern.
+
+### Backend Service Creation Rules
+
+When creating a new backend service, follow the patterns in `@backend/service-boilerplate`:
+
+1. **package.json scripts** - Must match the boilerplate exactly:
+   ```json
+   "scripts": {
+     "build": "tsup-node",
+     "start": "pm2 start ecosystem.config.cjs",
+     "start:prod": "pm2 start ecosystem.config.cjs --env production",
+     "stop": "pm2 stop ecosystem.config.cjs",
+     "dev": "tsup-node --watch --sourcemap inline --onSuccess 'node dist/index.js'",
+     "dev:build": "tsup-node --watch --sourcemap",
+     "dev:run": "NODE_OPTIONS='--enable-source-maps' nodemon dist/index.js --watch dist",
+     "dev:watch": "yarn install && concurrently \"yarn dev:build\" \"yarn dev:run\""
+   }
+   ```
+
+2. **tsup.config.ts** - Must use this configuration:
+   ```typescript
+   import { defineConfig } from 'tsup';
+   
+   export default defineConfig(() => {
+     return {
+       entry: ['src/index.mts'],
+       target: 'node22',
+       format: ['esm'],
+       noExternal: [/@base\/.+$/],
+       splitting: false,
+       sourcemap: true,
+       platform: 'node',
+       clean: true,
+     };
+   });
+   ```
+
+3. **Build Process**:
+   - Services MUST compile TypeScript to JavaScript using `tsup-node` 
+   - Compiled output goes to `dist/index.js`
+   - PM2 runs the compiled JavaScript, NOT TypeScript directly
+   - This avoids TypeScript enum issues in Node.js v22+ strip-only mode
+   - The `noExternal: [/@base\/.+$/]` pattern bundles all @base packages to avoid runtime TypeScript issues
