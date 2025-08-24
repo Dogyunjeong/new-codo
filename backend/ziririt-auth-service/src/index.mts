@@ -20,8 +20,8 @@ await server.register(cors, {
 // Initialize database
 const db = PostgresConnectionService.getInstance({ connectionString: appConfig.databaseUrl });
 
-// Register routes
-server.register(authRoutes);
+// Register routes with /api/auth prefix
+server.register(authRoutes, { prefix: '/api/auth' });
 
 // Start server
 const start = async (): Promise<void> => {

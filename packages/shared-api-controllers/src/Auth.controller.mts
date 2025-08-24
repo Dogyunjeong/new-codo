@@ -25,7 +25,7 @@ class AuthController {
 
   // Health Check
   public healthCheck = async (): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>('/health');
+    const response = await this._httpRequest.get<unknown>('/api/auth/health');
     return response.data;
   };
 
@@ -37,7 +37,7 @@ class AuthController {
     userAgent?: string;
     ipAddress?: string;
   }): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/login', credentials);
+    const response = await this._httpRequest.post<unknown>('/api/auth/login', credentials);
     return response.data;
   };
 
@@ -51,7 +51,7 @@ class AuthController {
     userAgent?: string;
     ipAddress?: string;
   }): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/signup', signupData);
+    const response = await this._httpRequest.post<unknown>('/api/auth/signup', signupData);
     return response.data;
   };
 
@@ -62,7 +62,7 @@ class AuthController {
     userAgent?: string;
     ipAddress?: string;
   }): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/google', authData);
+    const response = await this._httpRequest.post<unknown>('/api/auth/google', authData);
     return response.data;
   };
 
@@ -73,37 +73,37 @@ class AuthController {
     userAgent?: string;
     ipAddress?: string;
   }): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/apple', authData);
+    const response = await this._httpRequest.post<unknown>('/api/auth/apple', authData);
     return response.data;
   };
 
   // Authentication Domain - Refresh Token
   public refreshToken = async (refreshToken: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/refresh', { refreshToken });
+    const response = await this._httpRequest.post<unknown>('/api/auth/refresh', { refreshToken });
     return response.data;
   };
 
   // Alias for refreshToken to maintain compatibility
   public refreshSession = async (data: { refreshToken: string; deviceId?: string }): Promise<any> => {
-    const response = await this._httpRequest.post<unknown>('/refresh', data);
+    const response = await this._httpRequest.post<unknown>('/api/auth/refresh', data);
     return response;
   };
 
   // Authentication Domain - Logout
   public logout = async (refreshToken: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/logout', { refreshToken });
+    const response = await this._httpRequest.post<unknown>('/api/auth/logout', { refreshToken });
     return response.data;
   };
 
   // Authentication Domain - Verify Token
   public verifyToken = async (): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>('/verify');
+    const response = await this._httpRequest.get<unknown>('/api/auth/verify');
     return response.data;
   };
 
   // Authentication Domain - Get Current User
   public getCurrentUser = async (): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>('/me');
+    const response = await this._httpRequest.get<unknown>('/api/auth/me');
     return response.data;
   };
 }

@@ -319,7 +319,7 @@ export class AuthService {
   ): Promise<AuthResponse> {
     try {
       // Call backend to verify and exchange Firebase token for JWT
-      const response = await fetch(`${getBackendConfig().authServiceUrl}/auth/verify`, {
+      const response = await fetch(`${getBackendConfig().authServiceUrl}/api/auth/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

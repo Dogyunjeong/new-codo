@@ -22,6 +22,7 @@
 ## Environment Configuration
 
 ### **CRITICAL RULE: Backend Service Environment Variables**
+
 - **ALL backend service environment variables MUST be defined in a single `BASE_ENV_JSON` in `/deploy/local/local.env`**
 - **The `BASE_ENV_JSON` contains JSON stringified configuration for ALL services**
 - **Individual service `.env` files are NOT allowed in backend services**
@@ -30,6 +31,7 @@
 - **Each service overrides only SERVICE_NAME and PORT in docker-compose.yml**
 
 ### Environment Structure:
+
 ```bash
 # In /deploy/local/local.env - Single BASE_ENV_JSON for all services
 BASE_ENV_JSON='{
@@ -47,18 +49,20 @@ BASE_ENV_JSON='{
 ```
 
 ### Docker Compose Configuration:
+
 ```yaml
 # Each service gets the same BASE_ENV_JSON but overrides SERVICE_NAME and PORT
 ziririt-auth-service:
   env_file:
-    - ./local.env  # Gets BASE_ENV_JSON
+    - ./local.env # Gets BASE_ENV_JSON
   environment:
     NODE_ENV: development
-    PORT: 4101  # Service-specific port override
-    SERVICE_NAME: ziririt-auth-service  # Service-specific name override
+    PORT: 4101 # Service-specific port override
+    SERVICE_NAME: ziririt-auth-service # Service-specific name override
 ```
 
 ### Service Usage:
+
 ```typescript
 // In any backend service
 import { getBaseEnvironment } from '@base/server-base/utils';
@@ -70,6 +74,7 @@ console.log(env.AUTH_SERVICE_URL); // 'http://ziririt-auth-service:4101' (from B
 ```
 
 ### Benefits:
+
 - **Simplified maintenance**: One JSON config for all services
 - **Easy deployment**: Change one file to update all services
 - **No conflicts**: All services share the same base configuration
@@ -88,6 +93,7 @@ This is yarn workspace mono repo.
 **CRITICAL**: Packages must follow strict naming conventions to ensure proper separation of concerns:
 
 #### Naming Prefixes:
+
 - `shared-*`: Platform-agnostic packages that can run in ANY JavaScript environment
   - MUST NOT include Node.js standard library (fs, path, crypto, etc.)
   - MUST NOT include browser-specific APIs (DOM, window, localStorage)
@@ -115,12 +121,14 @@ This is yarn workspace mono repo.
 ### Dependency Injection for Shared Packages
 
 When shared packages need platform-specific functionality:
+
 - Use dependency injection through constructor parameters or configuration objects
 - Define interfaces for platform-specific services (e.g., ILogger, IStorage)
 - Allow consumers to provide their own implementations
 - Provide sensible defaults that work across platforms when possible
 
 Example:
+
 ```typescript
 // In shared package - define interface
 interface ILogger {
@@ -156,6 +164,7 @@ const client = new ApiClient({ logger });
 ### API Controllers
 
 API controllers are used to call backend services from frontend or other services:
+
 - Located in `./packages/shared-api-controllers/src/[Domain].controller.mts`
 - Host URL is passed from each service or frontend
 - Must be isomorphic (work in all JavaScript environments)
@@ -265,7 +274,7 @@ frontend will contains all frontend services for clients or admin.
 
 ## `./plans`
 
-this is build plans for current projects
+this is build plans for current projects. **always refer this folder before starting implementation**
 
 ## `./deploy`
 
@@ -290,6 +299,12 @@ unit test will be ran by vite test
 
 All API and integration tests are located in `./test/api-tests/`
 
+### E2E tests
+
+E2E test target to test from frontend and it will hit the running backend services
+
+- should be located in `./test/e2e/[frontend-package-name]/`
+
 #### Test Structure
 
 - `./test/api-tests/api/controllers/` - Tests using shared controllers (preferred method)
@@ -311,15 +326,6 @@ Frontend tests will be located in `./test/frontend/` (to be created)
 Every frontend feature implementation MUST include corresponding tests
 Tests should cover user interactions and expected outcomes
 
-# Feature Implementation guideline
-
-### steps
-
-1. plan/check PRD for requested features
-2. create types in `./packages/shared-types` according to step 1
-
--
-
 ## Shared types
 
 typescript is used for frontend, backend, and IaC
@@ -334,6 +340,7 @@ always using micro service approach. Current building is MVP building. Therefore
 When creating a new backend service, follow the patterns in `@backend/service-boilerplate`:
 
 1. **package.json scripts** - Must match the boilerplate exactly:
+
    ```json
    "scripts": {
      "build": "tsup-node",
@@ -348,9 +355,10 @@ When creating a new backend service, follow the patterns in `@backend/service-bo
    ```
 
 2. **tsup.config.ts** - Must use this configuration:
+
    ```typescript
    import { defineConfig } from 'tsup';
-   
+
    export default defineConfig(() => {
      return {
        entry: ['src/index.mts'],
@@ -366,8 +374,53 @@ When creating a new backend service, follow the patterns in `@backend/service-bo
    ```
 
 3. **Build Process**:
-   - Services MUST compile TypeScript to JavaScript using `tsup-node` 
+   - Services MUST compile TypeScript to JavaScript using `tsup-node`
    - Compiled output goes to `dist/index.js`
    - PM2 runs the compiled JavaScript, NOT TypeScript directly
    - This avoids TypeScript enum issues in Node.js v22+ strip-only mode
    - The `noExternal: [/@base\/.+$/]` pattern bundles all @base packages to avoid runtime TypeScript issues
+
+# **Prompt Implementation guideline**
+
+## step1 - find or creating a implementation Plan
+
+Check there is a implementation plan to follow
+if there is no implementation plan to follow, then create a implementation plan
+
+### plan types
+
+- requirements
+  - `requirements.md` in `./plans`
+  - requirements is representative of the goal of implementation
+  - if things are change this should be updated.
+- version plan
+  - version plans are split downed plans from `requirements.md`
+  - version plans should have more detailed plans to implementation after analyzing `requirements.md`
+  - version plans naming convention should be `v[version number]_plan.md` and should be located in `./plans/versions`
+- implementation plan
+  - This is detailed todo list plans to implement actual code and how to test
+  - It must include detail guidelines for each aspect of
+    - frontend and backend implementation
+    - integration test way
+    - implement api test, e2e test, unit test in `./test`
+  - implementation plan naming convention should be `[mm-dd_hh:mm]_[implementation feature/domain].md` in `./plans/implementations`
+
+### generating implementation plan
+
+## step2 - implementation according to plan
+
+## Step: Load implementation plan
+
+load current implementation plan first in `./plans`
+if there is no existing implementation plan
+
+### Creating new implementation plan
+
+###
+
+### steps
+
+1. plan/check PRD for requested features
+2. create types in `./packages/shared-types` according to step 1
+
+-
