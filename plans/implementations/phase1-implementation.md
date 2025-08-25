@@ -65,9 +65,9 @@
 - [x] Create JWTPayload and RefreshTokenPayload interfaces
 
 **Auth API Endpoints (Priority: High)**
-- [x] Implement auth API routes: POST /auth/google, POST /auth/apple
-- [x] Implement auth API routes: POST /auth/refresh, POST /auth/logout
-- [x] Implement auth API routes: GET /auth/verify, GET /auth/me
+- [x] Implement auth API routes: POST /api/auth/google, POST /api/auth/apple
+- [x] Implement auth API routes: POST /api/auth/refresh, POST /api/auth/logout
+- [x] Implement auth API routes: GET /api/auth/verify, GET /api/auth/me
 - [x] Test auth service locally with sample data
 
 ### Phase 1C: Profile Service Implementation ✅
@@ -81,13 +81,13 @@
 
 **Goal Management (Priority: High)**
 - [x] Implement GoalService class with CRUD operations
-- [x] Implement Profile API routes: GET/PUT /profiles/:userId
-- [x] Implement Profile API routes: GET /profiles/:userId/goals, followers, following
+- [x] Implement Profile API routes: GET/PUT /api/profiles/:userId
+- [x] Implement Profile API routes: GET /api/profiles/:userId/goals, followers, following
 
 **Social System Implementation (Priority: High)**
 - [x] Implement SocialService class for follow/unfollow functionality
-- [x] Implement Social API routes: POST/DELETE /social/follow/:userId
-- [x] Implement Social API routes: GET /social/relationship/:userId
+- [x] Implement Social API routes: POST/DELETE /api/social/follow/:userId
+- [x] Implement Social API routes: GET /api/social/relationship/:userId
 - [x] Test profile service locally with sample data
 
 **Privacy & Permissions (Priority: Medium)**
@@ -104,14 +104,14 @@
 
 **Media & Content (Priority: High)**
 - [x] Implement MediaService class for local file upload and processing
-- [x] Implement Post API routes: POST/GET/PUT/DELETE /posts
-- [x] Implement Post API routes: GET /posts/goal/:goalId, POST /media/upload
+- [x] Implement Post API routes: POST/GET/PUT/DELETE /api/posts
+- [x] Implement Post API routes: GET /api/posts/goal/:goalId, POST /api/media/upload
 
 **Interaction System (Priority: High)**
 - [x] Implement InteractionService class for likes and comments
-- [x] Implement Interaction API routes: POST/DELETE /posts/:postId/like
-- [x] Implement Interaction API routes: POST /posts/:postId/comments, DELETE /comments/:commentId
-- [x] Implement Interaction API routes: GET /posts/:postId/likes, GET /posts/:postId/comments
+- [x] Implement Interaction API routes: POST/DELETE /api/posts/:postId/like
+- [x] Implement Interaction API routes: POST /api/posts/:postId/comments, DELETE /api/comments/:commentId
+- [x] Implement Interaction API routes: GET /api/posts/:postId/likes, GET /api/posts/:postId/comments
 - [x] Test post service locally with sample data
 
 **Performance Optimization (Priority: Medium)**
@@ -127,8 +127,8 @@
 - [ ] Implement FeedCacheService class for Redis caching strategy
 
 **Feed API (Priority: High)**
-- [ ] Implement Feed API routes: GET /feed/home, GET /feed/goal/:goalId
-- [ ] Implement Feed API routes: POST /feed/refresh
+- [ ] Implement Feed API routes: GET /api/feed/home, GET /api/feed/goal/:goalId
+- [ ] Implement Feed API routes: POST /api/feed/refresh
 - [ ] Test feed service locally with sample data and performance benchmarks
 
 ### Phase 1F: React Native Frontend Implementation
@@ -314,12 +314,12 @@
 #### Auth API Endpoints
 ```typescript
 // auth-service/src/api/auth/Auth.routes.mts
-POST /auth/google          // Google OAuth callback
-POST /auth/apple           // Apple OAuth callback  
-POST /auth/refresh         // Refresh JWT token
-POST /auth/logout          // Revoke refresh token
-GET  /auth/verify          // Verify JWT token (for other services)
-GET  /auth/me              // Get current user info
+POST /api/auth/google          // Google OAuth callback
+POST /api/auth/apple           // Apple OAuth callback  
+POST /api/auth/refresh         // Refresh JWT token
+POST /api/auth/logout          // Revoke refresh token
+GET  /api/auth/verify          // Verify JWT token (for other services)
+GET  /api/auth/me              // Get current user info
 ```
 
 #### JWT Implementation
@@ -399,11 +399,11 @@ GET  /auth/me              // Get current user info
 #### Profile API Endpoints
 ```typescript
 // profile-service/src/api/profiles/Profile.routes.mts
-GET    /profiles/:userId           // Get user profile
-PUT    /profiles/:userId           // Update profile (own only)
-GET    /profiles/:userId/goals     // Get user's goals
-GET    /profiles/:userId/followers // Get followers list
-GET    /profiles/:userId/following // Get following list
+GET    /api/profiles/:userId           // Get user profile
+PUT    /api/profiles/:userId           // Update profile (own only)
+GET    /api/profiles/:userId/goals     // Get user's goals
+GET    /api/profiles/:userId/followers // Get followers list
+GET    /api/profiles/:userId/following // Get following list
 ```
 
 #### Goal Management
@@ -442,9 +442,9 @@ class SocialService {
 #### Social API Endpoints
 ```typescript
 // profile-service/src/api/social/Social.routes.mts
-POST   /social/follow/:userId      // Follow a user
-DELETE /social/follow/:userId      // Unfollow a user
-GET    /social/relationship/:userId // Check relationship status
+POST   /api/social/follow/:userId      // Follow a user
+DELETE /api/social/follow/:userId      // Unfollow a user
+GET    /api/social/relationship/:userId // Check relationship status
 ```
 
 #### Privacy & Permissions
@@ -550,12 +550,12 @@ class MediaService {
 #### Post API Endpoints
 ```typescript
 // post-service/src/api/posts/Post.routes.mts
-POST   /posts                     // Create progress post
-GET    /posts/:postId             // Get single post
-PUT    /posts/:postId             // Update post (own only)
-DELETE /posts/:postId             // Delete post (own only)
-GET    /posts/goal/:goalId        // Get posts for a goal
-POST   /media/upload              // Upload media files
+POST   /api/posts                     // Create progress post
+GET    /api/posts/:postId             // Get single post
+PUT    /api/posts/:postId             // Update post (own only)
+DELETE /api/posts/:postId             // Delete post (own only)
+GET    /api/posts/goal/:goalId        // Get posts for a goal
+POST   /api/media/upload              // Upload media files
 ```
 
 **Deliverables Week 5:**
@@ -584,12 +584,12 @@ class InteractionService {
 #### Social API Endpoints
 ```typescript
 // post-service/src/api/interactions/Interaction.routes.mts
-POST   /posts/:postId/like        // Like a post
-DELETE /posts/:postId/like        // Unlike a post
-POST   /posts/:postId/comments    // Add comment
-DELETE /comments/:commentId       // Delete comment
-GET    /posts/:postId/likes       // Get post likes
-GET    /posts/:postId/comments    // Get post comments
+POST   /api/posts/:postId/like        // Like a post
+DELETE /api/posts/:postId/like        // Unlike a post
+POST   /api/posts/:postId/comments    // Add comment
+DELETE /api/comments/:commentId       // Delete comment
+GET    /api/posts/:postId/likes       // Get post likes
+GET    /api/posts/:postId/comments    // Get post comments
 ```
 
 #### Performance Optimization
@@ -648,9 +648,9 @@ class FeedBuilder {
 #### Feed API Endpoints
 ```typescript
 // feed-service/src/api/feed/Feed.routes.mts
-GET    /feed/home                 // Get user's home feed
-GET    /feed/goal/:goalId         // Get goal timeline
-POST   /feed/refresh              // Refresh user's feed cache
+GET    /api/feed/home                 // Get user's home feed
+GET    /api/feed/goal/:goalId         // Get goal timeline
+POST   /api/feed/refresh              // Refresh user's feed cache
 ```
 
 #### Redis Caching Strategy

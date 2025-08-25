@@ -31,27 +31,27 @@ class FeedController {
 
   // Feed Domain
   public getHomeFeed = async (page: number = 1, limit: number = 20): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/feed/home?page=${page}&limit=${limit}`);
+    const response = await this._httpRequest.get<unknown>(`/api/feed/home?page=${page}&limit=${limit}`);
     return response.data;
   };
 
   public getGoalTimeline = async (goalId: string, page: number = 1, limit: number = 20): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/feed/goal/${goalId}?page=${page}&limit=${limit}`);
+    const response = await this._httpRequest.get<unknown>(`/api/feed/goal/${goalId}?page=${page}&limit=${limit}`);
     return response.data;
   };
 
   public getUserFeed = async (userId: string, page: number = 1, limit: number = 20): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/feed/user/${userId}?page=${page}&limit=${limit}`);
+    const response = await this._httpRequest.get<unknown>(`/api/feed/user/${userId}?page=${page}&limit=${limit}`);
     return response.data;
   };
 
   public getHashtagFeed = async (hashtag: string, page: number = 1, limit: number = 20): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/feed/hashtag/${hashtag}?page=${page}&limit=${limit}`);
+    const response = await this._httpRequest.get<unknown>(`/api/feed/hashtag/${hashtag}?page=${page}&limit=${limit}`);
     return response.data;
   };
 
   public refreshFeed = async (): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/feed/refresh', {});
+    const response = await this._httpRequest.post<unknown>('/api/feed/refresh', {});
     return response.data;
   };
 }

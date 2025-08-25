@@ -294,7 +294,7 @@ describe('Shared Controllers Integration', () => {
         const firstItem = items[0];
         expect(firstItem).toBeDefined();
         expect(firstItem.id).toBeDefined();
-        expect(firstItem.type).toBe('post');
+        expect(['post', 'milestone', 'achievement']).toContain(firstItem.type);
         expect(firstItem.content).toBeDefined();
         expect(firstItem.user).toBeDefined();
         expect(firstItem.user.id).toBeDefined();

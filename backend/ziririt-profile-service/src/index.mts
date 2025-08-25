@@ -59,10 +59,10 @@ const healthController = new HealthController(appConfig.serviceName, [
 server.get('/health/ready', healthController.readiness.bind(healthController));
 server.get('/health/live', healthController.liveness.bind(healthController));
 
-// Register routes
-server.register(profileRoutes, { prefix: '/profiles' });
-server.register(goalRoutes, { prefix: '/goals' });
-server.register(socialRoutes, { prefix: '/social' });
+// Register routes with /api prefix
+server.register(profileRoutes, { prefix: '/api/profiles' });
+server.register(goalRoutes, { prefix: '/api/goals' });
+server.register(socialRoutes, { prefix: '/api/social' });
 
 // Start server
 const start = async (): Promise<void> => {

@@ -20,13 +20,15 @@ describe('Auth Service Controller', () => {
 
   describe('OAuth Domain', () => {
     describe('Google OAuth', () => {
-      it('should reject invalid Google ID token', async () => {
-        await expect(
-          authController.googleAuth({ idToken: 'fake-token-for-testing' })
-        ).rejects.toThrow();
+      it('should handle Google ID token (mock auth)', async () => {
+        // With mock auth enabled, any token is accepted
+        const result = await authController.googleAuth({ idToken: 'mock-google-token' });
+        expect(result).toBeDefined();
+        expect(result).toHaveProperty('accessToken');
+        expect(result).toHaveProperty('refreshToken');
       });
 
-      it('should validate required idToken field', async () => {
+      it('should still require idToken field', async () => {
         await expect(
           authController.googleAuth({ idToken: '' })
         ).rejects.toThrow();
@@ -34,13 +36,15 @@ describe('Auth Service Controller', () => {
     });
 
     describe('Apple OAuth', () => {
-      it('should reject invalid Apple ID token', async () => {
-        await expect(
-          authController.appleAuth({ idToken: 'fake-apple-token' })
-        ).rejects.toThrow();
+      it('should handle Apple ID token (mock auth)', async () => {
+        // With mock auth enabled, any token is accepted
+        const result = await authController.appleAuth({ idToken: 'mock-apple-token' });
+        expect(result).toBeDefined();
+        expect(result).toHaveProperty('accessToken');
+        expect(result).toHaveProperty('refreshToken');
       });
 
-      it('should validate required idToken field', async () => {
+      it('should still require idToken field', async () => {
         await expect(
           authController.appleAuth({ idToken: '' })
         ).rejects.toThrow();

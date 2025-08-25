@@ -95,6 +95,36 @@ describe('Feed Service Controller', () => {
       expect((response as any).items.length).toBe(0); // Should be empty for non-existent goal
     });
 
+    it('should get user feed successfully', async () => {
+      const startTime = Date.now();
+      const response = await feedController.getUserFeed('alice_goals_user_id', 1, 20);
+      const responseTime = Date.now() - startTime;
+      
+      expect(response).toBeDefined();
+      expect((response as any).items).toBeDefined();
+      expect(Array.isArray((response as any).items)).toBe(true);
+      expect((response as any).page).toBe(1);
+      
+      // Performance check
+      expect(responseTime).toBeLessThan(500);
+      console.log(`User feed response time: ${responseTime}ms`);
+    });
+
+    it('should get hashtag feed successfully', async () => {
+      const startTime = Date.now();
+      const response = await feedController.getHashtagFeed('meditation', 1, 20);
+      const responseTime = Date.now() - startTime;
+      
+      expect(response).toBeDefined();
+      expect((response as any).items).toBeDefined();
+      expect(Array.isArray((response as any).items)).toBe(true);
+      expect((response as any).page).toBe(1);
+      
+      // Performance check
+      expect(responseTime).toBeLessThan(500);
+      console.log(`Hashtag feed response time: ${responseTime}ms`);
+    });
+
     it('should validate feed item structure', async () => {
       const response = await feedController.getHomeFeed(1, 5);
       const items = (response as any).items;
@@ -103,7 +133,7 @@ describe('Feed Service Controller', () => {
         const firstItem = items[0];
         expect(firstItem).toBeDefined();
         expect(firstItem.id).toBeDefined();
-        expect(firstItem.type).toBe('post');
+        expect(['post', 'milestone', 'achievement']).toContain(firstItem.type);
         expect(firstItem.content).toBeDefined();
         expect(firstItem.user).toBeDefined();
         expect(firstItem.user.id).toBeDefined();
@@ -111,6 +141,18 @@ describe('Feed Service Controller', () => {
         expect(firstItem.socialStats).toBeDefined();
         expect(typeof firstItem.socialStats.likesCount).toBe('number');
         expect(typeof firstItem.socialStats.commentsCount).toBe('number');
+        
+        // Check for milestone-specific fields if type is milestone
+        if (firstItem.type === 'milestone') {
+          expect(firstItem.content.isMilestone).toBe(true);
+        }
+        
+        // Check for metadata if present
+        if (firstItem.metadata) {
+          if (firstItem.metadata.goalId) {
+            expect(typeof firstItem.metadata.goalId).toBe('string');
+          }
+        }
       }
     });
   });

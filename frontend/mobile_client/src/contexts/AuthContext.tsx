@@ -6,6 +6,7 @@ import { AuthService, AuthUser, AuthProvider as AuthProviderType, AuthResponse }
 import { BiometricAuthService } from '../services/auth/BiometricAuthService'
 import { TokenManager } from '../services/auth/TokenManager'
 import { AuthInterceptor } from '../services/api/AuthInterceptor'
+import { getAppSettings } from '../config/firebase.config'
 import { Alert } from 'react-native'
 
 interface User extends AuthUser {
@@ -97,6 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true)
       
+      const isMockMode = __DEV__ && getAppSettings().mockAuthEnabled
+      
       // Check for stored tokens
       const token = await SecureStorage.getAuthToken()
       const userData = await SecureStorage.getUserData()
@@ -105,22 +108,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Set token for API calls
         authService.setAccessToken(token)
         
-        // Verify token validity
-        const isValid = await authService.verifyToken()
-        
-        if (isValid) {
+        // In mock mode, skip token verification
+        if (isMockMode) {
+          console.log('[MockAuth] Loading mock user from storage:', userData)
           setUser(userData as User)
           setIsAuthenticated(true)
-          
-          // Initialize token manager
           await tokenManager.initialize()
         } else {
-          // Try to refresh
-          try {
-            await refreshSession()
-          } catch (error) {
-            console.error('Failed to refresh session:', error)
-            await clearAuthData()
+          // Verify token validity
+          const isValid = await authService.verifyToken()
+          
+          if (isValid) {
+            setUser(userData as User)
+            setIsAuthenticated(true)
+            
+            // Initialize token manager
+            await tokenManager.initialize()
+          } else {
+            // Try to refresh
+            try {
+              await refreshSession()
+            } catch (error) {
+              console.error('Failed to refresh session:', error)
+              await clearAuthData()
+            }
           }
         }
       }
@@ -132,6 +143,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const handleAuthStateChange = async (firebaseUser: FirebaseUser | null) => {
+    // In mock mode, skip Firebase auth state changes
+    const isMockMode = __DEV__ && getAppSettings().mockAuthEnabled
+    
+    if (isMockMode) {
+      console.log('[MockAuth] Skipping Firebase auth state change')
+      return
+    }
+    
     setFirebaseUser(firebaseUser)
     
     if (firebaseUser) {
@@ -150,20 +169,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true)
       
-      // Check if biometric is enabled and use it
-      const biometricEnabled = await BiometricAuthService.isBiometricEnabled()
-      if (biometricEnabled) {
-        const biometricResult = await BiometricAuthService.authenticate(
-          'Authenticate to sign in'
-        )
-        if (!biometricResult.success) {
-          throw new Error(biometricResult.error || 'Biometric authentication failed')
+      // Skip biometric in mock mode
+      const isMockMode = __DEV__ && getAppSettings().mockAuthEnabled
+      
+      if (!isMockMode) {
+        // Check if biometric is enabled and use it
+        const biometricEnabled = await BiometricAuthService.isBiometricEnabled()
+        if (biometricEnabled) {
+          const biometricResult = await BiometricAuthService.authenticate(
+            'Authenticate to sign in'
+          )
+          if (!biometricResult.success) {
+            throw new Error(biometricResult.error || 'Biometric authentication failed')
+          }
         }
       }
       
-      // Sign in with Firebase
+      // Sign in with Firebase or Mock
       const response = await authService.signInWithEmail(email, password)
       await handleAuthSuccess(response)
+      
+      // Show mock mode indicator
+      if (isMockMode) {
+        console.log('[MockAuth] Successfully signed in with mock user:', response.user.email)
+      }
     } catch (error: any) {
       console.error('Email sign-in error:', error)
       throw new Error(error.message || 'Failed to sign in')

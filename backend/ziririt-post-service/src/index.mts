@@ -73,10 +73,10 @@ server.get('/health', async (request, reply) => {
   }
 });
 
-// Register routes
-server.register(postRoutes, { prefix: '/posts' });
-server.register(mediaRoutes, { prefix: '/media' });
-server.register(interactionRoutes, { prefix: '/interactions' });
+// Register routes with /api prefix
+server.register(postRoutes, { prefix: '/api/posts' });
+server.register(mediaRoutes, { prefix: '/api/media' });
+server.register(interactionRoutes, { prefix: '/api/interactions' });
 
 // Start server
 const start = async (): Promise<void> => {

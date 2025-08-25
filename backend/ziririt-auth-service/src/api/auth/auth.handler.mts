@@ -7,18 +7,30 @@ import { FirebaseAdminService } from './FirebaseAdmin.service.mts';
 import { getAppConfig } from '../../configs/app.config.mts';
 import { SessionManagementService } from './SessionManagement.service.mts';
 import { PostgresConnectionService } from '@base/server-services';
+import { MockAuthService } from './MockAuth.service.mts';
 
 export class AuthHandler {
   private authService: UserAuthenticationService;
   private firebaseAdmin: FirebaseAdminService;
   private sessionService: SessionManagementService;
+  private mockAuthService: MockAuthService;
   private config = getAppConfig();
+  private isMockMode: boolean;
 
   constructor(authService: UserAuthenticationService) {
     this.authService = authService;
     this.firebaseAdmin = FirebaseAdminService.getInstance(this.config);
     const dbConnection = PostgresConnectionService.getInstance({ connectionString: this.config.databaseUrl });
     this.sessionService = new SessionManagementService(dbConnection.getPool());
+    this.mockAuthService = new MockAuthService();
+    this.isMockMode = MockAuthService.isMockAuthEnabled(this.config);
+    
+    console.log('[AuthHandler] Config mockAuthEnabled:', this.config.mockAuthEnabled);
+    console.log('[AuthHandler] isMockMode:', this.isMockMode);
+    
+    if (this.isMockMode) {
+      MockAuthService.logMockAuth('Mock authentication mode is ENABLED in AuthHandler');
+    }
   }
 
   async googleAuth(request: FastifyRequest<{ Body: GoogleAuthData }>, reply: FastifyReply) {
@@ -170,11 +182,66 @@ export class AuthHandler {
       const clientIp = ipAddress || request.ip;
       const clientAgent = userAgent || request.headers['user-agent'] || '';
 
-      // Verify Firebase ID token
-      const decodedToken = await this.firebaseAdmin.verifyIdToken(idToken);
+      let decodedToken: any;
+      let user: any;
+      
+      // Use mock authentication if enabled
+      if (this.isMockMode) {
+        MockAuthService.logMockAuth('Processing mock token exchange');
+        
+        // Verify mock token
+        decodedToken = await this.mockAuthService.verifyMockIdToken(idToken);
+        
+        // Get or create mock user
+        const mockUser = await this.mockAuthService.findOrCreateMockUser({
+          firebaseUid: decodedToken.uid,
+          email: decodedToken.email || null,
+          displayName: decodedToken.name || null,
+          photoUrl: decodedToken.picture || null,
+          provider: decodedToken.firebase?.sign_in_provider || 'password',
+          emailVerified: decodedToken.email_verified || false,
+        });
+        
+        // Convert mock user to expected format
+        user = {
+          id: mockUser.id,
+          email: mockUser.email,
+          displayName: mockUser.displayName,
+          photoUrl: mockUser.photoUrl,
+          emailVerified: mockUser.emailVerified,
+          firebaseUid: mockUser.firebaseUid,
+        };
+        
+        // Generate mock tokens
+        const accessToken = this.mockAuthService.generateMockAccessToken(mockUser);
+        const refreshToken = this.mockAuthService.generateMockRefreshToken(mockUser);
+        
+        MockAuthService.logMockAuth('Mock authentication successful', { 
+          userId: user.id, 
+          email: user.email 
+        });
+        
+        // Return mock response (skip session creation for mock)
+        return reply.code(200).send({
+          accessToken,
+          refreshToken,
+          expiresIn: 900, // 15 minutes
+          user: {
+            id: user.id,
+            email: user.email,
+            displayName: user.displayName,
+            photoUrl: user.photoUrl,
+            isVerified: user.emailVerified,
+            firebaseUid: user.firebaseUid,
+          },
+        });
+      }
+      
+      // Normal Firebase authentication flow
+      decodedToken = await this.firebaseAdmin.verifyIdToken(idToken);
       
       // Get or create user in local database
-      const user = await this.authService.findOrCreateByFirebaseUid({
+      user = await this.authService.findOrCreateByFirebaseUid({
         firebaseUid: decodedToken.uid,
         email: decodedToken.email || null,
         displayName: decodedToken.name || null,

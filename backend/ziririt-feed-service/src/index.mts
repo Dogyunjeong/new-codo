@@ -1,24 +1,22 @@
-import Fastify from 'fastify';
 import { MongoClient } from 'mongodb';
-import { createClient } from 'redis';
-import cors from '@fastify/cors';
+import { createClient, RedisClientType } from 'redis';
+import { getBaseEnvironment } from '@base/server-base';
+import FeedService from './api/feed/feed.service.mts';
+import { FeedCacheService } from './api/feed/feedCache.service.mts';
+import { FeedHandler } from './api/feed/feed.handler.mts';
 
-const server = Fastify({
-  logger: true,
-});
+const env = getBaseEnvironment();
+const PORT = parseInt(process.env.PORT || '4104');
+const SERVICE_NAME = process.env.SERVICE_NAME || 'ziririt-feed-service';
 
-await server.register(cors, {
-  origin: true,
-  credentials: true,
-});
-
-const mongoUri = process.env.MONGODB_URI || 'mongodb://ziririt_user:ziririt_password@localhost:27017/ziririt_posts?authSource=admin';
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+// Initialize connections
+const mongoUri = env.MONGODB_URL || 'mongodb://ziririt_user:ziririt_password@localhost:27017/ziririt_posts?authSource=admin';
+const redisUrl = env.REDIS_URL || 'redis://localhost:6379';
 
 const mongoClient = new MongoClient(mongoUri);
-const redisClient = createClient({
+const redisClient: RedisClientType = createClient({
   url: redisUrl,
-});
+}) as RedisClientType;
 
 let isMongoConnected = false;
 let isRedisConnected = false;
@@ -42,6 +40,20 @@ async function ensureConnections() {
   }
 }
 
+// Simple Fastify setup instead of using FastifyServer class
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+
+const server = Fastify({
+  logger: true,
+});
+
+await server.register(cors, {
+  origin: true,
+  credentials: true,
+});
+
+// Health check endpoint
 server.get('/health', async (request, reply) => {
   try {
     await ensureConnections();
@@ -50,7 +62,7 @@ server.get('/health', async (request, reply) => {
     
     return reply.send({
       status: 'healthy',
-      service: 'ziririt-feed-service',
+      service: SERVICE_NAME,
       timestamp: new Date().toISOString(),
       connections: {
         mongodb: isMongoConnected,
@@ -60,201 +72,47 @@ server.get('/health', async (request, reply) => {
   } catch (error) {
     return reply.code(500).send({
       status: 'unhealthy',
-      service: 'ziririt-feed-service',
+      service: SERVICE_NAME,
       error: 'Database connection failed',
     });
   }
 });
 
-server.get('/feed/home', async (request, reply) => {
-  const startTime = Date.now();
-  
-  try {
-    await ensureConnections();
-    const userId = (request.headers as any)['x-user-id'] || 'anonymous';
-    const page = parseInt((request.query as any)?.page || '1', 10);
-    const limit = 20;
-    const skip = (page - 1) * limit;
+// Initialize services and handlers after connections are established
+await ensureConnections();
 
-    const cacheKey = `feed:home:${userId}:page:${page}`;
-    
-    try {
-      const cachedFeed = await redisClient.get(cacheKey);
-      if (cachedFeed) {
-        const responseTime = Date.now() - startTime;
-        console.log(`Feed from cache, response time: ${responseTime}ms`);
-        const data = JSON.parse(cachedFeed);
-        return reply.send({
-          ...data,
-          cached: true,
-          responseTime: `${responseTime}ms`,
-        });
-      }
-    } catch (cacheError) {
-      console.error('Cache error:', cacheError);
-    }
-
-    const postsCollection = mongoClient.db('ziririt_posts').collection('posts');
-    
-    const posts = await postsCollection
-      .find({})
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
-
-    const feedItems = posts.map(post => ({
-      id: post.id || post._id.toString(),
-      type: 'post',
-      content: post,
-      user: { id: post.userId },
-      timestamp: post.createdAt,
-      socialStats: {
-        likesCount: post.likesCount || 0,
-        commentsCount: post.commentsCount || 0,
-      },
-    }));
-
-    const responseData = {
-      items: feedItems,
-      page,
-      hasMore: feedItems.length === limit,
-    };
-
-    try {
-      await redisClient.setEx(cacheKey, 300, JSON.stringify(responseData));
-    } catch (cacheError) {
-      console.error('Failed to cache feed:', cacheError);
-    }
-
-    const responseTime = Date.now() - startTime;
-    console.log(`Feed response time: ${responseTime}ms`);
-
-    return reply.send({
-      ...responseData,
-      cached: false,
-      responseTime: `${responseTime}ms`,
-    });
-  } catch (error) {
-    console.error('Error getting home feed:', error);
-    return reply.code(500).send({ error: 'Failed to get feed' });
-  }
+const feedService = new FeedService({
+  mongoClient,
+  database: 'ziririt_posts',
+  logger: console,
 });
 
-server.get('/feed/goal/:goalId', async (request, reply) => {
-  const startTime = Date.now();
-  
-  try {
-    await ensureConnections();
-    const { goalId } = request.params as { goalId: string };
-    const page = parseInt((request.query as any)?.page || '1', 10);
-    const limit = 20;
-    const skip = (page - 1) * limit;
+const feedCacheService = new FeedCacheService(redisClient);
 
-    const cacheKey = `feed:goal:${goalId}:page:${page}`;
-    
-    try {
-      const cachedTimeline = await redisClient.get(cacheKey);
-      if (cachedTimeline) {
-        const responseTime = Date.now() - startTime;
-        console.log(`Goal timeline from cache, response time: ${responseTime}ms`);
-        const data = JSON.parse(cachedTimeline);
-        return reply.send({
-          ...data,
-          cached: true,
-          responseTime: `${responseTime}ms`,
-        });
-      }
-    } catch (cacheError) {
-      console.error('Cache error:', cacheError);
-    }
-
-    const postsCollection = mongoClient.db('ziririt_posts').collection('posts');
-    
-    const posts = await postsCollection
-      .find({ goalId })
-      .sort({ progressDate: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
-
-    const feedItems = posts.map(post => ({
-      id: post.id || post._id.toString(),
-      type: 'post',
-      content: post,
-      user: { id: post.userId },
-      timestamp: post.createdAt,
-      socialStats: {
-        likesCount: post.likesCount || 0,
-        commentsCount: post.commentsCount || 0,
-      },
-    }));
-
-    const responseData = {
-      items: feedItems,
-      page,
-      hasMore: feedItems.length === limit,
-    };
-
-    try {
-      await redisClient.setEx(cacheKey, 300, JSON.stringify(responseData));
-    } catch (cacheError) {
-      console.error('Failed to cache timeline:', cacheError);
-    }
-
-    const responseTime = Date.now() - startTime;
-    console.log(`Goal timeline response time: ${responseTime}ms`);
-
-    return reply.send({
-      ...responseData,
-      cached: false,
-      responseTime: `${responseTime}ms`,
-    });
-  } catch (error) {
-    console.error('Error getting goal timeline:', error);
-    return reply.code(500).send({ error: 'Failed to get timeline' });
-  }
+const feedHandler = new FeedHandler({
+  feedService,
+  feedCacheService,
 });
 
-server.post('/feed/refresh', async (request, reply) => {
-  const startTime = Date.now();
-  
-  try {
-    await ensureConnections();
-    const userId = (request.headers as any)['x-user-id'] || 'anonymous';
-    
-    const pattern = `feed:home:${userId}:*`;
-    const keys = await redisClient.keys(pattern);
-    
-    if (keys.length > 0) {
-      await redisClient.del(keys);
-      console.log(`Cleared ${keys.length} cache entries for user ${userId}`);
-    }
-    
-    const responseTime = Date.now() - startTime;
-    console.log(`Feed refresh response time: ${responseTime}ms`);
-    
-    return reply.send({
-      message: 'Feed refreshed successfully',
-      clearedEntries: keys.length,
-      responseTime: `${responseTime}ms`,
-    });
-  } catch (error) {
-    console.error('Error refreshing feed:', error);
-    return reply.code(500).send({ error: 'Failed to refresh feed' });
-  }
-});
+// Register API routes
+server.get('/api/feed/home', feedHandler.getHomeFeed.bind(feedHandler));
+server.get('/api/feed/goal/:goalId', feedHandler.getGoalTimeline.bind(feedHandler));
+server.get('/api/feed/user/:userId', feedHandler.getUserFeed.bind(feedHandler));
+server.get('/api/feed/hashtag/:hashtag', feedHandler.getHashtagFeed.bind(feedHandler));
+server.post('/api/feed/refresh', feedHandler.refreshFeed.bind(feedHandler));
 
+
+// Start server
 async function start() {
   try {
-    console.log('Starting feed service...');
+    console.log(`Starting ${SERVICE_NAME}...`);
     console.log('MongoDB URI:', mongoUri);
     console.log('Redis URL:', redisUrl);
     
-    await server.listen({ port: 4104, host: '0.0.0.0' });
-    console.log('Feed service running on port 4104');
+    await server.listen({ port: PORT, host: '0.0.0.0' });
+    console.log(`${SERVICE_NAME} running on port ${PORT}`);
   } catch (error) {
-    console.error('Error starting feed service:', error);
+    console.error(`Error starting ${SERVICE_NAME}:`, error);
     process.exit(1);
   }
 }

@@ -31,94 +31,94 @@ class PostController {
 
   // Post Domain
   public getRecentPosts = async (): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>('/posts/recent');
+    const response = await this._httpRequest.get<unknown>('/api/posts/recent');
     return response.data;
   };
 
   public getUserPosts = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/posts/user/${userId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/posts/user/${userId}`);
     return response.data;
   };
 
   public getGoalPosts = async (goalId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/posts/goal/${goalId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/posts/goal/${goalId}`);
     return response.data;
   };
 
   public getPost = async (postId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/posts/${postId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/posts/${postId}`);
     return response.data;
   };
 
   public searchPostsByHashtag = async (hashtag: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/posts/hashtag/${hashtag}`);
+    const response = await this._httpRequest.get<unknown>(`/api/posts/hashtag/${hashtag}`);
     return response.data;
   };
 
   public createPost = async (postData: any): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/posts', postData);
+    const response = await this._httpRequest.post<unknown>('/api/posts', postData);
     return response.data;
   };
 
   public updatePost = async (postId: string, postData: any): Promise<unknown> => {
-    const response = await this._httpRequest.put<unknown>(`/posts/${postId}`, postData);
+    const response = await this._httpRequest.put<unknown>(`/api/posts/${postId}`, postData);
     return response.data;
   };
 
   public deletePost = async (postId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/posts/${postId}`);
+    const response = await this._httpRequest.delete<unknown>(`/api/posts/${postId}`);
     return response.data;
   };
 
   // Media Domain
   public uploadMedia = async (mediaData: any): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/media/upload', mediaData);
+    const response = await this._httpRequest.post<unknown>('/api/media/upload', mediaData);
     return response.data;
   };
 
   public getMedia = async (mediaId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/media/${mediaId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/media/${mediaId}`);
     return response.data;
   };
 
   public deleteMedia = async (mediaId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/media/${mediaId}`);
+    const response = await this._httpRequest.delete<unknown>(`/api/media/${mediaId}`);
     return response.data;
   };
 
   // Interaction Domain
   public getPostComments = async (postId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/interactions/posts/${postId}/comments`);
+    const response = await this._httpRequest.get<unknown>(`/api/interactions/posts/${postId}/comments`);
     return response.data;
   };
 
   public getPostLikes = async (postId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/interactions/posts/${postId}/likes`);
+    const response = await this._httpRequest.get<unknown>(`/api/interactions/posts/${postId}/likes`);
     return response.data;
   };
 
   public getUserLikes = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/interactions/users/${userId}/likes`);
+    const response = await this._httpRequest.get<unknown>(`/api/interactions/users/${userId}/likes`);
     return response.data;
   };
 
   public addComment = async (postId: string, commentData: any): Promise<unknown> => {
     const response = await this._httpRequest.post<unknown>(
-      `/interactions/posts/${postId}/comments`,
+      `/api/interactions/posts/${postId}/comments`,
       commentData,
     );
     return response.data;
   };
 
   public likePost = async (postId: string, userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>(`/interactions/posts/${postId}/like`, {
+    const response = await this._httpRequest.post<unknown>(`/api/interactions/posts/${postId}/like`, {
       userId,
     });
     return response.data;
   };
 
   public unlikePost = async (postId: string, userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/interactions/posts/${postId}/like`, {
+    const response = await this._httpRequest.delete<unknown>(`/api/interactions/posts/${postId}/like`, {
       userId,
     });
     return response.data;

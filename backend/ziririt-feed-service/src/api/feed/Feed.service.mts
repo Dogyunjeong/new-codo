@@ -1,111 +1,126 @@
-import { MongoClient } from 'mongodb';
-import appConfig from '../../configs/app.config.mjs';
+import { MongoClient, Db, Collection } from 'mongodb';
+import { FeedBuilder } from './feedBuilder.util.mts';
+
+export interface FeedServiceDependencies {
+  mongoClient: MongoClient;
+  database: string;
+  logger: any;
+}
 
 class FeedService {
   private mongoClient: MongoClient;
+  private db: Db;
+  private postsCollection: Collection;
   private logger: any;
 
-  constructor({ logger }: { logger: any }) {
-    this.logger = logger;
-    this.mongoClient = new MongoClient(appConfig.MONGODB_URI);
+  constructor(deps: FeedServiceDependencies) {
+    this.logger = deps.logger;
+    this.mongoClient = deps.mongoClient;
+    this.db = this.mongoClient.db(deps.database);
+    this.postsCollection = this.db.collection('posts');
   }
 
-  async getHomeFeed(page: number = 1) {
+  async getHomeFeed(userId: string, page: number = 1, limit: number = 20) {
     try {
-      await this.mongoClient.connect();
-      const limit = 20;
       const skip = (page - 1) * limit;
-
-      const postsCollection = this.mongoClient.db('ziririt_posts').collection('posts');
       
-      const posts = await postsCollection
+      const posts = await this.postsCollection
         .find({})
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => ({
-        id: post.id || post._id.toString(),
-        type: 'post',
-        content: {
-          id: post.id || post._id.toString(),
-          userId: post.userId,
-          goalId: post.goalId,
-          content: post.content,
-          mediaFiles: post.mediaFiles || [],
-          hashtags: post.hashtags || [],
-          isMilestone: post.isMilestone || false,
-          progressDate: post.progressDate,
-          createdAt: post.createdAt,
-          updatedAt: post.updatedAt,
-          likesCount: post.likesCount || 0,
-          commentsCount: post.commentsCount || 0,
-        },
-        user: { id: post.userId },
-        timestamp: post.createdAt,
-        socialStats: {
-          likesCount: post.likesCount || 0,
-          commentsCount: post.commentsCount || 0,
-        },
-      }));
-
-      return {
-        items: feedItems,
-        page,
-        hasMore: feedItems.length === limit,
-      };
+      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
+      
+      // Sort by relevance for better user experience
+      const sortedItems = FeedBuilder.sortByRelevance(feedItems, userId);
+      
+      return FeedBuilder.buildFeedResponse(sortedItems, page, limit);
     } catch (error) {
       this.logger.error('Error getting home feed:', error);
       throw error;
-    } finally {
-      await this.mongoClient.close();
     }
   }
 
-  async getGoalTimeline(goalId: string, page: number = 1) {
+  async getGoalTimeline(goalId: string, page: number = 1, limit: number = 20) {
     try {
-      await this.mongoClient.connect();
-      const limit = 20;
       const skip = (page - 1) * limit;
-
-      const postsCollection = this.mongoClient.db('ziririt_posts').collection('posts');
       
-      const posts = await postsCollection
+      const posts = await this.postsCollection
         .find({ goalId })
         .sort({ progressDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => ({
-        id: post.id || post._id.toString(),
-        type: 'post',
-        content: post,
-        user: { id: post.userId },
-        timestamp: post.createdAt,
-        socialStats: {
-          likesCount: post.likesCount || 0,
-          commentsCount: post.commentsCount || 0,
-        },
-      }));
-
-      return {
-        items: feedItems,
-        page,
-        hasMore: feedItems.length === limit,
-      };
+      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
+      
+      return FeedBuilder.buildFeedResponse(feedItems, page, limit);
     } catch (error) {
       this.logger.error('Error getting goal timeline:', error);
       throw error;
-    } finally {
-      await this.mongoClient.close();
     }
   }
 
-  async refreshFeed() {
-    this.logger.info('Feed refresh requested');
-    return { message: 'Feed refreshed successfully' };
+  async getUserFeed(userId: string, page: number = 1, limit: number = 20) {
+    try {
+      const skip = (page - 1) * limit;
+      
+      const posts = await this.postsCollection
+        .find({ userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
+      
+      return FeedBuilder.buildFeedResponse(feedItems, page, limit);
+    } catch (error) {
+      this.logger.error('Error getting user feed:', error);
+      throw error;
+    }
+  }
+
+  async getHashtagFeed(hashtag: string, page: number = 1, limit: number = 20) {
+    try {
+      const skip = (page - 1) * limit;
+      
+      const posts = await this.postsCollection
+        .find({ hashtags: hashtag })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
+      
+      return FeedBuilder.buildFeedResponse(feedItems, page, limit);
+    } catch (error) {
+      this.logger.error('Error getting hashtag feed:', error);
+      throw error;
+    }
+  }
+
+  async getFollowingFeed(userId: string, followingIds: string[], page: number = 1, limit: number = 20) {
+    try {
+      const skip = (page - 1) * limit;
+      
+      const posts = await this.postsCollection
+        .find({ userId: { $in: followingIds } })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
+      
+      return FeedBuilder.buildFeedResponse(feedItems, page, limit);
+    } catch (error) {
+      this.logger.error('Error getting following feed:', error);
+      throw error;
+    }
   }
 }
 

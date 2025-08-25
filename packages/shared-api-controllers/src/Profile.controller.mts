@@ -25,70 +25,70 @@ class ProfileController {
 
   // Health Check
   public healthCheck = async (): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>('/profiles/health');
+    const response = await this._httpRequest.get<unknown>('/health');
     return response.data;
   };
 
   // Profile Domain
   public getUserProfile = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/profiles/${userId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/profiles/${userId}`);
     return response.data;
   };
 
   public updateProfile = async (userId: string, profileData: any): Promise<unknown> => {
-    const response = await this._httpRequest.put<unknown>(`/profiles/${userId}`, profileData);
+    const response = await this._httpRequest.put<unknown>(`/api/profiles/${userId}`, profileData);
     return response.data;
   };
 
   public deleteProfile = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/profiles/${userId}`);
+    const response = await this._httpRequest.delete<unknown>(`/api/profiles/${userId}`);
     return response.data;
   };
 
   // Goal Domain
   public getUserGoals = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/goals/user/${userId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/goals/user/${userId}`);
     return response.data;
   };
 
   public getGoal = async (goalId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/goals/${goalId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/goals/${goalId}`);
     return response.data;
   };
 
   public createGoal = async (goalData: any): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/goals', goalData);
+    const response = await this._httpRequest.post<unknown>('/api/goals', goalData);
     return response.data;
   };
 
   public updateGoal = async (goalId: string, goalData: any): Promise<unknown> => {
-    const response = await this._httpRequest.put<unknown>(`/goals/${goalId}`, goalData);
+    const response = await this._httpRequest.put<unknown>(`/api/goals/${goalId}`, goalData);
     return response.data;
   };
 
   public deleteGoal = async (goalId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/goals/${goalId}`);
+    const response = await this._httpRequest.delete<unknown>(`/api/goals/${goalId}`);
     return response.data;
   };
 
   // Social Domain
   public getFollowers = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/social/followers/${userId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/social/followers/${userId}`);
     return response.data;
   };
 
   public getFollowing = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/social/following/${userId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/social/following/${userId}`);
     return response.data;
   };
 
   public getRelationship = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/social/relationship/${userId}`);
+    const response = await this._httpRequest.get<unknown>(`/api/social/relationship/${userId}`);
     return response.data;
   };
 
   public followUser = async (userId: string, targetUserId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/social/follow', {
+    const response = await this._httpRequest.post<unknown>('/api/social/follow', {
       userId,
       targetUserId,
     });
@@ -96,7 +96,7 @@ class ProfileController {
   };
 
   public unfollowUser = async (userId: string, targetUserId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/social/unfollow', {
+    const response = await this._httpRequest.post<unknown>('/api/social/unfollow', {
       userId,
       targetUserId,
     });
