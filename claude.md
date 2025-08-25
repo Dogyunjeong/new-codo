@@ -36,7 +36,7 @@ if there is no implementation plan to follow, then create a implementation plan
     - frontend and backend implementation
     - integration test way
     - implement api test, e2e test, unit test in `./test`
-  - implementation plan naming convention should be `[mm-dd_hh:mm]_[implementation feature/domain].md` in `./plans/implementations`
+  - implementation plan naming convention should be `[month-date_hour:minutes]_[implementation feature/domain].md` in `./plans/implementations`
 
 ## step2 - implementation according to plan
 

@@ -260,6 +260,11 @@ frontend will contains all frontend services for clients or admin.
 - **Accessibility**: Follow WCAG guidelines and include proper ARIA attributes
 - **Testing**: Create unit tests for components and integration tests for pages
 
+### Frontend test
+
+- frontend e2e test should be in each frontend service folder with `./e2e_test` prefix
+- frontend unit test should be in each fronted service folder with `/unit_test` prefix
+
 ## `./plans`
 
 this is build plans for current projects. **always refer this folder before starting implementation**
