@@ -79,3 +79,7 @@ frontend/app_client/node_modules/
 frontend/app_client/.expo/
 frontend/app_client/dist/
 frontend/app_client/web-build/
+
+# Firebase config
+**/google-services.json
+**/GoogleService-Info.plist
