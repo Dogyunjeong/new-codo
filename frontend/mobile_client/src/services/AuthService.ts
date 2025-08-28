@@ -1,4 +1,5 @@
 import { AuthController } from '@base/shared-api-controllers';
+import { AuthProvider, AuthUser, AuthResponse, SignUpData } from './auth/types';
 import {
   User as FirebaseUser,
   onAuthStateChanged,
@@ -24,34 +25,6 @@ import { getBackendConfig, getAppSettings, getOAuthConfig } from '../config/fire
 import { MockAuthService, MockUser } from './auth/MockAuthService';
 import * as Device from 'expo-device';
 
-export interface AuthUser {
-  userId: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL?: string | null;
-  isVerified: boolean;
-  provider: 'email' | 'google' | 'apple';
-  firebaseUid?: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  refreshToken?: string;
-  user: AuthUser;
-  isNewUser?: boolean;
-}
-
-export interface SignUpData {
-  email: string;
-  password: string;
-  displayName?: string;
-}
-
-export enum AuthProvider {
-  EMAIL = 'email',
-  GOOGLE = 'google',
-  APPLE = 'apple',
-}
 
 export class AuthService {
   private static instance: AuthService;

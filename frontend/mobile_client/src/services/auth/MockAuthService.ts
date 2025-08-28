@@ -1,4 +1,4 @@
-import { AuthProvider } from '../AuthService';
+import { AuthProvider } from './types';
 
 export interface MockUser {
   id: string;
@@ -116,13 +116,13 @@ export class MockAuthService {
   static generateMockToken(userId: string, email: string): MockAuthToken {
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = 3600; // 1 hour
-    
+
     // Create mock JWT payload
     const header = {
       alg: 'HS256',
       typ: 'JWT',
     };
-    
+
     const payload = {
       userId,
       email,
@@ -132,15 +132,15 @@ export class MockAuthService {
       aud: 'ziririt-app',
       sub: userId,
     };
-    
+
     const refreshPayload = {
       userId,
-      exp: now + (86400 * 7), // 7 days
+      exp: now + 86400 * 7, // 7 days
       iat: now,
       type: 'refresh',
       iss: 'mock-auth-service',
     };
-    
+
     // Create base64 encoded mock tokens (not cryptographically signed)
     const encodeBase64 = (obj: any) => {
       const json = JSON.stringify(obj);
@@ -149,12 +149,12 @@ export class MockAuthService {
         .replace(/\//g, '_')
         .replace(/=/g, '');
     };
-    
+
     const mockSignature = 'mock-signature-' + Math.random().toString(36).substr(2, 9);
-    
+
     const token = `${encodeBase64(header)}.${encodeBase64(payload)}.${mockSignature}`;
     const refreshToken = `${encodeBase64(header)}.${encodeBase64(refreshPayload)}.${mockSignature}`;
-    
+
     return {
       token,
       refreshToken,
@@ -166,7 +166,7 @@ export class MockAuthService {
    * Simulate authentication with delay
    */
   static async simulateAuth<T>(response: T): Promise<T> {
-    await new Promise(resolve => setTimeout(resolve, this.MOCK_DELAY_MS));
+    await new Promise((resolve) => setTimeout(resolve, this.MOCK_DELAY_MS));
     return response;
   }
 
@@ -174,30 +174,31 @@ export class MockAuthService {
    * Get user by email
    */
   static getUserByEmail(email: string): MockUser | undefined {
-    return this.TEST_USERS.find(user => 
-      user.email.toLowerCase() === email.toLowerCase()
-    );
+    return this.TEST_USERS.find((user) => user.email.toLowerCase() === email.toLowerCase());
   }
 
   /**
    * Get user by ID
    */
   static getUserById(userId: string): MockUser | undefined {
-    return this.TEST_USERS.find(user => user.id === userId);
+    return this.TEST_USERS.find((user) => user.id === userId);
   }
 
   /**
    * Authenticate with email and password
    */
-  static async authenticateWithEmail(email: string, password: string): Promise<{
+  static async authenticateWithEmail(
+    email: string,
+    password: string,
+  ): Promise<{
     user: MockUser;
     tokens: MockAuthToken;
   }> {
     // For mock mode, accept any password or use default
     const user = this.getUserByEmail(email) || this.TEST_USERS[4]; // Default to test user
-    
+
     const tokens = this.generateMockToken(user.id, user.email);
-    
+
     return this.simulateAuth({
       user,
       tokens,
@@ -213,7 +214,7 @@ export class MockAuthService {
   }> {
     // Return different user based on provider for variety
     let user: MockUser;
-    
+
     switch (provider) {
       case AuthProvider.GOOGLE:
         user = this.TEST_USERS[1]; // Sarah Journey
@@ -224,9 +225,9 @@ export class MockAuthService {
       default:
         user = this.TEST_USERS[0]; // John Hero
     }
-    
+
     const tokens = this.generateMockToken(user.id, user.email);
-    
+
     return this.simulateAuth({
       user,
       tokens,
@@ -238,13 +239,13 @@ export class MockAuthService {
    */
   static async createUser(
     email: string,
-    displayName?: string
+    displayName?: string,
   ): Promise<{
     user: MockUser;
     tokens: MockAuthToken;
   }> {
     const userId = 'mock-user-' + Math.random().toString(36).substr(2, 9);
-    
+
     const newUser: MockUser = {
       id: userId,
       email,
@@ -259,9 +260,9 @@ export class MockAuthService {
       followerCount: 0,
       followingCount: 0,
     };
-    
+
     const tokens = this.generateMockToken(newUser.id, newUser.email);
-    
+
     return this.simulateAuth({
       user: newUser,
       tokens,
@@ -278,24 +279,20 @@ export class MockAuthService {
       if (parts.length !== 3) {
         throw new Error('Invalid token format');
       }
-      
+
       const payload = JSON.parse(atob(parts[1]));
       const userId = payload.userId;
       const user = this.getUserById(userId);
-      
+
       if (!user) {
         throw new Error('User not found');
       }
-      
-      return this.simulateAuth(
-        this.generateMockToken(user.id, user.email)
-      );
+
+      return this.simulateAuth(this.generateMockToken(user.id, user.email));
     } catch (error) {
       // Return a default token if parsing fails
       const defaultUser = this.TEST_USERS[4];
-      return this.simulateAuth(
-        this.generateMockToken(defaultUser.id, defaultUser.email)
-      );
+      return this.simulateAuth(this.generateMockToken(defaultUser.id, defaultUser.email));
     }
   }
 
@@ -306,10 +303,10 @@ export class MockAuthService {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return false;
-      
+
       const payload = JSON.parse(atob(parts[1]));
       const now = Math.floor(Date.now() / 1000);
-      
+
       return payload.exp > now;
     } catch {
       return false;
@@ -329,7 +326,7 @@ export class MockAuthService {
    */
   static generateMockFirebaseToken(user: MockUser): string {
     const now = Math.floor(Date.now() / 1000);
-    
+
     const payload = {
       iss: 'https://securetoken.google.com/mock-project',
       aud: 'mock-project',
@@ -347,9 +344,9 @@ export class MockAuthService {
         sign_in_provider: user.provider,
       },
     };
-    
+
     const header = { alg: 'RS256', typ: 'JWT' };
-    
+
     const encodeBase64 = (obj: any) => {
       const json = JSON.stringify(obj);
       return btoa(unescape(encodeURIComponent(json)))
@@ -357,7 +354,7 @@ export class MockAuthService {
         .replace(/\//g, '_')
         .replace(/=/g, '');
     };
-    
+
     return `${encodeBase64(header)}.${encodeBase64(payload)}.mock-firebase-signature`;
   }
 }
