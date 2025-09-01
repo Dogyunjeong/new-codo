@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { GoalHandler } from './goal.handler.mts';
 import { GoalManagementService } from './GoalManagement.service.mts';
-import { PostgresConnectionService } from '@base/server-services';
+import { PostgresConnectionService, createFirebaseAuthMiddleware, AuthenticatedRequest } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas
@@ -24,25 +24,13 @@ const updateGoalSchema = {
   },
 };
 
-// Auth middleware - simplified for now
-async function authenticateUser(request: FastifyRequest, reply: FastifyReply) {
-  const authHeader = request.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return reply.code(401).send({ error: 'Missing or invalid authorization header' });
-  }
-  
-  const token = authHeader.substring(7);
-  if (!token) {
-    return reply.code(401).send({ error: 'Invalid token' });
-  }
-  
-  // Mock implementation - replace with real JWT verification
-  (request as any).user = { userId: 'mock-user-id' };
-}
+// Get auth middleware instance
+const config = getAppConfig();
+const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
+const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
 
 export const goalRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   // Initialize services
-  const config = getAppConfig();
   const dbConnection = PostgresConnectionService.getInstance({ connectionString: config.databaseUrl });
   const goalService = new GoalManagementService(dbConnection.getPool());
   const goalHandler = new GoalHandler(goalService);

@@ -76,7 +76,6 @@ export const SecurityConfig = {
   development: {
     skipCertificatePinning: true,
     allowInsecureConnections: true,
-    mockAuthEnabled: true,
     verboseLogging: true,
   },
 };
@@ -96,7 +95,6 @@ export function getSecurityConfig() {
       },
       development: {
         ...SecurityConfig.development,
-        mockAuthEnabled: true,
       },
     };
   }

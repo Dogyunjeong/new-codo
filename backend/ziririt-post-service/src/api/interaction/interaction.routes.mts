@@ -36,6 +36,12 @@ async function authenticateUser(request: FastifyRequest, reply: FastifyReply) {
 }
 
 export const interactionRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
+  // Deprecation notice for legacy interaction routes
+  fastify.addHook('onRequest', (request, reply, next) => {
+    reply.header('Warning', '299 - Deprecated: use /api/posts/:postId/* routes');
+    fastify.log.warn({ path: request.url }, 'Using deprecated /api/interactions route');
+    next();
+  });
   const config = getAppConfig();
   const mongoConnection = MongoConnectionService.getInstance({ uri: config.databaseUrl });
   const interactionService = new InteractionManagementService(mongoConnection);

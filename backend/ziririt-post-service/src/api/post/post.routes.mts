@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { PostHandler } from './post.handler.mts';
 import { PostManagementService } from './PostManagement.service.mts';
-import { MongoConnectionService } from '@base/server-services';
+import { MongoConnectionService, createFirebaseAuthMiddleware } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 const createPostSchema = {
@@ -39,22 +39,12 @@ const updatePostSchema = {
   }
 };
 
-async function authenticateUser(request: FastifyRequest, reply: FastifyReply) {
-  const authHeader = request.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return reply.code(401).send({ error: 'Missing or invalid authorization header' });
-  }
-  
-  const token = authHeader.substring(7);
-  if (!token) {
-    return reply.code(401).send({ error: 'Invalid token' });
-  }
-  
-  (request as any).user = { userId: 'mock-user-id' };
-}
+// Get auth middleware instance
+const config = getAppConfig();
+const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
+const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
 
 export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
-  const config = getAppConfig();
   const mongoConnection = MongoConnectionService.getInstance({ uri: config.databaseUrl });
   const postService = new PostManagementService(mongoConnection);
   const postHandler = new PostHandler(postService);
@@ -89,6 +79,11 @@ export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
   });
 
   fastify.get('/recent', {
+    handler: postHandler.getRecentPosts.bind(postHandler),
+  });
+
+  // v0.1 alias: GET /api/posts -> recent posts
+  fastify.get('/', {
     handler: postHandler.getRecentPosts.bind(postHandler),
   });
 

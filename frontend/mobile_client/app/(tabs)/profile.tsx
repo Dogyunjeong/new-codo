@@ -1,14 +1,17 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import { useRouter } from 'expo-router'
 import {
   View,
   Text,
   StyleSheet,
   StatusBar,
   SafeAreaView,
-  Animated,
+  FlatList,
   TouchableOpacity,
   Dimensions,
   Alert,
+  RefreshControl,
 } from 'react-native'
 import { ProfileHeader } from '../../src/components/profile/ProfileHeader'
 import { ProfileStats } from '../../src/components/profile/ProfileStats'
@@ -18,80 +21,13 @@ import { StepCard, StepData } from '../../src/components/profile/StepCard'
 import { JourneyData } from '../../src/components/profile/JourneyCard'
 import { theme } from '../../src/constants/theme'
 import { useAuth } from '../../src/contexts/AuthContext'
+import { PostService } from '../../src/services/PostService'
+import { ProfileService } from '../../src/services/ProfileService'
+import { Post, Goal } from '../../src/services/post/types'
 
 const { height: screenHeight } = Dimensions.get('window')
-const HEADER_HEIGHT = 400
 const TAB_BAR_HEIGHT = 50
 
-const journeys: JourneyData[] = [
-  {
-    id: '1',
-    title: 'From Burnout to Balance',
-    description: 'Career transition from corporate to freelance design',
-    date: 'May 12, 2025',
-    steps: 42,
-    status: 'Active',
-    image: 'https://picsum.photos/200/160?random=1',
-    imageCaption: 'Career transition workspace',
-  },
-  {
-    id: '2',
-    title: 'Mindful Living',
-    description: 'Daily practices for mental wellness and self-care',
-    date: 'Jan 15, 2025',
-    steps: 12,
-    status: 'Ongoing',
-    image: 'https://picsum.photos/200/160?random=2',
-    imageCaption: 'Meditation and wellness',
-  },
-]
-
-const mockSteps: StepData[] = [
-  {
-    id: '1',
-    type: 'Breakthrough',
-    date: 'June 4, 2025',
-    content: 'After months of preparation, I finally completed my first paid design project. The client was thrilled with the results!',
-    media: {
-      image: 'https://picsum.photos/400/240?random=3',
-      caption: 'Project completion celebration',
-    },
-    engagement: {
-      likes: 87,
-      comments: 14,
-      isLiked: true,
-      isSaved: false,
-    },
-  },
-  {
-    id: '2',
-    type: 'Challenge',
-    date: 'May 28, 2025',
-    content: "Today I almost gave up on the project. Feeling like I'm not qualified enough, but pushing through anyway.",
-    media: {
-      image: 'https://picsum.photos/400/240?random=4',
-      caption: 'Journal entry about self-doubt',
-    },
-    engagement: {
-      likes: 124,
-      comments: 32,
-      isLiked: false,
-      isSaved: true,
-    },
-  },
-  {
-    id: '3',
-    type: 'Threshold',
-    date: 'May 12, 2025',
-    content: 'I finally did it. After 7 years at the same company, I handed in my resignation to pursue my passion.',
-    engagement: {
-      likes: 201,
-      comments: 46,
-      isLiked: true,
-      isSaved: true,
-    },
-  },
-]
 
 const tabs = [
   { id: 'my-steps', label: 'My Steps' },
@@ -101,42 +37,136 @@ const tabs = [
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState('my-steps')
-  const scrollY = useRef(new Animated.Value(0)).current
-  const { user, logout } = useAuth()
+  const [userSteps, setUserSteps] = useState<StepData[]>([])
+  const [userJourneys, setUserJourneys] = useState<JourneyData[]>([])
+  const [refreshing, setRefreshing] = useState(false)
+  const { user, signOut, isAuthenticated } = useAuth()
+  const postService = PostService.getInstance()
+  const profileService = ProfileService.getInstance()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      console.log('User not authenticated, redirecting to login')
+      router.replace('/auth/login')
+      return
+    }
+    
+    if (user) {
+      loadUserPosts()
+      loadUserGoals()
+    } else {
+      setUserSteps([])
+      setUserJourneys([])
+    }
+  }, [user, isAuthenticated])
+
+  // Reload posts and goals when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadUserPosts()
+      loadUserGoals()
+    }, [user])
+  )
+
+  const loadUserGoals = async () => {
+    if (!user) {
+      console.log('No user found for loading goals')
+      return
+    }
+    
+    try {
+      const goals = await profileService.getUserGoals(user.userId)
+      console.log('Loaded goals:', goals.length, 'goals:', goals)
+      
+      // Convert goals to JourneyData format
+      const journeys: JourneyData[] = goals.map((goal: Goal) => ({
+        id: goal.id,
+        title: goal.title,
+        description: goal.description || '',
+        date: new Date(goal.createdAt).toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }),
+        steps: goal.progress || 0,
+        status: goal.isPrivate ? 'Ongoing' : 'Active' as 'Active' | 'Ongoing',
+        image: goal.emoji ? undefined : 'https://picsum.photos/200',
+      }))
+      
+      setUserJourneys(journeys)
+    } catch (error) {
+      console.error('Failed to load goals:', error)
+      setUserJourneys([])
+    }
+  }
+
+  const loadUserPosts = async () => {
+    if (!user) {
+      console.log('No user found in auth context')
+      return
+    }
+    
+    try {
+      console.log('Loading posts for user:', {
+        userId: user.userId,
+        email: user.email,
+        displayName: user.displayName,
+        fullUser: user
+      })
+      const posts = await postService.getPosts(user.userId)
+      console.log('Loaded posts:', posts.length, 'posts:', posts)
+      
+      // Convert posts to StepData format
+      const steps: StepData[] = posts.map(post => ({
+        id: post.id,
+        type: post.categories?.[0]?.label || 'Progress',
+        date: new Date(post.createdAt).toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }),
+        content: `${post.title}${post.content ? '\n\n' + post.content : ''}`,
+        media: post.media ? {
+          image: post.media.image || post.media.video,
+          caption: post.media.caption,
+        } : undefined,
+        engagement: {
+          likes: post.engagement.likes,
+          comments: post.engagement.comments,
+          isLiked: post.engagement.isLiked,
+          isSaved: false,
+        },
+      }))
+      
+      setUserSteps(steps)
+    } catch (error) {
+      console.error('Failed to load user posts:', error)
+    }
+  }
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await Promise.all([loadUserPosts(), loadUserGoals()])
+    setRefreshing(false)
+  }
 
   // Use actual user data from auth context, with fallbacks
   const profileData = {
     user: {
-      name: user?.name || 'User',
-      username: user?.username || '@user',
-      bio: user?.bio || 'Welcome to HeroJourney! Share your story.',
-      avatar: user?.avatar || 'https://i.pravatar.cc/150?img=5',
+      name: user?.displayName || user?.email?.split('@')[0] || 'User',
+      username: user?.email ? '@' + user.email.split('@')[0] : '@user',
+      bio: 'Welcome to HeroJourney! Share your story.',
+      avatar: user?.photoURL || undefined,
     },
     stats: {
-      steps: 24,
+      steps: userSteps.length,
       following: 156,
       followers: 432,
     },
     tags: ['Career Change', 'Mindfulness', 'Writing'],
   }
 
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT / 2],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  })
-
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT],
-    outputRange: [0, -HEADER_HEIGHT / 2],
-    extrapolate: 'clamp',
-  })
-
-  const tabBarTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_HEIGHT - TAB_BAR_HEIGHT],
-    outputRange: [HEADER_HEIGHT, TAB_BAR_HEIGHT],
-    extrapolate: 'clamp',
-  })
 
   const handleStatPress = (stat: 'steps' | 'following' | 'followers') => {
     console.log('Stat pressed:', stat)
@@ -165,7 +195,15 @@ export default function ProfileScreen() {
               'Are you sure you want to logout?',
               [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Logout', style: 'destructive', onPress: logout }
+                { 
+                  text: 'Logout', 
+                  style: 'destructive', 
+                  onPress: async () => {
+                    await signOut()
+                    // Force navigation to auth screen
+                    router.replace('/auth/login')
+                  }
+                }
               ]
             )
           }
@@ -180,6 +218,7 @@ export default function ProfileScreen() {
 
   const handleJourneyPress = (journey: JourneyData) => {
     console.log('Journey pressed:', journey.title)
+    router.push(`/goal-detail?goalId=${journey.id}`)
   }
 
   const renderTab = (tab: typeof tabs[0]) => {
@@ -208,72 +247,59 @@ export default function ProfileScreen() {
   )
 
   const ListHeaderComponent = () => (
-    <>
-      <Animated.View
-        style={[
-          styles.profileInfoContainer,
-          {
-            opacity: headerOpacity,
-            transform: [{ translateY: headerTranslateY }],
-          },
-        ]}
-      >
-        <ProfileHeader
-          user={profileData.user}
-          onEdit={handleEditPress}
-          onSettings={handleSettingsPress}
-        />
-        
-        <ProfileStats
-          stats={profileData.stats}
-          onStatPress={handleStatPress}
-        />
-        
-        <ProfileTags
-          tags={profileData.tags}
-          onTagPress={handleTagPress}
-        />
-        
-        <JourneySection
-          title="Jamie's Journey"
-          journeys={journeys}
-          onViewAll={handleViewAllJourneys}
-          onJourneyPress={handleJourneyPress}
-        />
-      </Animated.View>
-
-      <View style={{ height: TAB_BAR_HEIGHT }} />
-    </>
+    <View style={styles.profileInfoContainer}>
+      <ProfileHeader
+        user={profileData.user}
+        onEdit={handleEditPress}
+        onSettings={handleSettingsPress}
+      />
+      
+      <ProfileStats
+        stats={profileData.stats}
+        onStatPress={handleStatPress}
+      />
+      
+      <ProfileTags
+        tags={profileData.tags}
+        onTagPress={handleTagPress}
+      />
+      
+      <JourneySection
+        title="My Journey"
+        journeys={userJourneys}
+        onViewAll={handleViewAllJourneys}
+        onJourneyPress={handleJourneyPress}
+      />
+      
+      <View style={styles.tabBar}>
+        {tabs.map(renderTab)}
+      </View>
+    </View>
   )
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
       
-      <Animated.View
-        style={[
-          styles.stickyTabBar,
-          {
-            transform: [{ translateY: tabBarTranslateY }],
-          },
-        ]}
-      >
-        <View style={styles.tabBar}>
-          {tabs.map(renderTab)}
-        </View>
-      </Animated.View>
-
-      <Animated.FlatList
-        data={mockSteps}
+      <FlatList
+        data={userSteps}
         keyExtractor={(item) => item.id}
         renderItem={renderStep}
         ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No posts yet</Text>
+            <Text style={styles.emptySubtext}>Start sharing your journey!</Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.colors.primary}
+          />
+        }
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
-        scrollEventThrottle={16}
       />
     </SafeAreaView>
   )
@@ -285,14 +311,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   profileInfoContainer: {
-    backgroundColor: theme.colors.background,
-  },
-  stickyTabBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
     backgroundColor: theme.colors.background,
   },
   tabBar: {
@@ -319,5 +337,20 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: theme.colors.primaryText,
     fontWeight: '600',
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: theme.colors.primaryText,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: theme.colors.secondaryText,
   },
 })

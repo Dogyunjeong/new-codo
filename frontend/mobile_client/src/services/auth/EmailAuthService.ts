@@ -61,8 +61,10 @@ export class EmailAuthService {
         });
       }
 
-      // Send email verification
-      await this.sendVerificationEmail(userCredential.user);
+      // Send email verification (skip in development to avoid URL issues)
+      if (!__DEV__) {
+        await this.sendVerificationEmail(userCredential.user);
+      }
 
       // Get ID token
       const idToken = await userCredential.user.getIdToken();
@@ -120,11 +122,15 @@ export class EmailAuthService {
       this.validateEmail(email);
       
       const auth = getFirebaseAuth();
-      await sendPasswordResetEmail(auth, email, {
-        // You can customize the email here
-        url: 'https://ziririt.com/auth/action', // Continue URL after reset
-        handleCodeInApp: false, // Handle in web by default
-      });
+      // In development, don't set a continue URL to avoid domain authorization issues
+      const actionCodeSettings = __DEV__ 
+        ? undefined
+        : {
+            url: 'https://ziririt.com/auth/action', // Continue URL after reset
+            handleCodeInApp: false, // Handle in web by default
+          };
+      
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
       
       console.log('Password reset email sent to:', email);
     } catch (error) {
@@ -176,10 +182,15 @@ export class EmailAuthService {
         throw new Error('No user logged in');
       }
 
-      await sendEmailVerification(currentUser, {
-        url: 'https://ziririt.com/auth/verify-success', // Continue URL after verification
-        handleCodeInApp: false,
-      });
+      // In development, don't set a continue URL to avoid domain authorization issues
+      const actionCodeSettings = __DEV__ 
+        ? undefined 
+        : {
+            url: 'https://ziririt.com/auth/verify-success', // Continue URL after verification
+            handleCodeInApp: false,
+          };
+      
+      await sendEmailVerification(currentUser, actionCodeSettings);
       
       console.log('Verification email sent');
     } catch (error) {
@@ -345,16 +356,7 @@ export class EmailAuthService {
     if (password.length < VALIDATION_RULES.PASSWORD_MIN_LENGTH) {
       throw new Error(`Password must be at least ${VALIDATION_RULES.PASSWORD_MIN_LENGTH} characters long`);
     }
-    
-    // Additional password strength checks
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
-    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-      throw new Error('Password must contain uppercase, lowercase, and numbers');
-    }
+    // Delegate strength rules to Firebase; avoid extra client-side constraints
   }
 
   /**

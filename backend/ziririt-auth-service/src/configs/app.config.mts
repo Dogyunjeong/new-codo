@@ -39,9 +39,6 @@ export interface AppConfig {
   
   // Logging
   logLevel: string;
-  
-  // Mock mode
-  mockAuthEnabled: boolean;
 }
 
 export const getAppConfig = (): AppConfig => {
@@ -88,8 +85,5 @@ export const getAppConfig = (): AppConfig => {
     
     // Logging
     logLevel: env.LOG_LEVEL || 'info',
-    
-    // Mock mode
-    mockAuthEnabled: env.MOCK_AUTH_ENABLED === true || env.MOCK_AUTH_ENABLED === 'true',
   };
 };

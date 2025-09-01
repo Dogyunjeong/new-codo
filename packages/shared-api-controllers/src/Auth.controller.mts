@@ -41,6 +41,17 @@ class AuthController {
     return response.data;
   };
 
+  // v0.1-compatible alias
+  public login = async (credentials: {
+    email: string;
+    password: string;
+    deviceId?: string;
+    userAgent?: string;
+    ipAddress?: string;
+  }): Promise<unknown> => {
+    return this.emailLogin(credentials);
+  };
+
   // Email/Password Signup
   public emailSignup = async (signupData: {
     email: string;
@@ -53,6 +64,19 @@ class AuthController {
   }): Promise<unknown> => {
     const response = await this._httpRequest.post<unknown>('/api/auth/signup', signupData);
     return response.data;
+  };
+
+  // v0.1-compatible alias
+  public signup = async (signupData: {
+    email: string;
+    password: string;
+    name: string;
+    username?: string;
+    deviceId?: string;
+    userAgent?: string;
+    ipAddress?: string;
+  }): Promise<unknown> => {
+    return this.emailSignup(signupData);
   };
 
   // OAuth Domain - Google Authentication

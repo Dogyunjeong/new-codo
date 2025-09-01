@@ -6,14 +6,15 @@ import { theme } from '../../constants/theme'
 
 interface StoryBarProps {
   userAvatar?: string
+  userName?: string
   onAddStep: () => void
 }
 
-export const StoryBar: React.FC<StoryBarProps> = ({ userAvatar, onAddStep }) => {
+export const StoryBar: React.FC<StoryBarProps> = ({ userAvatar, userName, onAddStep }) => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Avatar size="medium" src={userAvatar} />
+        <Avatar size="medium" src={userAvatar} name={userName} />
         <Text style={styles.placeholder}>Share your next step...</Text>
       </View>
       <TouchableOpacity style={styles.addButton} onPress={onAddStep} activeOpacity={0.8}>

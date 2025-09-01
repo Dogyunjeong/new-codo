@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   View,
   Text,
@@ -9,37 +9,82 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 import { theme } from '../src/constants/theme'
+import { PostService } from '../src/services/PostService'
+import { Goal } from '../src/services/post/types'
+import { useAuth } from '../src/contexts/AuthContext'
 
-interface Goal {
-  id: string
-  title: string
-  emoji: string
-  color: string
-  progress: number
-}
-
-const availableGoals: Goal[] = [
-  { id: '1', title: 'Fitness Journey', emoji: '💪', color: '#EF4444', progress: 45 },
-  { id: '2', title: 'Learn Coding', emoji: '💻', color: '#3B82F6', progress: 67 },
-  { id: '3', title: 'Read More', emoji: '📚', color: '#10B981', progress: 30 },
-  { id: '4', title: 'Meditation', emoji: '🧘', color: '#8B5CF6', progress: 80 },
-]
 
 export default function CreateStepScreen() {
   const router = useRouter()
+  const { user } = useAuth()
+  const postService = PostService.getInstance()
+  const [availableGoals, setAvailableGoals] = useState<Goal[]>([])
   const [selectedGoal, setSelectedGoal] = useState<string>('')
   const [stepTitle, setStepTitle] = useState('')
   const [stepDescription, setStepDescription] = useState('')
   const [selectedImages, setSelectedImages] = useState<string[]>([])
+  const [isPosting, setIsPosting] = useState(false)
 
-  const handlePost = () => {
-    console.log('Posting step:', { selectedGoal, stepTitle, stepDescription, selectedImages })
-    router.back()
+  useEffect(() => {
+    loadGoals()
+  }, [])
+
+  // Reload goals when screen gains focus (e.g., after creating a new journey)
+  useFocusEffect(
+    useCallback(() => {
+      loadGoals()
+    }, [])
+  )
+
+  const loadGoals = async () => {
+    try {
+      console.log('Loading goals for user:', user?.userId, user?.email)
+      const goals = await postService.getUserGoals()
+      console.log('Loaded goals:', goals)
+      
+      // Add default emoji and color if not present
+      const goalsWithDefaults = goals.map(goal => ({
+        ...goal,
+        emoji: goal.emoji || '🎯',
+        color: goal.color || '#3B82F6',
+        progress: goal.progress || 0
+      }))
+      
+      setAvailableGoals(goalsWithDefaults)
+    } catch (error) {
+      console.error('Failed to load goals:', error)
+    }
+  }
+
+  const handlePost = async () => {
+    if (!selectedGoal || !stepTitle) return
+    
+    setIsPosting(true)
+    try {
+      console.log('Creating post with title:', stepTitle)
+      const post = await postService.createPost({
+        goalId: selectedGoal,
+        title: stepTitle,
+        content: stepDescription,
+      })
+      console.log('Post created successfully:', post.id)
+      
+      // Brief delay to ensure state updates propagate
+      setTimeout(() => {
+        router.back()
+      }, 100)
+    } catch (error) {
+      console.error('Failed to create post:', error)
+      Alert.alert('Error', 'Failed to create post. Please try again.')
+    } finally {
+      setIsPosting(false)
+    }
   }
 
   const handleAddImage = () => {
@@ -59,11 +104,11 @@ export default function CreateStepScreen() {
           <Text style={styles.headerTitle}>Add New Step</Text>
           <TouchableOpacity
             onPress={handlePost}
-            style={[styles.postButton, (!selectedGoal || !stepTitle) && styles.postButtonDisabled]}
-            disabled={!selectedGoal || !stepTitle}
+            style={[styles.postButton, (!selectedGoal || !stepTitle || isPosting) && styles.postButtonDisabled]}
+            disabled={!selectedGoal || !stepTitle || isPosting}
           >
-            <Text style={[styles.postButtonText, (!selectedGoal || !stepTitle) && styles.postButtonTextDisabled]}>
-              Post
+            <Text style={[styles.postButtonText, (!selectedGoal || !stepTitle || isPosting) && styles.postButtonTextDisabled]}>
+              {isPosting ? 'Posting...' : 'Post'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -99,9 +144,9 @@ export default function CreateStepScreen() {
                   )}
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={styles.addGoalCard}>
+              <TouchableOpacity style={styles.addGoalCard} onPress={() => router.push('/create-journey')}>
                 <Ionicons name="add-circle-outline" size={32} color={theme.colors.textSecondary} />
-                <Text style={styles.addGoalText}>Create Goal</Text>
+                <Text style={styles.addGoalText}>Create Journey</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -216,21 +261,21 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   postButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     backgroundColor: theme.colors.primary,
     borderRadius: 16,
   },
   postButtonDisabled: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceLight,
   },
   postButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.colors.white,
   },
   postButtonTextDisabled: {
-    color: theme.colors.textTertiary,
+    color: theme.colors.secondaryText,
   },
   content: {
     flex: 1,

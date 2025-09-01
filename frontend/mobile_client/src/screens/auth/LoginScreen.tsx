@@ -10,14 +10,10 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Modal,
-  ScrollView,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin'
 import { theme } from '../../constants/theme'
-import { getAppSettings } from '../../config/firebase.config'
-import { MockAuthService } from '../../services/auth/MockAuthService'
 
 interface LoginScreenProps {
   onLogin: (email: string, password: string) => Promise<void>
@@ -41,11 +37,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isAppleLoading, setIsAppleLoading] = useState(false)
-  const [showMockUserModal, setShowMockUserModal] = useState(false)
-  const [isMockLoading, setIsMockLoading] = useState(false)
-  
-  // Check if mock auth is enabled
-  const isMockAuthEnabled = __DEV__ && getAppSettings().mockAuthEnabled
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -123,67 +114,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     Alert.alert('Coming Soon', 'Facebook login will be available soon')
   }
   
-  const handleMockLogin = async (mockUserEmail: string) => {
-    setIsMockLoading(true)
-    setShowMockUserModal(false)
-    try {
-      // Use the default mock password
-      await onLogin(mockUserEmail, MockAuthService.DEFAULT_PASSWORD)
-    } catch (error: any) {
-      Alert.alert(
-        'Mock Login Failed',
-        error.message || 'An error occurred during mock login'
-      )
-    } finally {
-      setIsMockLoading(false)
-    }
-  }
-  
-  const renderMockUserModal = () => (
-    <Modal
-      visible={showMockUserModal}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setShowMockUserModal(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Test User</Text>
-            <TouchableOpacity
-              onPress={() => setShowMockUserModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Ionicons name="close" size={24} color={theme.colors.primaryText} />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView style={styles.modalBody}>
-            <Text style={styles.modalSubtitle}>Choose a test account to sign in:</Text>
-            
-            {MockAuthService.TEST_USERS.map((user) => (
-              <TouchableOpacity
-                key={user.id}
-                style={styles.mockUserCard}
-                onPress={() => handleMockLogin(user.email)}
-              >
-                <View style={styles.mockUserInfo}>
-                  <Text style={styles.mockUserName}>{user.displayName}</Text>
-                  <Text style={styles.mockUserEmail}>{user.email}</Text>
-                  <Text style={styles.mockUserBio} numberOfLines={2}>{user.bio}</Text>
-                  <View style={styles.mockUserStats}>
-                    <Text style={styles.mockUserStat}>✅ {user.isVerified ? 'Verified' : 'Unverified'}</Text>
-                    <Text style={styles.mockUserStat}>📚 {user.journeyCount} Journeys</Text>
-                    <Text style={styles.mockUserStat}>👥 {user.followerCount} Followers</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
-  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -302,43 +232,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 </TouchableOpacity>
               </View>
             </View>
-            
-            {/* Mock Login Button for Development */}
-            {isMockAuthEnabled && (
-              <View style={styles.mockSection}>
-                <View style={styles.mockDivider}>
-                  <Text style={styles.mockBadge}>🧪 DEV MODE</Text>
-                </View>
-                <TouchableOpacity
-                  style={[styles.mockButton, (isMockLoading || isLoading) && styles.mockButtonDisabled]}
-                  onPress={() => setShowMockUserModal(true)}
-                  disabled={isMockLoading || isLoading}
-                >
-                  {isMockLoading ? (
-                    <ActivityIndicator color={theme.colors.white} />
-                  ) : (
-                    <>
-                      <Ionicons name="bug-outline" size={20} color={theme.colors.white} />
-                      <Text style={styles.mockButtonText}>Test Login (Mock Mode)</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-                <Text style={styles.mockHint}>Sign in with a test account - No Firebase required!</Text>
-              </View>
-            )}
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account?</Text>
+            <Text style={styles.footerText}>Don&apos;t have an account?</Text>
             <TouchableOpacity onPress={onSignup}>
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>
-      
-      {/* Mock User Selection Modal */}
-      {renderMockUserModal()}
     </SafeAreaView>
   )
 }
@@ -489,47 +392,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: '600',
   },
-  mockSection: {
-    marginTop: theme.spacing.xl,
-  },
-  mockDivider: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  mockBadge: {
-    ...theme.typography.caption,
-    color: theme.colors.warning || '#FFA500',
-    backgroundColor: theme.colors.warningBackground || '#FFF3CD',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    fontWeight: '600',
-  },
-  mockButton: {
-    flexDirection: 'row',
-    height: 50,
-    backgroundColor: theme.colors.warning || '#FFA500',
-    borderRadius: theme.borderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-  },
-  mockButtonDisabled: {
-    opacity: 0.6,
-  },
-  mockButtonText: {
-    ...theme.typography.button,
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  mockHint: {
-    ...theme.typography.caption,
-    color: theme.colors.secondaryText,
-    textAlign: 'center',
-    marginBottom: theme.spacing.sm,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -572,45 +434,5 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.secondaryText,
     marginBottom: theme.spacing.lg,
-  },
-  mockUserCard: {
-    backgroundColor: theme.colors.surface || '#F5F5F5',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  mockUserInfo: {
-    flex: 1,
-  },
-  mockUserName: {
-    ...theme.typography.h4,
-    color: theme.colors.primaryText,
-    marginBottom: theme.spacing.xs,
-  },
-  mockUserEmail: {
-    ...theme.typography.body,
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.sm,
-  },
-  mockUserBio: {
-    ...theme.typography.caption,
-    color: theme.colors.secondaryText,
-    marginBottom: theme.spacing.sm,
-    fontStyle: 'italic',
-  },
-  mockUserStats: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-  },
-  mockUserStat: {
-    ...theme.typography.caption,
-    color: theme.colors.tertiaryText,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
   },
 })

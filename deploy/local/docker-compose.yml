@@ -79,9 +79,11 @@ services:
       NODE_ENV: development
       PORT: 4102
       SERVICE_NAME: ziririt-profile-service
+      GOOGLE_APPLICATION_CREDENTIALS: /base/keys/gcp-dev-key.json
     ports:
       - '4102:4102'
     volumes:
+      - ../keys:/base/keys:ro
       - ../../backend/ziririt-profile-service/src:/base/backend/ziririt-profile-service/src
       - ../../packages:/base/packages
     depends_on:
@@ -104,9 +106,11 @@ services:
       NODE_ENV: development
       PORT: 4103
       SERVICE_NAME: ziririt-post-service
+      GOOGLE_APPLICATION_CREDENTIALS: /base/keys/gcp-dev-key.json
     ports:
       - '4103:4103'
     volumes:
+      - ../keys:/base/keys:ro
       - ../../backend/ziririt-post-service/src:/base/backend/ziririt-post-service/src
       - ../../packages:/base/packages
       - media_storage:/app/media
@@ -128,11 +132,13 @@ services:
       - ./local.env
     environment:
       NODE_ENV: development
+      GOOGLE_APPLICATION_CREDENTIALS: /base/keys/gcp-dev-key.json
       PORT: 4104
       SERVICE_NAME: ziririt-feed-service
     ports:
       - '4104:4104'
     volumes:
+      - ../keys:/base/keys:ro
       - ../../backend/ziririt-feed-service/src:/base/backend/ziririt-feed-service/src
       - ../../packages:/base/packages
     depends_on:

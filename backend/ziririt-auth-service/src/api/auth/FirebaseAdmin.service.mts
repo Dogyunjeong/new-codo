@@ -14,28 +14,40 @@ export class FirebaseAdminService {
     if (admin.apps.length > 0) {
       this.app = admin.apps[0];
     } else {
-      // Check if we have valid credentials
-      const privateKey = config.firebaseServiceAccount?.privateKey || config.firebasePrivateKey || '';
-      const clientEmail = config.firebaseServiceAccount?.clientEmail || config.firebaseClientEmail || '';
-      const projectId = config.firebaseServiceAccount?.projectId || config.gcpProjectId || 'ziririt-dev';
+      // Check for Google Application Default Credentials first
+      const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       
-      if (!privateKey || !clientEmail || privateKey === '' || clientEmail === '') {
-        console.warn('Firebase Admin SDK: No valid service account credentials found.');
-        console.warn('Using mock mode for development. Real authentication will not work.');
-        
-        // Initialize with application default credentials (will fail in production)
+      if (credentialsPath) {
+        console.log('Firebase Admin SDK: Using service account from file:', credentialsPath);
+        // Initialize with service account file
         this.app = admin.initializeApp({
-          projectId: projectId,
+          credential: admin.credential.applicationDefault(),
+          projectId: config.firebaseServiceAccount?.projectId || config.gcpProjectId || 'codo-dev-469003',
         });
       } else {
-        // Initialize Firebase Admin with service account credentials
-        this.app = admin.initializeApp({
-          credential: admin.credential.cert({
+        // Fallback to credentials from config
+        const privateKey = config.firebaseServiceAccount?.privateKey || config.firebasePrivateKey || '';
+        const clientEmail = config.firebaseServiceAccount?.clientEmail || config.firebaseClientEmail || '';
+        const projectId = config.firebaseServiceAccount?.projectId || config.gcpProjectId || 'codo-dev-469003';
+        
+        if (!privateKey || !clientEmail || privateKey === '' || clientEmail === '') {
+          console.warn('Firebase Admin SDK: No valid service account credentials found.');
+          console.warn('Using mock mode for development. Real authentication will not work.');
+          
+          // Initialize with application default credentials (will fail in production)
+          this.app = admin.initializeApp({
             projectId: projectId,
-            clientEmail: clientEmail,
-            privateKey: privateKey.replace(/\\n/g, '\n'),
-          }),
-        });
+          });
+        } else {
+          // Initialize Firebase Admin with service account credentials
+          this.app = admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId: projectId,
+              clientEmail: clientEmail,
+              privateKey: privateKey.replace(/\\n/g, '\n'),
+            }),
+          });
+        }
       }
     }
   }
@@ -52,27 +64,6 @@ export class FirebaseAdminService {
    */
   async verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     try {
-      // In development without credentials, return mock data
-      if (!this.app.options.credential) {
-        console.warn('Firebase Admin SDK: Mock mode - returning test user data');
-        return {
-          uid: 'mock-user-' + Date.now(),
-          email: 'test@example.com',
-          email_verified: true,
-          name: 'Test User',
-          picture: null,
-          firebase: {
-            sign_in_provider: 'password',
-            identities: {},
-          },
-          iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + 3600,
-          aud: 'ziririt-dev',
-          iss: 'https://securetoken.google.com/ziririt-dev',
-          sub: 'mock-user-' + Date.now(),
-        } as any;
-      }
-      
       const decodedToken = await this.app.auth().verifyIdToken(idToken, checkRevoked);
       return decodedToken;
     } catch (error: any) {

@@ -21,8 +21,7 @@ import { EmailAuthService } from './auth/EmailAuthService';
 import { GoogleAuthService } from './auth/GoogleAuthService';
 import { TokenManager } from './auth/TokenManager';
 import { SecureStorage } from './storage/SecureStorage';
-import { getBackendConfig, getAppSettings, getOAuthConfig } from '../config/firebase.config';
-import { MockAuthService, MockUser } from './auth/MockAuthService';
+import { getBackendConfig, getOAuthConfig } from '../config/firebase.config';
 import * as Device from 'expo-device';
 
 
@@ -59,9 +58,9 @@ export class AuthService {
         return;
       }
 
-      // For development/testing, use mock if no OAuth config
-      if (__DEV__ && (!config.googleWebClientId || config.googleWebClientId === '')) {
-        console.log('Google Sign-In: Using mock mode in development');
+      // Skip if no OAuth config
+      if (!config.googleWebClientId || config.googleWebClientId === '') {
+        console.log('Google Sign-In: No web client ID configured');
         return;
       }
 
@@ -122,20 +121,9 @@ export class AuthService {
    * Sign in with email and password
    */
   async signInWithEmail(email: string, password: string): Promise<AuthResponse> {
-    // Use mock authentication if enabled
-    if (__DEV__ && getAppSettings().mockAuthEnabled) {
-      console.log('[MockAuth] Using mock authentication for email sign-in');
-      return this.signInWithMockEmail(email, password);
-    }
-
     try {
-      // Sign in with Firebase first
       const firebaseResult = await EmailAuthService.signIn(email, password);
-
-      // Exchange Firebase token for backend JWT
-      const response = await this.exchangeFirebaseToken(firebaseResult.idToken, AuthProvider.EMAIL);
-
-      return response;
+      return this.exchangeFirebaseToken(firebaseResult.idToken, AuthProvider.EMAIL);
     } catch (error: any) {
       console.error('Email sign-in error:', error);
       throw error;
@@ -146,12 +134,6 @@ export class AuthService {
    * Sign up with email and password
    */
   async signUpWithEmail(data: SignUpData): Promise<AuthResponse> {
-    // Use mock authentication if enabled
-    if (__DEV__ && getAppSettings().mockAuthEnabled) {
-      console.log('[MockAuth] Using mock authentication for sign-up');
-      return this.signUpWithMockEmail(data);
-    }
-
     try {
       // Sign up with Firebase
       const firebaseResult = await EmailAuthService.signUp(data);
@@ -178,12 +160,6 @@ export class AuthService {
    * Tries One-Tap Sign-In first on Android, then falls back to regular sign-in
    */
   async signInWithGoogle(useOneTap: boolean = true): Promise<AuthResponse> {
-    // Use mock authentication if enabled
-    if (__DEV__ && getAppSettings().mockAuthEnabled) {
-      console.log('[MockAuth] Using mock Google authentication');
-      return this.signInWithMockOAuth(AuthProvider.GOOGLE);
-    }
-
     try {
       const hasNativeModule = !!(NativeModules as any)?.RNGoogleSignin;
       if (!hasNativeModule) {
@@ -254,12 +230,6 @@ export class AuthService {
    * Sign in with Apple
    */
   async signInWithApple(): Promise<AuthResponse> {
-    // Use mock authentication if enabled
-    if (__DEV__ && getAppSettings().mockAuthEnabled) {
-      console.log('[MockAuth] Using mock Apple authentication');
-      return this.signInWithMockOAuth(AuthProvider.APPLE);
-    }
-
     try {
       // Check availability and sign in with Apple
       const isAvailable = await AppleAuthService.isAvailable();
@@ -295,12 +265,6 @@ export class AuthService {
       displayName?: string;
     },
   ): Promise<AuthResponse> {
-    // Mock the backend exchange in mock mode
-    if (__DEV__ && getAppSettings().mockAuthEnabled) {
-      console.log('[MockAuth] Simulating backend token exchange');
-      return this.mockExchangeToken(firebaseToken, provider, additionalData);
-    }
-
     try {
       // Call backend to verify and exchange Firebase token for JWT
       const response = await fetch(`${getBackendConfig().authServiceUrl}/api/auth/verify`, {
@@ -470,6 +434,31 @@ export class AuthService {
   }
 
   /**
+   * Get current access token
+   */
+  async getAccessToken(): Promise<string | null> {
+    try {
+      // Use TokenManager's getAccessToken which handles validation and refresh
+      const token = await this.tokenManager.getAccessToken();
+      
+      if (!token) {
+        // If no stored token, try to get from Firebase
+        const auth = getFirebaseAuth();
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const idToken = await currentUser.getIdToken();
+          return idToken;
+        }
+      }
+      
+      return token;
+    } catch (error) {
+      console.error('Error getting access token:', error);
+      return null;
+    }
+  }
+
+  /**
    * Set access token for API calls
    */
   setAccessToken(token: string): void {
@@ -539,85 +528,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with mock email
-   */
-  private async signInWithMockEmail(email: string, password: string): Promise<AuthResponse> {
-    const { user, tokens } = await MockAuthService.authenticateWithEmail(email, password);
-    return this.convertMockUserToAuthResponse(user, tokens);
-  }
-
-  /**
-   * Sign up with mock email
-   */
-  private async signUpWithMockEmail(data: SignUpData): Promise<AuthResponse> {
-    const { user, tokens } = await MockAuthService.createUser(data.email, data.displayName);
-    return this.convertMockUserToAuthResponse(user, tokens, true);
-  }
-
-  /**
-   * Sign in with mock OAuth
-   */
-  private async signInWithMockOAuth(provider: AuthProvider): Promise<AuthResponse> {
-    const { user, tokens } = await MockAuthService.authenticateWithOAuth(provider);
-    return this.convertMockUserToAuthResponse(user, tokens);
-  }
-
-  /**
-   * Mock exchange token with backend
-   */
-  private async mockExchangeToken(
-    firebaseToken: string,
-    provider: AuthProvider,
-    additionalData?: {
-      isNewUser?: boolean;
-      displayName?: string;
-    },
-  ): Promise<AuthResponse> {
-    // Simulate backend response
-    await MockAuthService.simulateAuth(null);
-    
-    // Get mock user based on token
-    const user = MockAuthService.getRandomUser();
-    const tokens = MockAuthService.generateMockToken(user.id, user.email);
-    
-    return this.convertMockUserToAuthResponse(user, tokens, additionalData?.isNewUser);
-  }
-
-  /**
-   * Convert mock user to auth response
-   */
-  private convertMockUserToAuthResponse(
-    mockUser: MockUser,
-    tokens: { token: string; refreshToken: string },
-    isNewUser: boolean = false,
-  ): AuthResponse {
-    // Store tokens in secure storage
-    SecureStorage.setAuthToken(tokens.token);
-    SecureStorage.setRefreshToken(tokens.refreshToken);
-    
-    return {
-      token: tokens.token,
-      refreshToken: tokens.refreshToken,
-      user: {
-        userId: mockUser.id,
-        email: mockUser.email,
-        displayName: mockUser.displayName,
-        photoURL: mockUser.photoURL,
-        isVerified: mockUser.isVerified,
-        provider: mockUser.provider,
-        firebaseUid: mockUser.id,
-      },
-      isNewUser,
-    };
-  }
-
-  /**
-   * Get list of available mock users
-   */
-  static getMockUsers(): MockUser[] {
-    return MockAuthService.TEST_USERS;
-  }
 
   /**
    * Clean up resources

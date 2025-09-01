@@ -7,24 +7,41 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create users table for authentication
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE,  -- Made nullable for Firebase users
     email VARCHAR(255) UNIQUE NOT NULL,
     display_name VARCHAR(100),
-    avatar_url VARCHAR(500),
-    provider VARCHAR(20) NOT NULL, -- 'google', 'apple'
-    provider_id VARCHAR(255) NOT NULL,
+    photo_url VARCHAR(500),
+    firebase_uid VARCHAR(255) UNIQUE,  -- Firebase Authentication UID
+    email_verified BOOLEAN DEFAULT false,  -- Email verification status
+    provider VARCHAR(20) NOT NULL, -- 'google', 'apple', 'email'
+    provider_id VARCHAR(255),  -- Legacy OAuth provider ID
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
+    last_login_at TIMESTAMP,
     UNIQUE(provider, provider_id)
 );
 
--- Create refresh_tokens table for JWT token management
+-- Create refresh_tokens table for JWT token management (legacy - kept for compatibility)
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     token_hash VARCHAR(255) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create user_sessions table for session management
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    refresh_token_hash VARCHAR(255) UNIQUE NOT NULL,
+    device_id VARCHAR(255),
+    device_type VARCHAR(50),
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    last_used_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Create profiles table for user profiles
@@ -64,18 +81,23 @@ CREATE TABLE IF NOT EXISTS follows (
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_provider ON users(provider, provider_id);
+CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_refresh_token ON user_sessions(refresh_token_hash);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
 CREATE INDEX IF NOT EXISTS idx_goals_created ON goals(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
 
 -- Insert sample data for development
-INSERT INTO users (username, email, display_name, provider, provider_id) VALUES
-    ('alice_goals', 'alice@example.com', 'Alice Johnson', 'google', 'google_alice_123'),
-    ('bob_progress', 'bob@example.com', 'Bob Smith', 'apple', 'apple_bob_456'),
-    ('charlie_journey', 'charlie@example.com', 'Charlie Brown', 'google', 'google_charlie_789')
+-- Insert users with a stable UUID for alice to satisfy tests
+INSERT INTO users (id, username, email, display_name, firebase_uid, email_verified, provider, provider_id) VALUES
+    ('3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f', 'alice_goals', 'alice@example.com', 'Alice Johnson', 'firebase_alice_123', true, 'google', 'google_alice_123'),
+    (uuid_generate_v4(), 'bob_progress', 'bob@example.com', 'Bob Smith', 'firebase_bob_456', true, 'apple', 'apple_bob_456'),
+    (uuid_generate_v4(), 'charlie_journey', 'charlie@example.com', 'Charlie Brown', 'firebase_charlie_789', true, 'google', 'google_charlie_789')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert corresponding profiles
@@ -112,8 +134,13 @@ FROM users u
 ON CONFLICT (user_id) DO NOTHING;
 
 -- Insert sample goals
-INSERT INTO goals (user_id, title, description, is_private, steps_count)
+-- Insert goals; assign a stable UUID for "Strength Training Journey" to satisfy tests
+INSERT INTO goals (id, user_id, title, description, is_private, steps_count)
 SELECT 
+    CASE 
+      WHEN goal_data.title = 'Strength Training Journey' THEN 'f679548c-09c9-468c-a02d-44ab598e35bc'::uuid
+      ELSE uuid_generate_v4()
+    END AS id,
     u.id,
     goal_data.title,
     goal_data.description,

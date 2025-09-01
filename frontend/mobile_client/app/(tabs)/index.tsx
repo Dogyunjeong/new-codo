@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
 import {
   View,
   Text,
@@ -15,93 +16,11 @@ import { TabBar } from '../../src/components/common/TabBar'
 import { PostCard, PostData } from '../../src/components/feed/PostCard'
 import { useAddStepModal } from '../../src/contexts/AddStepModalContext'
 import { theme } from '../../src/constants/theme'
+import { PostService } from '../../src/services/PostService'
+import { FeedService } from '../../src/services/FeedService'
+import { Post } from '../../src/services/post/types'
+import { useAuth } from '../../src/contexts/AuthContext'
 
-// Mock data matching the design exactly
-const mockPosts: PostData[] = [
-  {
-    id: '1',
-    user: {
-      name: 'Emma Chen',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      meta: 'Career • 2h ago',
-    },
-    categories: [
-      { label: 'Call to Adventure', color: '#E5F4FF' },
-      { label: 'Threshold', color: '#FFE5F0' },
-      { label: 'Breakthrough', color: '#F0FFE5' },
-    ],
-    title: 'From Corporate to Creative: My Year of Change',
-    content: '24 steps',
-    engagement: {
-      likes: 243,
-      comments: 42,
-      relates: 0,
-      isLiked: false,
-    },
-    inspiredBy: {
-      user: 'career_coach_mike',
-      avatar: 'https://i.pravatar.cc/150?img=8',
-    },
-  },
-  {
-    id: '2',
-    user: {
-      name: 'Alex Chen',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      meta: 'Healing • 4h ago',
-    },
-    title: 'Finding Strength in Vulnerability Journey',
-    content: 'Today I finally opened up to my support group about my struggles. The weight that lifted from my shoulders was incredible.',
-    steps: '8 steps',
-    media: {
-      image: 'https://picsum.photos/400/300?random=1',
-      caption: 'Photo from support group meeting',
-    },
-    tags: [
-      { label: 'Mental Health', type: 'category' },
-      { label: 'Community', type: 'category' },
-    ],
-    engagement: {
-      likes: 128,
-      comments: 36,
-      relates: 0,
-      isLiked: true,
-    },
-    inspiredBy: {
-      user: 'mental_health_warrior',
-      avatar: 'https://i.pravatar.cc/150?img=9',
-    },
-  },
-  {
-    id: '3',
-    user: {
-      name: 'Taylor Morgan',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      meta: 'Parenting • 1d ago',
-    },
-    title: 'Navigating Special Needs Education Journey',
-    content: 'After months of anxiety, my son with autism had a smooth first day at his new school. The preparation and advocacy paid off!',
-    steps: '15 steps',
-    media: {
-      image: 'https://picsum.photos/400/300?random=2',
-      caption: 'Video of backpack preparation',
-    },
-    tags: [
-      { label: 'Special Needs', type: 'category' },
-      { label: 'Milestone', type: 'category' },
-    ],
-    engagement: {
-      likes: 89,
-      comments: 24,
-      relates: 0,
-      isLiked: false,
-    },
-    inspiredBy: {
-      user: 'autism_parent_support',
-      avatar: 'https://i.pravatar.cc/150?img=10',
-    },
-  },
-]
 
 const tabs = [
   { id: 'for-you', label: 'For You' },
@@ -113,14 +32,80 @@ const tabs = [
 export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState('for-you')
   const [refreshing, setRefreshing] = useState(false)
-  const [posts, setPosts] = useState(mockPosts)
+  const [posts, setPosts] = useState<PostData[]>([])
   const { showModal } = useAddStepModal()
+  const { user, isAuthenticated } = useAuth()
+  const postService = PostService.getInstance()
+  const feedService = FeedService.getInstance()
 
-  const handleRefresh = () => {
+  useEffect(() => {
+    // Only load posts if user is authenticated
+    if (isAuthenticated) {
+      loadPosts()
+    }
+  }, [isAuthenticated])
+
+  // Reload posts when screen comes into focus (e.g., after creating a post)
+  useFocusEffect(
+    useCallback(() => {
+      // Only load posts if user is authenticated
+      if (isAuthenticated) {
+        loadPosts()
+      }
+    }, [isAuthenticated])
+  )
+
+  const loadPosts = async () => {
+    try {
+      // Try to fetch from feed service first, fallback to post service if needed
+      let fetchedPosts: any[] = [];
+      
+      try {
+        // Attempt to get feed from backend feed service
+        fetchedPosts = await feedService.getHomeFeed();
+      } catch (feedError) {
+        console.log('Feed service not available, falling back to post service');
+        // Fallback to post service if feed service fails
+        fetchedPosts = await postService.getPosts();
+      }
+      
+      const mappedPosts: PostData[] = fetchedPosts.map((post: any) => ({
+        id: post.id || post._id,
+        user: {
+          // Handle both structures: post.user object or just post.userId
+          name: post.user?.name || post.userName || 'Unknown User',
+          avatar: post.user?.avatar || post.userAvatar || 'https://i.pravatar.cc/150',
+          meta: post.user?.meta || post.userMeta || '',
+        },
+        categories: post.categories || [],
+        title: post.title || '',
+        content: post.content || '',
+        steps: post.steps,
+        media: post.media || post.mediaFiles?.[0],
+        tags: post.tags || post.hashtags?.map((tag: string) => ({
+          label: tag,
+          type: 'hashtag' as const
+        })),
+        engagement: post.engagement || {
+          likes: post.likesCount || 0,
+          comments: post.commentsCount || 0,
+          relates: 0,
+          isLiked: false,
+        },
+        inspiredBy: post.inspiredBy,
+      }))
+      setPosts(mappedPosts)
+    } catch (error) {
+      console.error('Failed to load posts:', error)
+      // Set empty posts array on error
+      setPosts([])
+    }
+  }
+
+  const handleRefresh = async () => {
     setRefreshing(true)
-    setTimeout(() => {
-      setRefreshing(false)
-    }, 1500)
+    await loadPosts()
+    setRefreshing(false)
   }
 
   const renderHeader = () => (
@@ -138,7 +123,8 @@ export default function HomeScreen() {
       </View>
       
       <StoryBar
-        userAvatar="https://i.pravatar.cc/150?img=5"
+        userAvatar={user?.photoURL || undefined}
+        userName={user?.displayName || user?.email?.split('@')[0]}
         onAddStep={showModal}
       />
       

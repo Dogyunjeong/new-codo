@@ -15,7 +15,17 @@ const server = Fastify({
 
 // Register CORS
 await server.register(cors, {
-  origin: true,
+  origin: [
+    'http://localhost:8081',     // Expo web
+    'http://localhost:19000',    // Expo classic
+    'http://localhost:19006',    // Expo web classic
+    'http://10.0.2.2:8081',     // Android emulator
+    'http://192.168.*.*:*',     // Local network
+    'exp://*',                   // Expo client
+    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Local network IPs
+    /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/, // Private network IPs
+    true                         // Allow all origins in development
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 });

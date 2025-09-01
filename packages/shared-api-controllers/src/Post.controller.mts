@@ -31,8 +31,15 @@ class PostController {
 
   // Post Domain
   public getRecentPosts = async (): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>('/api/posts/recent');
-    return response.data;
+    try {
+      // v0.1 preferred route
+      const response = await this._httpRequest.get<unknown>('/api/posts');
+      return response.data;
+    } catch (e) {
+      // Legacy fallback
+      const response = await this._httpRequest.get<unknown>('/api/posts/recent');
+      return response.data;
+    }
   };
 
   public getUserPosts = async (userId: string): Promise<unknown> => {
@@ -88,13 +95,31 @@ class PostController {
 
   // Interaction Domain
   public getPostComments = async (postId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/api/interactions/posts/${postId}/comments`);
-    return response.data;
+    try {
+      const response = await this._httpRequest.get<any>(`/api/posts/${postId}/comments`);
+      const data = response.data as any;
+      const items = (data && (data.items || data.comments)) || [];
+      return { items, comments: items, pagination: data?.pagination };
+    } catch (e) {
+      const response = await this._httpRequest.get<any>(`/api/interactions/posts/${postId}/comments`);
+      const data = response.data as any;
+      const items = (data && (data.items || data.comments)) || [];
+      return { items, comments: items, pagination: data?.pagination };
+    }
   };
 
   public getPostLikes = async (postId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/api/interactions/posts/${postId}/likes`);
-    return response.data;
+    try {
+      const response = await this._httpRequest.get<any>(`/api/posts/${postId}/likes`);
+      const data = response.data as any;
+      const items = (data && (Array.isArray(data) ? data : data.items)) || [];
+      return { items, likes: items, pagination: data?.pagination };
+    } catch (e) {
+      const response = await this._httpRequest.get<any>(`/api/interactions/posts/${postId}/likes`);
+      const data = response.data as any;
+      const items = (data && (Array.isArray(data) ? data : data.items)) || [];
+      return { items, likes: items, pagination: data?.pagination };
+    }
   };
 
   public getUserLikes = async (userId: string): Promise<unknown> => {
@@ -103,25 +128,47 @@ class PostController {
   };
 
   public addComment = async (postId: string, commentData: any): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>(
-      `/api/interactions/posts/${postId}/comments`,
-      commentData,
-    );
-    return response.data;
+    try {
+      const response = await this._httpRequest.post<unknown>(
+        `/api/posts/${postId}/comments`,
+        commentData,
+      );
+      return response.data;
+    } catch (e) {
+      const response = await this._httpRequest.post<unknown>(
+        `/api/interactions/posts/${postId}/comments`,
+        commentData,
+      );
+      return response.data;
+    }
   };
 
   public likePost = async (postId: string, userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>(`/api/interactions/posts/${postId}/like`, {
-      userId,
-    });
-    return response.data;
+    try {
+      const response = await this._httpRequest.post<unknown>(`/api/posts/${postId}/like`, {
+        userId,
+      });
+      return response.data;
+    } catch (e) {
+      const response = await this._httpRequest.post<unknown>(`/api/interactions/posts/${postId}/like`, {
+        userId,
+      });
+      return response.data;
+    }
   };
 
   public unlikePost = async (postId: string, userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/api/interactions/posts/${postId}/like`, {
-      userId,
-    });
-    return response.data;
+    try {
+      const response = await this._httpRequest.delete<unknown>(`/api/posts/${postId}/like`, {
+        userId,
+      });
+      return response.data;
+    } catch (e) {
+      const response = await this._httpRequest.delete<unknown>(`/api/interactions/posts/${postId}/like`, {
+        userId,
+      });
+      return response.data;
+    }
   };
 }
 

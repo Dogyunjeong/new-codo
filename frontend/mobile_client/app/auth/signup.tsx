@@ -5,10 +5,10 @@ import { useAuth } from '../../src/contexts/AuthContext'
 
 export default function SignupPage() {
   const router = useRouter()
-  const { signup } = useAuth()
+  const { signUpWithEmail } = useAuth()
 
   const handleSignup = async (email: string, password: string, name: string) => {
-    await signup(email, password, name)
+    await signUpWithEmail(email, password, name)
     // Navigation is handled by the auth context
   }
 

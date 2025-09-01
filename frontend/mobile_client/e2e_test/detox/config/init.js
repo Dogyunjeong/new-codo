@@ -5,13 +5,12 @@ const config = require('../../../.detoxrc.js');
 beforeAll(async () => {
   await detox.init(config, { initGlobals: false });
   
-  // Set mock auth environment
+  // Launch app
   if (device.getPlatform() === 'ios') {
     await device.launchApp({
       newInstance: true,
       launchArgs: {
         detoxPrintBusyIdleResources: 'YES',
-        mockAuthEnabled: 'true',
       },
       permissions: {
         notifications: 'YES',
@@ -24,7 +23,6 @@ beforeAll(async () => {
       newInstance: true,
       launchArgs: {
         detoxPrintBusyIdleResources: 'YES',
-        mockAuthEnabled: 'true',
       },
       permissions: {
         notifications: 'YES',

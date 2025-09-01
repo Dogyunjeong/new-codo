@@ -1,13 +1,29 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, TouchableOpacity, StyleSheet } from 'react-native';
+import { Platform, TouchableOpacity, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../src/constants/theme';
 import { AddStepModalProvider, useAddStepModal } from '../../src/contexts/AddStepModalContext';
 import { AddNewStepModal } from '../../src/screens/AddNewStepModal';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 function TabLayoutContent() {
   const { showModal, hideModal, isModalVisible } = useAddStepModal();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  // Only render tabs if authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <>

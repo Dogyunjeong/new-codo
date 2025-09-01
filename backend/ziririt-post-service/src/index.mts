@@ -5,6 +5,7 @@ import { getAppConfig } from './configs/app.config.mts';
 import { postRoutes } from './api/post/post.routes.mts';
 import { mediaRoutes } from './api/media/media.routes.mts';
 import { interactionRoutes } from './api/interaction/interaction.routes.mts';
+import { interactionV01Routes } from './api/interaction/interaction.v01.routes.mts';
 import { MongoConnectionService } from '@base/server-services';
 import { MonitoringMiddleware } from '@base/server-base';
 import fs from 'fs/promises';
@@ -17,7 +18,17 @@ const server = Fastify({
 
 // Register CORS
 await server.register(cors, {
-  origin: true,
+  origin: [
+    'http://localhost:8081',     // Expo web
+    'http://localhost:19000',    // Expo classic
+    'http://localhost:19006',    // Expo web classic
+    'http://10.0.2.2:8081',     // Android emulator
+    'http://192.168.*.*:*',     // Local network
+    'exp://*',                   // Expo client
+    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/, // Local network IPs
+    /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/, // Private network IPs
+    true                         // Allow all origins in development
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 });
@@ -76,7 +87,10 @@ server.get('/health', async (request, reply) => {
 // Register routes with /api prefix
 server.register(postRoutes, { prefix: '/api/posts' });
 server.register(mediaRoutes, { prefix: '/api/media' });
+// Legacy interactions routes under /api/interactions
 server.register(interactionRoutes, { prefix: '/api/interactions' });
+// v0.1 interactions aliases under /api/posts/:postId/*
+server.register(interactionV01Routes, { prefix: '/api/posts' });
 
 // Start server
 const start = async (): Promise<void> => {

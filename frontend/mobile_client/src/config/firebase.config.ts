@@ -39,7 +39,6 @@ export interface AppSettings {
   maxRetryAttempts: number;
   debugMode: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
-  mockAuthEnabled: boolean;
 }
 
 export interface AppConfig {
@@ -123,7 +122,6 @@ export const getAppSettings = (): AppSettings => {
     maxRetryAttempts: parseInt(process.env.EXPO_PUBLIC_MAX_RETRY_ATTEMPTS || config.maxRetryAttempts || '3', 10),
     debugMode: process.env.EXPO_PUBLIC_DEBUG_MODE === 'true' || config.debugMode || __DEV__,
     logLevel: (process.env.EXPO_PUBLIC_LOG_LEVEL || config.logLevel || 'info') as AppSettings['logLevel'],
-    mockAuthEnabled: process.env.EXPO_PUBLIC_MOCK_AUTH_ENABLED === 'true' || config.mockAuthEnabled || false,
   };
 };
 

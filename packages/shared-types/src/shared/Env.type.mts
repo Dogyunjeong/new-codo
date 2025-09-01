@@ -90,7 +90,6 @@ export interface AuthServiceEnv extends BaseEnv {
   PASSWORD_SALT_ROUNDS?: number;
   EMAIL_VERIFICATION_ENABLED?: boolean;
   TWO_FACTOR_AUTH_ENABLED?: boolean;
-  MOCK_AUTH_ENABLED?: boolean;
 }
 
 /**
