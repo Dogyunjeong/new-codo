@@ -6,9 +6,9 @@ import { getAppConfig } from '../../configs/app.config.mts';
 
 const createPostSchema = {
   type: 'object',
-  required: ['goalId', 'content'],
+  required: ['journeyId', 'content'],
   properties: {
-    goalId: { type: 'string' },
+    journeyId: { type: 'string' },
     content: { type: 'string', minLength: 1, maxLength: 2000 },
     mediaFiles: {
       type: 'array',
@@ -54,28 +54,13 @@ export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
     schema: { body: createPostSchema },
     handler: postHandler.createPost.bind(postHandler),
   });
-
-  fastify.get('/:postId', {
-    handler: postHandler.getPost.bind(postHandler),
-  });
-
-  fastify.put('/:postId', {
-    preHandler: authenticateUser,
-    schema: { body: updatePostSchema },
-    handler: postHandler.updatePost.bind(postHandler),
-  });
-
-  fastify.delete('/:postId', {
-    preHandler: authenticateUser,
-    handler: postHandler.deletePost.bind(postHandler),
-  });
-
+  // Static and prefixed routes before dynamic :postId
   fastify.get('/user/:userId', {
     handler: postHandler.getUserPosts.bind(postHandler),
   });
 
-  fastify.get('/goal/:goalId', {
-    handler: postHandler.getGoalPosts.bind(postHandler),
+  fastify.get('/journey/:journeyId', {
+    handler: postHandler.getJourneyPosts.bind(postHandler),
   });
 
   fastify.get('/recent', {
@@ -89,6 +74,22 @@ export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
 
   fastify.get('/hashtag/:hashtag', {
     handler: postHandler.searchByHashtag.bind(postHandler),
+  });
+
+  // Dynamic postId routes after statics
+  fastify.get('/:postId', {
+    handler: postHandler.getPost.bind(postHandler),
+  });
+
+  fastify.put('/:postId', {
+    preHandler: authenticateUser,
+    schema: { body: updatePostSchema },
+    handler: postHandler.updatePost.bind(postHandler),
+  });
+
+  fastify.delete('/:postId', {
+    preHandler: authenticateUser,
+    handler: postHandler.deletePost.bind(postHandler),
   });
 
   done();

@@ -243,8 +243,8 @@ export class ProfileServiceClient extends ServiceClientService {
     return response.data;
   }
 
-  async getUserGoals(userId: string, page: number = 1, limit: number = 20): Promise<any> {
-    const response = await this.get(`/goals/user/${userId}`, {
+  async getUserJourneys(userId: string, page: number = 1, limit: number = 20): Promise<any> {
+    const response = await this.get(`/journeys/user/${userId}`, {
       headers: {
         'X-Page': page.toString(),
         'X-Limit': limit.toString()

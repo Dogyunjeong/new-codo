@@ -11,7 +11,7 @@ export interface MediaFile {
 export interface Post {
   id: string;
   userId: string;
-  goalId: string;
+  journeyId: string;
   content: string;
   mediaFiles?: MediaFile[];
   hashtags?: string[];
@@ -46,7 +46,7 @@ export interface Comment {
 
 // Request/Response types
 export interface CreatePostRequest {
-  goalId: string;
+  journeyId: string;
   content: string;
   mediaFiles?: string[]; // Array of media file IDs
   hashtags?: string[];

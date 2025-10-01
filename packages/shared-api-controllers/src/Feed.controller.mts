@@ -35,8 +35,8 @@ class FeedController {
     return response.data;
   };
 
-  public getGoalTimeline = async (goalId: string, page: number = 1, limit: number = 20): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/api/feed/goal/${goalId}?page=${page}&limit=${limit}`);
+  public getJourneyTimeline = async (journeyId: string, page: number = 1, limit: number = 20): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/api/feed/journey/${journeyId}?page=${page}&limit=${limit}`);
     return response.data;
   };
 

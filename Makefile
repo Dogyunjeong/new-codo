@@ -1,10 +1,10 @@
-# Ziririt Goal Sharing App - Development Makefile
+# Ziririt Journey Sharing App - Development Makefile
 
 .PHONY: help install dev up down logs clean test build
 
 # Default target
 help:
-	@echo "Ziririt Goal Sharing App - Available Commands:"
+	@echo "Ziririt Journey Sharing App - Available Commands:"
 	@echo ""
 	@echo "  make install     - Install all dependencies"
 	@echo "  make dev         - Start all services in development mode"

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
-import { GoalHandler } from './goal.handler.mts';
-import { GoalManagementService } from './GoalManagement.service.mts';
+import { JourneyHandler } from './journey.handler.mts';
+import { JourneyManagementService } from './JourneyManagement.service.mts';
 import { PostgresConnectionService, createFirebaseAuthMiddleware, AuthenticatedRequest } from '@base/server-services';
 import { getAppConfig } from '../../configs/app.config.mts';
 
@@ -29,40 +29,40 @@ const config = getAppConfig();
 const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
 const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
 
-export const goalRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
+export const journeyRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   // Initialize services
   const dbConnection = PostgresConnectionService.getInstance({ connectionString: config.databaseUrl });
-  const goalService = new GoalManagementService(dbConnection.getPool());
-  const goalHandler = new GoalHandler(goalService);
+  const journeyService = new JourneyManagementService(dbConnection.getPool());
+  const journeyHandler = new JourneyHandler(journeyService);
 
-  // Create a new goal
+  // Create a new journey
   fastify.post('/', {
     preHandler: authenticateUser,
     schema: { body: createGoalSchema },
-    handler: goalHandler.createGoal.bind(goalHandler),
+    handler: journeyHandler.createJourney.bind(journeyHandler),
   });
 
-  // Get a specific goal
-  fastify.get('/:goalId', {
-    handler: goalHandler.getGoal.bind(goalHandler),
+  // Get user's journeys (define before dynamic :journeyId to avoid route conflicts)
+  fastify.get('/user/:userId', {
+    handler: journeyHandler.getUserJourneys.bind(journeyHandler),
   });
 
-  // Update a goal
-  fastify.put('/:goalId', {
+  // Get a specific journey
+  fastify.get('/:journeyId', {
+    handler: journeyHandler.getJourney.bind(journeyHandler),
+  });
+
+  // Update a journey
+  fastify.put('/:journeyId', {
     preHandler: authenticateUser,
     schema: { body: updateGoalSchema },
-    handler: goalHandler.updateGoal.bind(goalHandler),
+    handler: journeyHandler.updateJourney.bind(journeyHandler),
   });
 
-  // Delete a goal
-  fastify.delete('/:goalId', {
+  // Delete a journey
+  fastify.delete('/:journeyId', {
     preHandler: authenticateUser,
-    handler: goalHandler.deleteGoal.bind(goalHandler),
-  });
-
-  // Get user's goals
-  fastify.get('/user/:userId', {
-    handler: goalHandler.getUserGoals.bind(goalHandler),
+    handler: journeyHandler.deleteJourney.bind(journeyHandler),
   });
 
   done();

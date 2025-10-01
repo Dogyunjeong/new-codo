@@ -91,14 +91,14 @@ describe('Shared Controllers Integration', () => {
       expect(response).toBeDefined();
     });
 
-    it('should attempt to get user goals', async () => {
+    it('should attempt to get user journeys', async () => {
       const response = await profileController.getUserGoals(testUserId);
       expect(response).toBeDefined();
-      expect(response.goals).toBeDefined();
-      expect(Array.isArray(response.goals)).toBe(true);
+      expect(response.goals || response.journeys).toBeDefined();
+      expect(Array.isArray(response.goals || response.journeys)).toBe(true);
     });
 
-    it('should attempt to get specific goal', async () => {
+    it('should attempt to get specific journey', async () => {
       const response = await profileController.getGoal(testGoalId);
       expect(response).toBeDefined();
       expect(response.goal).toBeDefined();
@@ -191,14 +191,14 @@ describe('Shared Controllers Integration', () => {
       const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Strength Training Journey (public)
 
       // Step 1: Get goal information
-      const goal = await profileController.getGoal(testGoalId);
+      const goal = await (profileController.getJourney ? profileController.getJourney(testGoalId) : profileController.getGoal(testGoalId));
       expect(goal).toBeDefined();
       expect(goal.goal).toBeDefined();
       expect(goal.goal.id).toBe(testGoalId);
 
       // Step 2: Get posts for a MongoDB test goal (different ID system)
       const mongoGoalId = 'goal_meditation_id';
-      const goalPosts = await postController.getGoalPosts(mongoGoalId);
+      const goalPosts = await (postController.getJourneyPosts ? postController.getJourneyPosts(mongoGoalId) : postController.getGoalPosts(mongoGoalId));
       expect(goalPosts).toBeDefined();
       expect(goalPosts.items).toBeDefined();
       expect(Array.isArray(goalPosts.items)).toBe(true);
@@ -274,7 +274,7 @@ describe('Shared Controllers Integration', () => {
     it('should get goal timeline successfully', async () => {
       // Use MongoDB goal ID since feed service reads from MongoDB
       const mongoGoalId = 'goal_meditation_id';
-      const response = await feedController.getGoalTimeline(mongoGoalId, 1, 10);
+      const response = await (feedController.getJourneyTimeline ? feedController.getJourneyTimeline(mongoGoalId, 1, 10) : (feedController as any).getGoalTimeline(mongoGoalId, 1, 10));
       expect(response).toBeDefined();
       expect((response as any).items).toBeDefined();
       expect(Array.isArray((response as any).items)).toBe(true);
@@ -325,10 +325,10 @@ describe('Shared Controllers Integration', () => {
       const mongoGoalId = 'goal_meditation_id';
       
       // Get posts for a goal from post service
-      const goalPosts = await postController.getGoalPosts(mongoGoalId);
+      const goalPosts = await (postController.getJourneyPosts ? postController.getJourneyPosts(mongoGoalId) : postController.getGoalPosts(mongoGoalId));
       
       // Get timeline for same goal from feed service
-      const goalTimeline = await feedController.getGoalTimeline(mongoGoalId);
+      const goalTimeline = await (feedController.getJourneyTimeline ? feedController.getJourneyTimeline(mongoGoalId) : (feedController as any).getGoalTimeline(mongoGoalId));
       
       expect(goalPosts).toBeDefined();
       expect(goalTimeline).toBeDefined();

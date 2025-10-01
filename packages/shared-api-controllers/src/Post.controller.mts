@@ -47,8 +47,8 @@ class PostController {
     return response.data;
   };
 
-  public getGoalPosts = async (goalId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/api/posts/goal/${goalId}`);
+  public getJourneyPosts = async (journeyId: string): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/api/posts/journey/${journeyId}`);
     return response.data;
   };
 

@@ -1,7 +1,7 @@
-# Phase 1.1 — Goal, Post, Feed API Audit & Fix Plan
+# Phase 1.1 — Journey, Post, Feed API Audit & Fix Plan
 
 ## Scope & Objectives
-- Audit and fix Goal (profile svc), Post (post svc), and Feed (feed svc) APIs.
+- Audit and fix Journey (profile svc), Post (post svc), and Feed (feed svc) APIs.
 - Ensure REST correctness, auth, validation, error consistency, and data integrity.
 - Align routes with `/api/*` convention and gateway expectations.
 
@@ -12,29 +12,29 @@
 
 ## Work Plan (Smallest Chunks)
 
-### A. Goals — Backend (profile svc) + Frontend
+### A. Journeys — Backend (profile svc) + Frontend
 - Backend (backend/ziririt-profile-service)
-  - [ ] Routes: `src/api/goal/goal.routes.mts` — paths/prefix, params, schemas, pagination.
-  - [ ] Handler: `src/api/goal/goal.handler.mts` — ownership checks, 400/403/404 usage, validation.
-  - [ ] Service: `src/api/goal/GoalManagement.service.mts` — DB queries, transactions, race conditions, return types.
-  - [ ] Types: `src/types/profile.types.mts` — `CreateGoalRequest`, `UpdateGoalRequest` requirements match handler logic.
-  - [ ] Index: `src/index.mts` — register `server.register(goalRoutes, { prefix: '/api/goals' })`; CORS/auth order.
-  - [ ] Tests: Add/adjust API tests under `test/api-tests` for goal create/read/update/delete.
+  - [x] Routes: `src/api/journey/journey.routes.mts` — paths/prefix, params, schemas, pagination.
+  - [x] Handler: `src/api/journey/journey.handler.mts` — ownership checks, 400/403/404 usage, validation.
+  - [x] Service: `src/api/journey/JourneyManagement.service.mts` — DB queries, transactions, race conditions, return types.
+  - [x] Types: `src/types/profile.types.mts` — `CreateJourneyRequest`, `UpdateJourneyRequest` requirements match handler logic.
+  - [x] Index: `src/index.mts` — register `server.register(journeyRoutes, { prefix: '/api/journeys' })`; CORS/auth order.
+  - [ ] Tests: Add/adjust API tests under `test/api-tests` for journey create/read/update/delete.
 - Frontend (frontend/mobile_client)
-  - [ ] Service: `src/services/ProfileService.ts` — goal CRUD via `@base/shared-api-controllers`, auth token injection, error handling.
-  - [ ] Screens/Flows: `app/create-journey.tsx`, `app/goal-detail.tsx`, `app/(tabs)/profile.tsx` — wire up goal list/detail/create/update/delete with loading/error states.
+  - [x] Service: `src/services/ProfileService.ts` — journey CRUD via `@base/shared-api-controllers`, auth token injection, error handling.
+  - [ ] Screens/Flows: `app/create-journey.tsx`, `app/journey.tsx`, `app/(tabs)/profile.tsx` — wire up journey list/detail/create/update/delete with loading/error states.
   - [ ] Config: `src/config/firebase.config.ts` — profile service/gateway URLs from `BASE_ENV_JSON`.
   - [ ] E2E: Add Detox for goal CRUD in `e2e_test/detox`.
 
 ### B. Posts — Backend (post svc) + Frontend
 - Backend (backend/ziririt-post-service)
-  - [ ] Routes: `src/routes/post.routes.mts` — CRUD endpoints, validation, `/api/posts` prefix.
-  - [ ] Service: `src/services/post.service.mts` — Mongo queries, indexing, soft-delete vs hard-delete, social stats updates.
+  - [x] Routes: `src/api/post/post.routes.mts` — CRUD endpoints, validation, `/api/posts` prefix (order static before `:postId`).
+  - [x] Service: `src/api/post/PostManagement.service.mts` — enforce goal privacy via profile svc; filter results.
   - [ ] Types: `src/types/post.types.mts` — request/response shapes align with routes.
-  - [ ] Media: `src/routes/media.routes.mts`, `src/services/media.service.mts` — file type limits, cleanup on delete.
-  - [ ] Interaction: `src/routes/interaction.routes.mts`, `src/services/interaction.service.mts` — idempotent like/unlike, comment trees.
-  - [ ] Cross-service: `src/services/profile.controller.mts`, `src/services/goal.service.mts` — base URLs, timeouts, error mapping; enforce goal privacy on post visibility.
-  - [ ] De-dup goals: `src/routes/goal.routes.mts` — if profile svc owns goals, deprecate/proxy with clear contract.
+  - [x] Media: `src/api/media/media.routes.mts`, `src/api/media/MediaManagement.service.mts` — auth middleware; file type limits, cleanup on delete.
+  - [ ] Interaction: `src/api/interaction/interaction.v01.routes.mts` — idempotent like/unlike, comment trees.
+  - [x] Cross-service: `src/services/profile.controller.mts` — use ProfileController.getJourney to enforce journey privacy.
+  - [x] Remove legacy goal routes: deleted `src/routes/goal.routes.mts` in post service.
   - [ ] Tests: Expand API tests for post CRUD, likes, comments.
 - Frontend (frontend/mobile_client)
   - [ ] Service: `src/services/PostService.ts` — create/read/update/delete posts; like/comment ops; ensure auth and consistent types.
@@ -44,15 +44,14 @@
 
 ### C. Feed — Backend (feed svc) + Frontend
 - Backend (backend/ziririt-feed-service)
-  - [ ] Routes: `src/api/feed/feed.routes.mts` — ensure correct handler import (fix `.mjs` if needed), `/api/feed/*` paths; align with v0.1 route shape (path vs auth-derived user).
-  - [ ] Handler: `src/api/feed/feed.handler.mts` — auth usage, pagination defaults/limits, error handling.
+  - [x] Routes: `src/api/feed/feed.routes.mts` — ensure correct handler import (fix `.mjs` if needed), `/api/feed/*` paths; align with v0.1 route shape (path vs auth-derived user).
+  - [x] Handler: `src/api/feed/feed.handler.mts` — fix imports; preserve pagination.
   - [ ] Service: `src/api/feed/Feed.service.mts` — composition from post/profile, sorting/filtering, avoid N+1.
   - [ ] Cache: `src/api/feed/feedCache.service.mts`, `src/services/FeedCache.service.mts` — key patterns, TTL, invalidation.
-  - [ ] Builder: `src/services/FeedBuilder.service.mts` — transform correctness, user enrichment, type safety.
-  - [ ] Index: `src/index.mts` — `/api` prefix registration, middleware order.
+  - [x] Index: `src/index.mts` — `/api` prefix registration, add auth preHandler for home/refresh.
   - [ ] Tests: Add feed endpoint tests; verify cache hit/miss paths.
 - Frontend (frontend/mobile_client)
-  - [ ] Service: `src/services/FeedService.ts` — normalize responses (array vs `{posts}`), set token before calls.
+  - [x] Service: `src/services/FeedService.ts` — normalize responses (array vs `{posts}` vs `{items}`), set token before calls.
   - [ ] Screens/Flows: `app/(tabs)/index.tsx`, `app/(tabs)/discover.tsx`, `src/screens/ProfileFeedScreen.tsx` — home, explore, user feeds; refresh behavior.
   - [ ] E2E: Add Detox for feed loading and refresh flows.
 

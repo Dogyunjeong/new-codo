@@ -14,8 +14,8 @@ export interface FeedItem {
     sharesCount?: number;
   };
   metadata?: {
-    goalId?: string;
-    goalTitle?: string;
+    journeyId?: string;
+    journeyTitle?: string;
     progressPercentage?: number;
     milestone?: {
       title: string;
@@ -32,7 +32,7 @@ export class FeedBuilder {
       content: {
         id: post.id || post._id?.toString(),
         userId: post.userId,
-        goalId: post.goalId,
+        journeyId: post.journeyId,
         content: post.content,
         mediaFiles: post.mediaFiles || [],
         hashtags: post.hashtags || [],
@@ -52,9 +52,9 @@ export class FeedBuilder {
         commentsCount: post.commentsCount || 0,
         sharesCount: post.sharesCount || 0,
       },
-      metadata: post.goalId ? {
-        goalId: post.goalId,
-        goalTitle: post.goalTitle,
+      metadata: post.journeyId ? {
+        journeyId: post.journeyId,
+        journeyTitle: (post as any).journeyTitle || (post as any).goalTitle,
         progressPercentage: post.progressPercentage,
         milestone: post.isMilestone ? {
           title: post.milestoneTitle,

@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Post, CreatePostRequest, UpdatePostRequest, PaginatedResponse } from '../../types/post.types.mts';
 import { MongoConnectionService, PerformanceMonitorService, LoggerService } from '@base/server-services';
+import { getJourney as fetchJourney } from '../../services/profile.controller.mts';
 
 export class PostManagementService {
   private mongoConnection: MongoConnectionService;
@@ -18,11 +19,11 @@ export class PostManagementService {
       'create_post',
       'post',
       async () => {
-        const { goalId, content, mediaFiles, hashtags, isMilestone = false, progressDate } = postData;
+        const { journeyId, content, mediaFiles, hashtags, isMilestone = false, progressDate } = postData;
         
         this.logger.info('Creating new post', { 
           userId, 
-          goalId, 
+          journeyId, 
           isMilestone,
           hashtagCount: hashtags?.length || 0
         });
@@ -30,7 +31,7 @@ export class PostManagementService {
         const post: Post = {
           id: uuidv4(),
           userId,
-          goalId,
+          journeyId,
           content,
           mediaFiles: mediaFiles ? [] : undefined,
           hashtags: hashtags?.map(tag => tag.startsWith('#') ? tag : `#${tag}`),
@@ -78,8 +79,14 @@ export class PostManagementService {
           return null;
         }
 
-        this.logger.debug('Post retrieved successfully', { postId, userId: post.userId });
-        return post;
+        // Enforce journey privacy
+        if (await this.isPostVisibleToViewer(post, viewerId)) {
+          this.logger.debug('Post retrieved successfully', { postId, userId: post.userId });
+          return post;
+        }
+
+        this.logger.debug('Post not visible to viewer due to privacy', { postId, viewerId });
+        return null;
       }
     );
   }
@@ -94,11 +101,12 @@ export class PostManagementService {
       .skip(skip)
       .limit(limit)
       .toArray();
-
-    const hasMore = posts.length === limit;
+    
+    const filtered = await this.filterVisiblePosts(posts, viewerId);
+    const hasMore = filtered.length === limit; // approximate without total count
 
     return {
-      items: posts,
+      items: filtered,
       pagination: {
         page,
         limit,
@@ -107,21 +115,22 @@ export class PostManagementService {
     };
   }
 
-  async getPostsByGoal(goalId: string, page: number = 1, limit: number = 20, viewerId?: string): Promise<PaginatedResponse<Post>> {
+  async getPostsByJourney(journeyId: string, page: number = 1, limit: number = 20, viewerId?: string): Promise<PaginatedResponse<Post>> {
     const collection = this.mongoConnection.getCollection<Post>('posts');
     const skip = (page - 1) * limit;
 
     const posts = await collection
-      .find({ goalId })
+      .find({ journeyId })
       .sort({ progressDate: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
-
-    const hasMore = posts.length === limit;
+    
+    const filtered = await this.filterVisiblePosts(posts, viewerId);
+    const hasMore = filtered.length === limit; // approximate
 
     return {
-      items: posts,
+      items: filtered,
       pagination: {
         page,
         limit,
@@ -184,11 +193,12 @@ export class PostManagementService {
       .skip(skip)
       .limit(limit)
       .toArray();
-
-    const hasMore = posts.length === limit;
+    
+    const filtered = await this.filterVisiblePosts(posts, viewerId);
+    const hasMore = filtered.length === limit; // approximate
 
     return {
-      items: posts,
+      items: filtered,
       pagination: {
         page,
         limit,
@@ -209,11 +219,12 @@ export class PostManagementService {
       .skip(skip)
       .limit(limit)
       .toArray();
-
-    const hasMore = posts.length === limit;
+    
+    const filtered = await this.filterVisiblePosts(posts);
+    const hasMore = filtered.length === limit; // approximate
 
     return {
-      items: posts,
+      items: filtered,
       pagination: {
         page,
         limit,
@@ -252,5 +263,33 @@ export class PostManagementService {
   private async deleteCommentsForPost(postId: string): Promise<void> {
     const collection = this.mongoConnection.getCollection('comments');
     await collection.deleteMany({ postId });
+  }
+
+  // Privacy helpers
+  private async isPostVisibleToViewer(post: Post, viewerId?: string): Promise<boolean> {
+    try {
+      // Owner can always view
+      if (viewerId && viewerId === post.userId) return true;
+      // No journeyId means public (should not happen, but be safe)
+      if (!(post as any).journeyId) return true;
+
+      const journeyResp: any = await fetchJourney((post as any).journeyId);
+      const journey = journeyResp?.journey || journeyResp;
+      if (!journey) return false;
+      // Public journey
+      if (!journey.isPrivate) return true;
+      // Private journey: only owner can view
+      return viewerId === journey.userId;
+    } catch (e) {
+      // On failure to resolve journey, deny access by default
+      return false;
+    }
+  }
+
+  private async filterVisiblePosts(posts: Post[], viewerId?: string): Promise<Post[]> {
+    const results = await Promise.all(
+      posts.map(async (p) => (await this.isPostVisibleToViewer(p, viewerId)) ? p : null)
+    );
+    return results.filter((p): p is Post => !!p);
   }
 }

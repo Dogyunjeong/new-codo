@@ -40,7 +40,7 @@ describe('Post Creation End-to-End Test', () => {
   describe('Create Post', () => {
     it('should create a new post successfully', async () => {
       const postData = {
-        goalId: 'test-goal-' + Date.now(),
+        journeyId: 'test-journey-' + Date.now(),
         content: 'Test post content from automated test',
         hashtags: ['#test', '#automated'],
         isMilestone: false,
@@ -53,7 +53,7 @@ describe('Post Creation End-to-End Test', () => {
       expect(post).toBeDefined();
       expect(post.id).toBeDefined();
       expect(post.userId).toBe(userId);
-      expect(post.goalId).toBe(postData.goalId);
+      expect(post.journeyId).toBe(postData.journeyId);
       expect(post.content).toBe(postData.content);
       expect(post.hashtags).toEqual(postData.hashtags);
       expect(post.likesCount).toBe(0);
@@ -62,7 +62,7 @@ describe('Post Creation End-to-End Test', () => {
 
     it('should fail to create post without required fields', async () => {
       const invalidPostData = {
-        content: 'Post without goalId'
+        content: 'Post without journeyId'
       };
 
       try {
@@ -103,7 +103,7 @@ describe('Post Creation End-to-End Test', () => {
     it('should update an existing post', async () => {
       // First create a post
       const postData = {
-        goalId: 'test-goal-update',
+        journeyId: 'test-journey-update',
         content: 'Original content',
         hashtags: ['#original'],
         isMilestone: false
@@ -131,7 +131,7 @@ describe('Post Creation End-to-End Test', () => {
     it('should delete a post', async () => {
       // First create a post
       const postData = {
-        goalId: 'test-goal-delete',
+        journeyId: 'test-journey-delete',
         content: 'Post to be deleted',
         hashtags: ['#delete'],
         isMilestone: false
@@ -159,7 +159,7 @@ describe('Post Creation End-to-End Test', () => {
     beforeAll(async () => {
       // Create a test post for interactions
       const postData = {
-        goalId: 'test-goal-interactions',
+        journeyId: 'test-journey-interactions',
         content: 'Post for interaction testing',
         hashtags: ['#interactions'],
         isMilestone: false

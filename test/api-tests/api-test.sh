@@ -112,15 +112,15 @@ test_auth_service() {
 }
 
 test_profile_service() {
-    echo -e "\n${BLUE}=== Testing Profile Service - Profile, Goal & Social Domains ===${NC}"
+echo -e "\n${BLUE}=== Testing Profile Service - Profile, Journey & Social Domains ===${NC}"
     
     # Profile Domain
     run_test "Profile Health Check" "$PROFILE_SERVICE/profiles/health"
     run_test "Get User Profile" "$PROFILE_SERVICE/profiles/$TEST_USER_ID"
     
-    # Goal Domain  
-    run_test "Get User Goals" "$PROFILE_SERVICE/goals/user/$TEST_USER_ID"
-    run_test "Get Specific Goal" "$PROFILE_SERVICE/goals/$TEST_GOAL_ID"
+# Journey Domain  
+run_test "Get User Journeys" "$PROFILE_SERVICE/journeys/user/$TEST_USER_ID"
+run_test "Get Specific Journey" "$PROFILE_SERVICE/journeys/$TEST_GOAL_ID"
     
     # Social Domain
     run_test "Get User Followers" "$PROFILE_SERVICE/social/followers/$TEST_USER_ID"
@@ -134,7 +134,7 @@ test_post_service() {
     # Post Domain
     run_test "Get Recent Posts" "$POST_SERVICE/posts/recent"
     run_test "Get User Posts" "$POST_SERVICE/posts/user/alice_goals_user_id"
-    run_test "Get Goal Posts" "$POST_SERVICE/posts/goal/$TEST_GOAL_ID"
+    run_test "Get Journey Posts" "$POST_SERVICE/posts/journey/$TEST_GOAL_ID"
     run_test "Get Specific Post" "$POST_SERVICE/posts/$TEST_POST_ID"
     run_test "Search Posts by Hashtag" "$POST_SERVICE/posts/hashtag/meditation"
     
@@ -148,23 +148,23 @@ test_cross_service_integration() {
     echo -e "\n${BLUE}=== Testing Cross-Service Data Integration ===${NC}"
     
     # Test that goal exists in both Profile and Post services
-    echo -e "\n${YELLOW}Testing Goal-Post Relationship:${NC}"
-    echo "Goal ID: $TEST_GOAL_ID"
+    echo -e "\n${YELLOW}Testing Journey-Post Relationship:${NC}"
+    echo "Journey ID: $TEST_GOAL_ID"
     
-    run_test "Goal exists in Profile Service" "$PROFILE_SERVICE/goals/$TEST_GOAL_ID"
-    run_test "Posts exist for Goal in Post Service" "$POST_SERVICE/posts/goal/$TEST_GOAL_ID"
+    run_test "Journey exists in Profile Service" "$PROFILE_SERVICE/journeys/$TEST_GOAL_ID"
+    run_test "Posts exist for Journey in Post Service" "$POST_SERVICE/posts/journey/$TEST_GOAL_ID"
     
     # Test user consistency across services
     echo -e "\n${YELLOW}Testing User Consistency:${NC}"
     run_test "User Profile exists" "$PROFILE_SERVICE/profiles/$TEST_USER_ID"
-    run_test "User has Goals" "$PROFILE_SERVICE/goals/user/$TEST_USER_ID"
+    run_test "User has Journeys" "$PROFILE_SERVICE/journeys/user/$TEST_USER_ID"
 }
 
 test_error_handling() {
     echo -e "\n${BLUE}=== Testing Error Handling ===${NC}"
     
     run_test "Non-existent Profile" "$PROFILE_SERVICE/profiles/non-existent-id" "GET" "" "404"
-    run_test "Non-existent Goal" "$PROFILE_SERVICE/goals/non-existent-id" "GET" "" "404"
+    run_test "Non-existent Journey" "$PROFILE_SERVICE/journeys/non-existent-id" "GET" "" "404"
     run_test "Non-existent Post" "$POST_SERVICE/posts/non-existent-id" "GET" "" "404"
     run_test "Invalid Route" "$POST_SERVICE/invalid/route" "GET" "" "404"
 }
@@ -196,7 +196,7 @@ if [ $FAILED_TESTS -eq 0 ]; then
     echo -e "\n${GREEN}🎉 ALL TESTS PASSED!${NC}"
     echo -e "${GREEN}✅ Domain-Driven Microservices Architecture is working perfectly!${NC}"
     echo -e "${GREEN}✅ Auth Service: OAuth & Authentication domains functional${NC}"
-    echo -e "${GREEN}✅ Profile Service: Profile, Goal & Social domains functional${NC}"
+    echo -e "${GREEN}✅ Profile Service: Profile, Journey & Social domains functional${NC}"
     echo -e "${GREEN}✅ Post Service: Post, Media & Interaction domains functional${NC}"
     echo -e "${GREEN}✅ Cross-service data integrity confirmed${NC}"
     echo -e "${GREEN}✅ Error handling working correctly${NC}"

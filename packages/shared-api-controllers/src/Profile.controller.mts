@@ -45,29 +45,29 @@ class ProfileController {
     return response.data;
   };
 
-  // Goal Domain
-  public getUserGoals = async (userId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/api/goals/user/${userId}`);
+  // Journey Domain
+  public getUserJourneys = async (userId: string): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/api/journeys/user/${userId}`);
     return response.data;
   };
 
-  public getGoal = async (goalId: string): Promise<unknown> => {
-    const response = await this._httpRequest.get<unknown>(`/api/goals/${goalId}`);
+  public getJourney = async (journeyId: string): Promise<unknown> => {
+    const response = await this._httpRequest.get<unknown>(`/api/journeys/${journeyId}`);
     return response.data;
   };
 
-  public createGoal = async (goalData: any): Promise<unknown> => {
-    const response = await this._httpRequest.post<unknown>('/api/goals', goalData);
+  public createJourney = async (journeyData: any): Promise<unknown> => {
+    const response = await this._httpRequest.post<unknown>('/api/journeys', journeyData);
     return response.data;
   };
 
-  public updateGoal = async (goalId: string, goalData: any): Promise<unknown> => {
-    const response = await this._httpRequest.put<unknown>(`/api/goals/${goalId}`, goalData);
+  public updateJourney = async (journeyId: string, journeyData: any): Promise<unknown> => {
+    const response = await this._httpRequest.put<unknown>(`/api/journeys/${journeyId}`, journeyData);
     return response.data;
   };
 
-  public deleteGoal = async (goalId: string): Promise<unknown> => {
-    const response = await this._httpRequest.delete<unknown>(`/api/goals/${goalId}`);
+  public deleteJourney = async (journeyId: string): Promise<unknown> => {
+    const response = await this._httpRequest.delete<unknown>(`/api/journeys/${journeyId}`);
     return response.data;
   };
 

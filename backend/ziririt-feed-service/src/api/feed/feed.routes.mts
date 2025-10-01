@@ -1,7 +1,9 @@
 import { Route } from "@base/server-base";
-import FeedHandler from './feed.handler.mjs';
+import { FeedHandler } from './feed.handler.mts';
 
-const feedHandler = new FeedHandler();
+// Note: This file is not used by index.mts; kept for reference.
+// The FeedHandler now requires dependencies; this file would need DI wiring if used.
+const feedHandler = {} as any;
 
 export const feedRoutes: Route[] = [
   {
@@ -11,8 +13,8 @@ export const feedRoutes: Route[] = [
   },
   {
     method: 'GET',
-    url: '/feed/goal/:goalId',
-    handler: feedHandler.getGoalTimeline,
+    url: '/feed/journey/:journeyId',
+    handler: (feedHandler as any).getJourneyTimeline,
   },
   {
     method: 'POST',

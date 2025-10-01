@@ -1,1 +1,0 @@
-export * from './Goal.type.mts';

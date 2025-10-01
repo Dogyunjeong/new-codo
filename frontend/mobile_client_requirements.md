@@ -187,7 +187,7 @@ This document outlines the requirements and implementation tasks for Phase 1 of 
 ### Phase 1C (Content Creation) - Week 5
 1. Add New Step screen
 2. Media upload functionality
-3. Goal creation and management
+3. Journey creation and management
 
 ### Phase 1D (Polish & Testing) - Week 6
 1. UI/UX polish

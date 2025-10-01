@@ -5,12 +5,12 @@ export interface Profile {
   followersCount: number;
   followingCount: number;
   stepsCount: number;
-  goalsCount: number;
+  journeysCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface Goal {
+export interface Journey {
   id: string;
   userId: string;
   title: string;
@@ -39,13 +39,13 @@ export interface User {
 }
 
 // Request/Response types
-export interface CreateGoalRequest {
+export interface CreateJourneyRequest {
   title: string;
   description?: string;
   isPrivate?: boolean;
 }
 
-export interface UpdateGoalRequest {
+export interface UpdateJourneyRequest {
   title?: string;
   description?: string;
   isPrivate?: boolean;

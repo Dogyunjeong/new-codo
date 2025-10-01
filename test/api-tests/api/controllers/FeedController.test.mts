@@ -4,7 +4,7 @@ import { TEST_CONFIG } from '../../setup.mts';
 
 describe('Feed Service Controller', () => {
   let feedController: FeedController;
-  const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Public goal from test data
+  const testGoalId = 'f679548c-09c9-468c-a02d-44ab598e35bc'; // Public journey from test data
   const testUserId = '3cc3bab8-66fa-47b2-8d93-b2d45a05ee4f'; // Alice's user ID
 
   beforeEach(() => {
@@ -41,7 +41,7 @@ describe('Feed Service Controller', () => {
 
     it('should get goal timeline with good performance', async () => {
       const startTime = Date.now();
-      const response = await feedController.getGoalTimeline(testGoalId, 1, 20);
+      const response = await (feedController.getJourneyTimeline ? feedController.getJourneyTimeline(testGoalId, 1, 20) : (feedController as any).getGoalTimeline(testGoalId, 1, 20));
       const responseTime = Date.now() - startTime;
       
       expect(response).toBeDefined();
@@ -87,7 +87,7 @@ describe('Feed Service Controller', () => {
     });
 
     it('should handle non-existent goal timeline', async () => {
-      const response = await feedController.getGoalTimeline('non-existent-goal-id');
+      const response = await (feedController.getJourneyTimeline ? feedController.getJourneyTimeline('non-existent-goal-id') : (feedController as any).getGoalTimeline('non-existent-goal-id'));
       
       expect(response).toBeDefined();
       expect((response as any).items).toBeDefined();
@@ -149,8 +149,9 @@ describe('Feed Service Controller', () => {
         
         // Check for metadata if present
         if (firstItem.metadata) {
-          if (firstItem.metadata.goalId) {
-            expect(typeof firstItem.metadata.goalId).toBe('string');
+          const jid = (firstItem.metadata.journeyId || firstItem.metadata.goalId);
+          if (jid) {
+            expect(typeof jid).toBe('string');
           }
         }
       }

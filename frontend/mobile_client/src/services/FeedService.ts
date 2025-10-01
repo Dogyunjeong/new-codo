@@ -35,8 +35,8 @@ export class FeedService {
       const response = await this.feedController.getHomeFeed(page, limit) as any;
       
       // Handle response structure from backend
-      if (response && response.posts) {
-        return response.posts as Post[];
+      if (response && (response.posts || response.items)) {
+        return (response.posts || response.items) as Post[];
       } else if (Array.isArray(response)) {
         return response as Post[];
       }
@@ -51,24 +51,24 @@ export class FeedService {
     }
   }
 
-  async getGoalTimeline(goalId: string, page: number = 1, limit: number = 20): Promise<Post[]> {
+  async getJourneyTimeline(goalId: string, page: number = 1, limit: number = 20): Promise<Post[]> {
     try {
       const token = await this.authService.getAccessToken();
       if (token) {
         this.feedController.setAccessToken(token);
       }
 
-      const response = await this.feedController.getGoalTimeline(goalId, page, limit) as any;
+      const response = await this.feedController.getJourneyTimeline(goalId, page, limit) as any;
       
-      if (response && response.posts) {
-        return response.posts as Post[];
+      if (response && (response.posts || response.items)) {
+        return (response.posts || response.items) as Post[];
       } else if (Array.isArray(response)) {
         return response as Post[];
       }
       
       return [];
     } catch (error) {
-      console.error('Failed to fetch goal timeline:', error);
+      console.error('Failed to fetch journey timeline:', error);
       return [];
     }
   }
@@ -82,8 +82,8 @@ export class FeedService {
 
       const response = await this.feedController.getUserFeed(userId, page, limit) as any;
       
-      if (response && response.posts) {
-        return response.posts as Post[];
+      if (response && (response.posts || response.items)) {
+        return (response.posts || response.items) as Post[];
       } else if (Array.isArray(response)) {
         return response as Post[];
       }
@@ -104,8 +104,8 @@ export class FeedService {
 
       const response = await this.feedController.getHashtagFeed(hashtag, page, limit) as any;
       
-      if (response && response.posts) {
-        return response.posts as Post[];
+      if (response && (response.posts || response.items)) {
+        return (response.posts || response.items) as Post[];
       } else if (Array.isArray(response)) {
         return response as Post[];
       }

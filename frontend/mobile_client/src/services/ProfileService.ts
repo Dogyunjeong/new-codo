@@ -1,5 +1,5 @@
 import ProfileController from '@base/shared-api-controllers/src/Profile.controller.mts';
-import { Goal, CreateGoalRequest, UpdateGoalRequest } from '@base/shared-types';
+import { Journey, CreateJourneyRequest as CreateGoalRequest, UpdateJourneyRequest as UpdateGoalRequest } from '@base/shared-types';
 import { getBackendConfig } from '../config/firebase.config';
 import { AuthService } from './AuthService';
 
@@ -25,11 +25,11 @@ export class ProfileService {
     return ProfileService.instance;
   }
 
-  async getUserGoals(userId?: string): Promise<Goal[]> {
+  async getUserJourneys(userId?: string): Promise<Journey[]> {
     try {
       const targetUserId = userId || (await this.authService.getCurrentUser())?.userId;
       if (!targetUserId) {
-        console.warn('No user ID available for fetching goals');
+        console.warn('No user ID available for fetching journeys');
         return [];
       }
 
@@ -38,15 +38,16 @@ export class ProfileService {
         this.profileController.setAccessToken(token);
       }
 
-      const goals = await this.profileController.getUserGoals(targetUserId) as Goal[];
-      return goals || [];
+      const response = (await this.profileController.getUserJourneys(targetUserId)) as any;
+      const goals = Array.isArray(response) ? response : (response?.journeys || response?.goals);
+      return (goals as Journey[]) || [];
     } catch (error) {
-      console.error('Failed to fetch user goals:', error);
+      console.error('Failed to fetch user journeys:', error);
       return [];
     }
   }
 
-  async createGoal(goalData: CreateGoalRequest): Promise<Goal> {
+  async createJourney(goalData: CreateGoalRequest): Promise<Journey> {
     const currentUser = await this.authService.getCurrentUser();
     if (!currentUser) {
       throw new Error('User not authenticated');
@@ -58,58 +59,58 @@ export class ProfileService {
     }
 
     try {
-      const goal = await this.profileController.createGoal({
+      const response = (await this.profileController.createJourney({
         ...goalData,
         userId: currentUser.userId,
-      }) as Goal;
-      return goal;
+      })) as any;
+      return (response?.journey as Journey) || (response?.goal as Journey);
     } catch (error) {
-      console.error('Failed to create goal:', error);
+      console.error('Failed to create journey:', error);
       throw error;
     }
   }
 
-  async updateGoal(goalId: string, updates: UpdateGoalRequest): Promise<Goal> {
+  async updateJourney(goalId: string, updates: UpdateGoalRequest): Promise<Journey> {
     const token = await this.authService.getAccessToken();
     if (token) {
       this.profileController.setAccessToken(token);
     }
 
     try {
-      const goal = await this.profileController.updateGoal(goalId, updates) as Goal;
-      return goal;
+      const response = (await this.profileController.updateJourney(goalId, updates)) as any;
+      return (response?.journey as Journey) || (response?.goal as Journey);
     } catch (error) {
-      console.error('Failed to update goal:', error);
+      console.error('Failed to update journey:', error);
       throw error;
     }
   }
 
-  async deleteGoal(goalId: string): Promise<boolean> {
+  async deleteJourney(goalId: string): Promise<boolean> {
     const token = await this.authService.getAccessToken();
     if (token) {
       this.profileController.setAccessToken(token);
     }
 
     try {
-      await this.profileController.deleteGoal(goalId);
+      await this.profileController.deleteJourney(goalId);
       return true;
     } catch (error) {
-      console.error('Failed to delete goal:', error);
+      console.error('Failed to delete journey:', error);
       return false;
     }
   }
 
-  async getGoal(goalId: string): Promise<Goal | null> {
+  async getJourney(goalId: string): Promise<Journey | null> {
     const token = await this.authService.getAccessToken();
     if (token) {
       this.profileController.setAccessToken(token);
     }
 
     try {
-      const goal = await this.profileController.getGoal(goalId) as Goal;
-      return goal;
+      const response = (await this.profileController.getJourney(goalId)) as any;
+      return ((response?.journey as Journey) || (response?.goal as Journey)) || null;
     } catch (error) {
-      console.error('Failed to fetch goal:', error);
+      console.error('Failed to fetch journey:', error);
       return null;
     }
   }

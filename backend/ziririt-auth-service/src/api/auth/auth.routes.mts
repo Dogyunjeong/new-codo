@@ -175,6 +175,25 @@ export const authRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
     handler: authHandler.getSession.bind(authHandler),
   });
 
+  // Verify access token (GET)
+  fastify.get('/verify', {
+    preHandler: authenticateToken,
+    handler: async (request, reply) => {
+      const user = (request as any).user;
+      return reply.code(200).send({
+        valid: true,
+        user: {
+          id: user.userId,
+          userId: user.userId,
+          email: user.email,
+          displayName: user.displayName,
+          isVerified: user.isVerified,
+          firebaseUid: user.firebaseUid,
+        }
+      });
+    },
+  });
+
   // Get current user info
   fastify.get('/me', {
     preHandler: authenticateToken,

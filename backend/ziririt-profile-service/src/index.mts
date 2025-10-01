@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { getAppConfig } from './configs/app.config.mts';
 import { profileRoutes } from './api/profile/profile.routes.mts';
-import { goalRoutes } from './api/goal/goal.routes.mts';
+import { journeyRoutes } from './api/journey/journey.routes.mts';
 import { socialRoutes } from './api/social/social.routes.mts';
 import { PostgresConnectionService } from '@base/server-services';
 import { HealthController } from '@base/server-base';
@@ -71,7 +71,7 @@ server.get('/health/live', healthController.liveness.bind(healthController));
 
 // Register routes with /api prefix
 server.register(profileRoutes, { prefix: '/api/profiles' });
-server.register(goalRoutes, { prefix: '/api/goals' });
+server.register(journeyRoutes, { prefix: '/api/journeys' });
 server.register(socialRoutes, { prefix: '/api/social' });
 
 // Start server

@@ -1,9 +1,9 @@
-import type { GoalBase } from '../goals/Goal.type.mts';
+import type { JourneyBase } from '../journeys/Journey.type.mts';
 import type { Inspiration } from '../inspirations/Inspiration.type.mts';
 import type { Post, User, UploadedMediaFile } from './PostBasic.type.mts';
 
 export interface ProgressPost extends Post {
-  goalId: string;
+  journeyId: string;
   isMilestone: boolean;
   // Inspiration chain tracking
   rootInspirationId?: string;  // ID of the root inspiration if this is inspired
@@ -12,7 +12,7 @@ export interface ProgressPost extends Post {
 
 export interface ProgressPostWithDetails extends ProgressPost {
   user: User;
-  goal: GoalBase;
+  goal: JourneyBase;
   // Inspiration chain details
   rootInspiration?: Inspiration;
   inspiredFromPost?: ProgressPost;
@@ -20,7 +20,7 @@ export interface ProgressPostWithDetails extends ProgressPost {
 }
 
 export interface CreateProgressPostRequest {
-  goalId: string;
+  journeyId: string;
   content: string;
   mediaFiles?: UploadedMediaFile[];
   hashtags?: string[];

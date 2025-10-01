@@ -1,6 +1,6 @@
-# Ziririt - Goal Sharing Social App
+# Ziririt - Journey Sharing Social App
 
-A social platform where users can create goals, share progress updates, and interact with others' journeys. Built with a focus on continuous progress and growth rather than just goal completion.
+A social platform where users can create journeys, share progress updates, and interact with others' journeys. Built with a focus on continuous progress and growth rather than just goal completion.
 
 ## 🚀 Quick Start
 
@@ -51,12 +51,12 @@ make test          # Run all tests
 ### Microservices Architecture
 - **API Gateway** (Port 8080): Request routing, rate limiting, and CORS
 - **Ziririt Auth Service** (Port 4101): User authentication and management
-- **Ziririt Profile Service** (Port 4102): User profiles, goals, and social relationships
+- **Ziririt Profile Service** (Port 4102): User profiles, journeys, and social relationships
 - **Ziririt Post Service** (Port 4103): Progress posts, comments, likes, and media
 - **Ziririt Feed Service** (Port 4104): Feed generation and caching
 
 ### Database Strategy
-- **PostgreSQL**: User data, profiles, goals, social relationships
+- **PostgreSQL**: User data, profiles, journeys, social relationships
 - **MongoDB**: Posts, comments, likes, feed data
 - **Redis**: Caching, sessions, real-time data
 
@@ -70,7 +70,7 @@ make test          # Run all tests
 
 ### Core Features (Phase 1)
 - ✅ Social authentication (Google, Apple)
-- ✅ Goal creation and management
+- ✅ Journey creation and management
 - ✅ Progress posts with media support
 - ✅ Social interactions (follow, like, comment)
 - ✅ Home feed generation
@@ -94,7 +94,7 @@ ziririt-1/
 │   ├── ecosystem.config.cjs        # PM2 process configuration
 │   ├── ziririt-api-gateway/        # API Gateway service
 │   ├── ziririt-auth-service/       # Authentication service
-│   ├── ziririt-profile-service/    # Profile and goals service
+│   ├── ziririt-profile-service/    # Profile and journeys service
 │   ├── ziririt-post-service/       # Posts and interactions service
 │   └── ziririt-feed-service/       # Feed generation service
 ├── frontend/
@@ -131,7 +131,7 @@ make gateway   # Ziririt API gateway only
 ## 🧪 Testing
 
 Sample data is automatically loaded during database initialization:
-- 3 test users with profiles and goals
+- 3 test users with profiles and journeys
 - Sample progress posts with media
 - Social relationships and interactions
 - Comments and likes
@@ -148,7 +148,7 @@ All requests go through the **API Gateway (8080)** with the following routes:
 
 ### Profile Routes
 - `GET /profiles/:userId` - Get user profile
-- `GET /profiles/:userId/goals` - Get user's goals
+- `GET /profiles/:userId/journeys` - Get user's journeys
 - `POST /social/follow/:userId` - Follow user
 - `GET /social/relationship/:userId` - Check relationship
 
@@ -160,7 +160,7 @@ All requests go through the **API Gateway (8080)** with the following routes:
 
 ### Feed Routes
 - `GET /feed/home` - Get user's home feed
-- `GET /feed/goal/:goalId` - Get goal timeline
+- `GET /feed/journey/:journeyId` - Get journey timeline
 - `POST /feed/refresh` - Refresh feed cache
 
 ### Direct Service Access (Development Only)

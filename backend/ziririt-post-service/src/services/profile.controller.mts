@@ -8,8 +8,8 @@ export const profileServiceController = new ProfileController({
 // Export methods for use in post service
 export const {
   getUserProfile,
-  getUserGoals,
-  getGoal,
+  getUserJourneys,
+  getJourney,
   getFollowers,
   getFollowing,
   getRelationship

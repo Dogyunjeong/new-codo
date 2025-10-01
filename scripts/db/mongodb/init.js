@@ -1,4 +1,4 @@
-// MongoDB initialization script for Ziririt Goal Sharing App
+// MongoDB initialization script for Ziririt Journey Sharing App
 // This script sets up the initial database schema for posts and feed services
 
 // Switch to the posts database
@@ -7,10 +7,10 @@ db = db.getSiblingDB('ziririt_posts');
 // Create collections and indexes for posts
 db.createCollection('posts');
 db.posts.createIndex({ "userId": 1, "createdAt": -1 });
-db.posts.createIndex({ "goalId": 1, "progressDate": -1 });
+db.posts.createIndex({ "journeyId": 1, "progressDate": -1 });
 db.posts.createIndex({ "createdAt": -1 });
 db.posts.createIndex({ "hashtags": 1 });
-db.posts.createIndex({ "userId": 1, "goalId": 1, "progressDate": -1 });
+db.posts.createIndex({ "userId": 1, "journeyId": 1, "progressDate": -1 });
 
 // Create collections and indexes for likes
 db.createCollection('likes');
@@ -34,7 +34,7 @@ const samplePosts = [
   {
     id: "post_001",
     userId: "alice_goals_user_id", // This will be replaced with actual UUID from PostgreSQL
-    goalId: "goal_meditation_id",
+    journeyId: "journey_meditation_id",
     content: "Day 15 of my meditation journey! 🧘‍♀️ Today I managed to sit for 12 minutes without getting distracted. The consistency is really paying off - I feel more centered throughout the day.",
     mediaFiles: [],
     hashtags: ["meditation", "mindfulness", "consistency", "progress"],
@@ -48,7 +48,7 @@ const samplePosts = [
   {
     id: "post_002",
     userId: "alice_goals_user_id",
-    goalId: "goal_strength_id",
+    journeyId: "journey_strength_id",
     content: "Deadlift PR today! 🏋️‍♀️ Finally hit 135lbs for 3 reps. The progressive overload approach is working. Form felt solid and controlled throughout.",
     mediaFiles: [
       {
@@ -69,7 +69,7 @@ const samplePosts = [
   {
     id: "post_003",
     userId: "bob_progress_user_id",
-    goalId: "goal_spanish_id", 
+    journeyId: "journey_spanish_id", 
     content: "¡Hola! Had my first conversation entirely in Spanish with a native speaker today 🇪🇸 Still made mistakes but they understood everything I said. Confidence building!",
     mediaFiles: [],
     hashtags: ["spanish", "conversation", "milestone", "confidence"],
@@ -83,7 +83,7 @@ const samplePosts = [
   {
     id: "post_004",
     userId: "bob_progress_user_id",
-    goalId: "goal_photography_id",
+    journeyId: "journey_photography_id",
     content: "Experimenting with natural lighting for portraits. This golden hour shot taught me so much about shadow positioning and subject placement.",
     mediaFiles: [
       {
@@ -104,7 +104,7 @@ const samplePosts = [
   {
     id: "post_005",
     userId: "charlie_journey_user_id",
-    goalId: "goal_reading_id",
+    journeyId: "journey_reading_id",
     content: "Finished 'Atomic Habits' tonight 📚 The 1% better concept really resonates with my journey. Taking notes on how to apply the habit stacking technique to my routine.",
     mediaFiles: [],
     hashtags: ["reading", "atomichabits", "selfimprovement", "habitstacking"],
@@ -118,7 +118,7 @@ const samplePosts = [
   {
     id: "post_006",
     userId: "charlie_journey_user_id",
-    goalId: "goal_workout_id",
+    journeyId: "journey_workout_id",
     content: "Week 2 of home workouts complete! 💪 Did a full body circuit today - burpees are still my nemesis but I'm getting stronger. Consistency over perfection.",
     mediaFiles: [],
     hashtags: ["homeworkout", "circuit", "burpees", "consistency"],
@@ -195,4 +195,4 @@ db.comments.insertMany(sampleComments);
 print("MongoDB initialization completed successfully!");
 print("Created collections: posts, likes, comments, feed_cache");
 print("Inserted sample data for development and testing");
-print("Database ready for Ziririt Goal Sharing App");
+print("Database ready for Ziririt Journey Sharing App");

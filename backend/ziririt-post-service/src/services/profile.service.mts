@@ -39,7 +39,7 @@ export class ProfileService {
         followersCount: profile.followersCount,
         followingCount: 0, // Hide following count for private profiles
         stepsCount: 0,     // Hide steps count for private profiles
-        goalsCount: 0,     // Hide goals count for private profiles
+        journeysCount: 0,     // Hide journeys count for private profiles
       };
     }
 

@@ -1,5 +1,5 @@
 import { PostController } from '@base/shared-api-controllers';
-import { Post, Goal, CreatePostData } from './post/types';
+import { Post, Journey, CreatePostData } from './post/types';
 import { getBackendConfig } from '../config/firebase.config';
 import { AuthService } from './AuthService';
 import { ProfileService } from './ProfileService';
@@ -57,36 +57,36 @@ export class PostService {
     return likePostOp(postId, { controller: this.postController, auth: this.authService });
   }
 
-  async getGoals(userId?: string): Promise<Goal[]> {
-    return this.profileService.getUserGoals(userId);
+  async getJourneys(userId?: string): Promise<Journey[]> {
+    return this.profileService.getUserJourneys(userId);
   }
 
-  async getUserGoals(): Promise<Goal[]> {
+  async getUserJourneys(): Promise<Journey[]> {
     const currentUser = await this.authService.getCurrentUser();
     if (!currentUser) {
       return [];
     }
-    return this.profileService.getUserGoals(currentUser.userId);
+    return this.profileService.getUserJourneys(currentUser.userId);
   }
 
-  async createGoal(goalData: Partial<Goal>): Promise<Goal> {
-    return this.profileService.createGoal({
+  async createJourney(goalData: Partial<Journey>): Promise<Journey> {
+    return this.profileService.createJourney({
       title: goalData.title || 'New Journey',
       description: goalData.description,
       isPrivate: goalData.isPrivate || false,
     });
   }
 
-  async updateGoal(goalId: string, updates: Partial<Goal>): Promise<Goal> {
-    return this.profileService.updateGoal(goalId, {
+  async updateJourney(goalId: string, updates: Partial<Journey>): Promise<Journey> {
+    return this.profileService.updateJourney(goalId, {
       title: updates.title,
       description: updates.description,
       isPrivate: updates.isPrivate,
     });
   }
 
-  async deleteGoal(goalId: string): Promise<boolean> {
-    return this.profileService.deleteGoal(goalId);
+  async deleteJourney(goalId: string): Promise<boolean> {
+    return this.profileService.deleteJourney(goalId);
   }
 
   setAccessToken(token: string): void {

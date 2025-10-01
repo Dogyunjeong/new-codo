@@ -1,5 +1,5 @@
 import type { User } from '../auth/User.type.mts';
-import type { Goal } from '../goals/Goal.type.mts';
+import type { Journey } from '../journeys/Journey.type.mts';
 import type { Post } from '../post/ProgressPost.type.mts';
 import type { Inspiration, TrendingChain } from '../inspirations/Inspiration.type.mts';
 import type { SocialStats } from '../post/PostBasic.type.mts';
@@ -7,7 +7,7 @@ import type { SocialStats } from '../post/PostBasic.type.mts';
 export interface FeedItem {
   id: string;
   type: FeedItemType;
-  content: Post | Inspiration | Goal;
+  content: Post | Inspiration | Journey;
   user: User;
   timestamp: Date;
   socialStats: SocialStats;
@@ -30,7 +30,7 @@ export interface FeedRequest {
 }
 
 export interface DiscoverContent {
-  trendingGoals: Goal[];
+  trendingJourneys: Journey[];
   trendingPosts: Post[];
   trendingChains: TrendingChain[];
   suggestedUsers: User[];
@@ -47,7 +47,7 @@ export interface SearchRequest {
 
 export interface SearchResults {
   users: User[];
-  goals: Goal[];
+  journeys: Journey[];
   posts: Post[];
   inspirations: Inspiration[];
   hasMore: boolean;
@@ -57,14 +57,14 @@ export interface SearchResults {
 export enum FeedItemType {
   POST = 'post',
   INSPIRATION = 'inspiration',
-  GOAL = 'goal',
+  JOURNEY = 'journey',
   MILESTONE = 'milestone',
 }
 
 export enum SearchType {
   ALL = 'all',
   USERS = 'users',
-  GOALS = 'goals',
+  JOURNEYS = 'journeys',
   POSTS = 'posts',
   INSPIRATIONS = 'inspirations',
 }

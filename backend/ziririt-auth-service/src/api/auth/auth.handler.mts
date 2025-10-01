@@ -71,11 +71,17 @@ export class AuthHandler {
     try {
       const { refreshToken } = request.body;
       const tokenResponse = await this.authService.refreshAccessToken(refreshToken);
-      
-      return reply.code(200).send(tokenResponse);
+
+      // Map accessToken to token for frontend compatibility
+      return reply.code(200).send({
+        token: tokenResponse.accessToken,
+        refreshToken: tokenResponse.refreshToken,
+        expiresIn: tokenResponse.expiresIn,
+        user: tokenResponse.user,
+      });
     } catch (error) {
       request.log.error('Token refresh error:', error);
-      return reply.code(401).send({ 
+      return reply.code(401).send({
         error: 'Token refresh failed',
         message: error instanceof Error ? error.message : 'Invalid refresh token'
       });
@@ -201,6 +207,7 @@ export class AuthHandler {
       await this.authService.updateLastLogin(user.id);
       
       return reply.code(200).send({
+        token: accessToken,
         accessToken,
         refreshToken,
         expiresIn: 900, // 15 minutes

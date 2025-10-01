@@ -1,6 +1,6 @@
 import type { Post } from '../post/PostBasic.type.mts';
 
-export interface GoalBase {
+export interface JourneyBase {
   id: string;
   userId: string;
   title: string;
@@ -9,24 +9,24 @@ export interface GoalBase {
   updatedAt: Date;
 }
 
-export interface Goal extends GoalBase {
+export interface Journey extends JourneyBase {
   isPrivate: boolean;
 }
 
-export interface GoalCreate extends Omit<Goal, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface JourneyCreate extends Omit<Journey, 'id' | 'createdAt' | 'updatedAt'> {}
 
-export interface GoalWithProgress extends Goal {
+export interface JourneyWithProgress extends Journey {
   totalPosts: number;
   recentPosts: Post[];
 }
 
-export interface CreateGoalRequest {
+export interface CreateJourneyRequest {
   title: string;
   description?: string;
   isPrivate?: boolean;
 }
 
-export interface UpdateGoalRequest {
+export interface UpdateJourneyRequest {
   title?: string;
   description?: string;
   isPrivate?: boolean;

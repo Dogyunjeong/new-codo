@@ -1,7 +1,7 @@
 {
   "name": "ziririt-profile-service",
   "version": "1.0.0",
-  "description": "Profile service for Ziririt Goal Sharing App - Handles user profiles, goals, and social relationships",
+  "description": "Profile service for Ziririt Journey Sharing App - Handles user profiles, journeys, and social relationships",
   "packageManager": "yarn@4.0.2",
   "type": "module",
   "scripts": {

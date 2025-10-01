@@ -15,9 +15,9 @@ export interface Post extends PostBase {
   id: string;
 }
 
-// Basic Post type with goalId for progress posts (avoid circular imports)
+// Basic Post type with journeyId for progress posts (avoid circular imports)
 export interface PostBasic extends PostBase {
-  goalId: string;
+  journeyId: string;
   isMilestone: boolean;
 }
 

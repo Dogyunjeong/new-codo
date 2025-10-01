@@ -18,7 +18,7 @@ export async function createPost(
       .filter((t, i, arr) => t && arr.indexOf(t) === i);
 
   const payload = {
-    goalId: postData.goalId,
+    journeyId: postData.journeyId,
     content: postData.content || postData.title || '',
     hashtags: normalizeHashtags(postData.tags),
     mediaFiles: [],

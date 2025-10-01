@@ -57,7 +57,7 @@ export class DatabaseConnection {
       // Posts collection indexes
       const postsCollection = db.collection('posts');
       await postsCollection.createIndex({ userId: 1, createdAt: -1 });
-      await postsCollection.createIndex({ goalId: 1, progressDate: -1 });
+      await postsCollection.createIndex({ journeyId: 1, progressDate: -1 });
       await postsCollection.createIndex({ createdAt: -1 });
       await postsCollection.createIndex({ hashtags: 1 });
       await postsCollection.createIndex({ id: 1 }, { unique: true });

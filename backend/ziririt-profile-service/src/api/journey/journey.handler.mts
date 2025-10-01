@@ -1,18 +1,18 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { GoalManagementService, CreateGoalData, UpdateGoalData } from './GoalManagement.service.mts';
+import { JourneyManagementService, CreateJourneyData, UpdateJourneyData } from './JourneyManagement.service.mts';
 import { AuthenticatedRequest } from '@base/server-services';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export class GoalHandler {
-  private goalService: GoalManagementService;
+export class JourneyHandler {
+  private journeyService: JourneyManagementService;
 
-  constructor(goalService: GoalManagementService) {
-    this.goalService = goalService;
+  constructor(journeyService: JourneyManagementService) {
+    this.journeyService = journeyService;
   }
 
-  async createGoal(request: AuthenticatedRequest & FastifyRequest<{ Body: CreateGoalData }>, reply: FastifyReply) {
+  async createJourney(request: AuthenticatedRequest & FastifyRequest<{ Body: CreateJourneyData }>, reply: FastifyReply) {
     try {
       const goalData = request.body;
       
@@ -20,101 +20,118 @@ export class GoalHandler {
         return reply.code(401).send({ error: 'User not authenticated' });
       }
 
-      const goal = await this.goalService.createGoal(request.user.userId, goalData);
+      const goal = await this.journeyService.createJourney(request.user.userId, goalData);
       
       return reply.code(201).send({ goal });
     } catch (error) {
-      request.log.error('Create goal error:', error);
+      request.log.error('Create journey error:', error);
       return reply.code(500).send({ 
-        error: 'Failed to create goal',
+        error: 'Failed to create journey',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
 
-  async getGoal(request: AuthenticatedRequest & FastifyRequest<{ Params: { goalId: string } }>, reply: FastifyReply) {
+  async getJourney(request: AuthenticatedRequest & FastifyRequest<{ Params: { journeyId: string } }>, reply: FastifyReply) {
     try {
-      const { goalId } = request.params;
+      const { journeyId: goalId } = request.params;
       
       // Validate UUID format
       if (!UUID_REGEX.test(goalId)) {
-        return reply.code(404).send({ error: 'Goal not found' });
+        return reply.code(404).send({ error: 'Journey not found' });
       }
       
       // Get viewer ID from authenticated user if present
       const viewerId = request.user?.userId;
 
-      const goal = await this.goalService.getGoalById(goalId, viewerId);
+      const goal = await this.journeyService.getJourneyById(goalId, viewerId);
       
       if (!goal) {
-        return reply.code(404).send({ error: 'Goal not found or access denied' });
+        return reply.code(404).send({ error: 'Journey not found or access denied' });
       }
 
       return reply.code(200).send({ goal });
     } catch (error) {
-      request.log.error('Get goal error:', error);
+      request.log.error('Get journey error:', error);
       // Check if it's a UUID validation error from database
       if (error instanceof Error && error.message.includes('invalid input syntax for type uuid')) {
-        return reply.code(404).send({ error: 'Goal not found' });
+        return reply.code(404).send({ error: 'Journey not found' });
       }
       return reply.code(500).send({ 
-        error: 'Failed to get goal',
+        error: 'Failed to get journey',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
 
-  async updateGoal(
-    request: AuthenticatedRequest & FastifyRequest<{ Params: { goalId: string }, Body: UpdateGoalData }>, 
+  async updateJourney(
+    request: AuthenticatedRequest & FastifyRequest<{ Params: { journeyId: string }, Body: UpdateJourneyData }>, 
     reply: FastifyReply
   ) {
     try {
-      const { goalId } = request.params;
+      const { journeyId: goalId } = request.params;
+      // Validate UUID format
+      if (!UUID_REGEX.test(goalId)) {
+        return reply.code(404).send({ error: 'Journey not found' });
+      }
       const updates = request.body;
       
       if (!request.user?.userId) {
         return reply.code(401).send({ error: 'User not authenticated' });
       }
 
-      const updatedGoal = await this.goalService.updateGoal(goalId, request.user.userId, updates);
+      const updatedGoal = await this.journeyService.updateJourney(goalId, request.user.userId, updates);
       
       return reply.code(200).send({ goal: updatedGoal });
     } catch (error) {
-      request.log.error('Update goal error:', error);
+      request.log.error('Update journey error:', error);
       if (error instanceof Error && error.message.includes('not found')) {
         return reply.code(404).send({ error: error.message });
       }
+      if (error instanceof Error && error.message.includes('No fields to update')) {
+        return reply.code(400).send({ error: error.message });
+      }
+      if (error instanceof Error && error.message.includes('invalid input syntax for type uuid')) {
+        return reply.code(404).send({ error: 'Journey not found' });
+      }
       return reply.code(500).send({ 
-        error: 'Failed to update goal',
+        error: 'Failed to update journey',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
 
-  async deleteGoal(request: AuthenticatedRequest & FastifyRequest<{ Params: { goalId: string } }>, reply: FastifyReply) {
+  async deleteJourney(request: AuthenticatedRequest & FastifyRequest<{ Params: { journeyId: string } }>, reply: FastifyReply) {
     try {
-      const { goalId } = request.params;
+      const { journeyId: goalId } = request.params;
+      // Validate UUID format
+      if (!UUID_REGEX.test(goalId)) {
+        return reply.code(404).send({ error: 'Journey not found' });
+      }
       
       if (!request.user?.userId) {
         return reply.code(401).send({ error: 'User not authenticated' });
       }
 
-      await this.goalService.deleteGoal(goalId, request.user.userId);
+      await this.journeyService.deleteJourney(goalId, request.user.userId);
       
-      return reply.code(200).send({ message: 'Goal deleted successfully' });
+      return reply.code(200).send({ message: 'Journey deleted successfully' });
     } catch (error) {
-      request.log.error('Delete goal error:', error);
+      request.log.error('Delete journey error:', error);
       if (error instanceof Error && error.message.includes('not found')) {
         return reply.code(404).send({ error: error.message });
       }
+      if (error instanceof Error && error.message.includes('invalid input syntax for type uuid')) {
+        return reply.code(404).send({ error: 'Journey not found' });
+      }
       return reply.code(500).send({ 
-        error: 'Failed to delete goal',
+        error: 'Failed to delete journey',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
 
-  async getUserGoals(
+  async getUserJourneys(
     request: AuthenticatedRequest & FastifyRequest<{ 
       Params: { userId: string }, 
       Querystring: { page?: string, limit?: string } 
@@ -132,17 +149,17 @@ export class GoalHandler {
       // Get viewer ID from authenticated user if present
       const viewerId = request.user?.userId;
 
-      const goals = await this.goalService.getUserGoals(userId, viewerId);
+      const goals = await this.journeyService.getUserJourneys(userId, viewerId);
       
-      return reply.code(200).send({ goals });
+      return reply.code(200).send({ journeys: goals });
     } catch (error) {
-      request.log.error('Get user goals error:', error);
+      request.log.error('Get user journeys error:', error);
       // Check if it's a UUID validation error from database
       if (error instanceof Error && error.message.includes('invalid input syntax for type uuid')) {
         return reply.code(404).send({ error: 'User not found' });
       }
       return reply.code(500).send({ 
-        error: 'Failed to get user goals',
+        error: 'Failed to get user journeys',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }

@@ -5,7 +5,7 @@ import { TEST_CONFIG } from '../../setup.mts';
 describe('Post Service Controller', () => {
   let postController: PostController;
   const testUserId = 'alice_goals_user_id';
-  const testGoalId = 'goal_meditation_id'; // Keep MongoDB test data ID
+  const testGoalId = 'journey_meditation_id'; // Updated MongoDB test data ID
   const testPostId = 'post_001'; // Keep MongoDB test data ID
 
   beforeEach(() => {
@@ -36,8 +36,8 @@ describe('Post Service Controller', () => {
       expect(Array.isArray(response.items)).toBe(true);
     });
 
-    it('should get goal posts', async () => {
-      const response = await postController.getGoalPosts('goal_meditation_id'); // Use actual goal ID from test data
+    it('should get journey posts', async () => {
+      const response = await postController.getJourneyPosts('journey_meditation_id'); // Use actual journey ID from test data
       expect(response).toBeDefined();
       expect(response.items).toBeDefined();
       expect(Array.isArray(response.items)).toBe(true);

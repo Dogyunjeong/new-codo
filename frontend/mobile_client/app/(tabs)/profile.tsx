@@ -23,7 +23,7 @@ import { theme } from '../../src/constants/theme'
 import { useAuth } from '../../src/contexts/AuthContext'
 import { PostService } from '../../src/services/PostService'
 import { ProfileService } from '../../src/services/ProfileService'
-import { Post, Goal } from '../../src/services/post/types'
+import { Post, Journey } from '../../src/services/post/types'
 
 const { height: screenHeight } = Dimensions.get('window')
 const TAB_BAR_HEIGHT = 50
@@ -54,33 +54,33 @@ export default function ProfileScreen() {
     
     if (user) {
       loadUserPosts()
-      loadUserGoals()
+      loadUserJourneys()
     } else {
       setUserSteps([])
       setUserJourneys([])
     }
   }, [user, isAuthenticated])
 
-  // Reload posts and goals when screen comes into focus
+  // Reload posts and journeys when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadUserPosts()
-      loadUserGoals()
+      loadUserJourneys()
     }, [user])
   )
 
-  const loadUserGoals = async () => {
+  const loadUserJourneys = async () => {
     if (!user) {
-      console.log('No user found for loading goals')
+      console.log('No user found for loading journeys')
       return
     }
     
     try {
-      const goals = await profileService.getUserGoals(user.userId)
-      console.log('Loaded goals:', goals.length, 'goals:', goals)
+      const journeysRaw = await (profileService.getUserJourneys?.(user.userId) || profileService.getUserGoals?.(user.userId))
+      console.log('Loaded journeys:', journeysRaw.length, 'journeys:', journeysRaw)
       
-      // Convert goals to JourneyData format
-      const journeys: JourneyData[] = goals.map((goal: Goal) => ({
+      // Convert to JourneyData format
+      const journeys: JourneyData[] = journeysRaw.map((goal: Journey) => ({
         id: goal.id,
         title: goal.title,
         description: goal.description || '',
@@ -96,7 +96,7 @@ export default function ProfileScreen() {
       
       setUserJourneys(journeys)
     } catch (error) {
-      console.error('Failed to load goals:', error)
+      console.error('Failed to load journeys:', error)
       setUserJourneys([])
     }
   }
@@ -147,7 +147,7 @@ export default function ProfileScreen() {
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await Promise.all([loadUserPosts(), loadUserGoals()])
+    await Promise.all([loadUserPosts(), loadUserJourneys()])
     setRefreshing(false)
   }
 
@@ -218,7 +218,7 @@ export default function ProfileScreen() {
 
   const handleJourneyPress = (journey: JourneyData) => {
     console.log('Journey pressed:', journey.title)
-    router.push(`/goal-detail?goalId=${journey.id}`)
+    router.push(`/journey?journeyId=${journey.id}`)
   }
 
   const renderTab = (tab: typeof tabs[0]) => {

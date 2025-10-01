@@ -5,7 +5,7 @@ interface PostDocument {
   _id: any;
   id: string;
   userId: string;
-  goalId: string;
+  journeyId: string;
   content: string;
   mediaFiles?: Array<{
     id: string;
@@ -45,7 +45,7 @@ export class FeedBuilderService {
     const posts = await this.postsCollection
       .find({ 
         userId: { $in: userIds },
-        // Could add additional filters here (e.g., not private goals)
+        // Could add additional filters here (e.g., not private journeys)
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -55,15 +55,15 @@ export class FeedBuilderService {
     return this.transformToFeedItems(posts);
   }
 
-  async buildGoalTimelineFeed(
-    goalId: string,
+  async buildJourneyTimelineFeed(
+    journeyId: string,
     page: number = 1,
     limit: number = 20
   ): Promise<FeedItem[]> {
     const skip = (page - 1) * limit;
 
     const posts = await this.postsCollection
-      .find({ goalId })
+      .find({ journeyId })
       .sort({ progressDate: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -115,7 +115,7 @@ export class FeedBuilderService {
       content: {
         id: post.id,
         userId: post.userId,
-        goalId: post.goalId,
+        journeyId: (post as any).journeyId,
         content: post.content,
         mediaFiles: post.mediaFiles || [],
         hashtags: post.hashtags || [],

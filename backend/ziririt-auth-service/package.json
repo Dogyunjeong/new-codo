@@ -2,7 +2,7 @@
   "name": "ziririt-auth-service",
   "version": "1.0.0",
   "type": "module",
-  "description": "Authentication service for Ziririt Goal Sharing App - Handles OAuth and JWT authentication",
+  "description": "Authentication service for Ziririt Journey Sharing App - Handles OAuth and JWT authentication",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsup-node",

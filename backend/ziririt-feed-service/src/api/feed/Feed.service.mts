@@ -23,7 +23,7 @@ class FeedService {
   async getHomeFeed(userId: string, page: number = 1, limit: number = 20) {
     try {
       const skip = (page - 1) * limit;
-      
+
       const posts = await this.postsCollection
         .find({})
         .sort({ createdAt: -1 })
@@ -31,11 +31,11 @@ class FeedService {
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
-      
+      const feedItems = posts.map((post) => FeedBuilder.buildPostItem(post));
+
       // Sort by relevance for better user experience
       const sortedItems = FeedBuilder.sortByRelevance(feedItems, userId);
-      
+
       return FeedBuilder.buildFeedResponse(sortedItems, page, limit);
     } catch (error) {
       this.logger.error('Error getting home feed:', error);
@@ -43,22 +43,22 @@ class FeedService {
     }
   }
 
-  async getGoalTimeline(goalId: string, page: number = 1, limit: number = 20) {
+  async getJourneyTimeline(journeyId: string, page: number = 1, limit: number = 20) {
     try {
       const skip = (page - 1) * limit;
-      
+
       const posts = await this.postsCollection
-        .find({ goalId })
+        .find({ journeyId })
         .sort({ progressDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
-      
+      const feedItems = posts.map((post) => FeedBuilder.buildPostItem(post));
+
       return FeedBuilder.buildFeedResponse(feedItems, page, limit);
     } catch (error) {
-      this.logger.error('Error getting goal timeline:', error);
+      this.logger.error('Error getting journey timeline:', error);
       throw error;
     }
   }
@@ -66,7 +66,7 @@ class FeedService {
   async getUserFeed(userId: string, page: number = 1, limit: number = 20) {
     try {
       const skip = (page - 1) * limit;
-      
+
       const posts = await this.postsCollection
         .find({ userId })
         .sort({ createdAt: -1 })
@@ -74,8 +74,8 @@ class FeedService {
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
-      
+      const feedItems = posts.map((post) => FeedBuilder.buildPostItem(post));
+
       return FeedBuilder.buildFeedResponse(feedItems, page, limit);
     } catch (error) {
       this.logger.error('Error getting user feed:', error);
@@ -86,7 +86,7 @@ class FeedService {
   async getHashtagFeed(hashtag: string, page: number = 1, limit: number = 20) {
     try {
       const skip = (page - 1) * limit;
-      
+
       const posts = await this.postsCollection
         .find({ hashtags: hashtag })
         .sort({ createdAt: -1 })
@@ -94,8 +94,8 @@ class FeedService {
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
-      
+      const feedItems = posts.map((post) => FeedBuilder.buildPostItem(post));
+
       return FeedBuilder.buildFeedResponse(feedItems, page, limit);
     } catch (error) {
       this.logger.error('Error getting hashtag feed:', error);
@@ -103,10 +103,15 @@ class FeedService {
     }
   }
 
-  async getFollowingFeed(userId: string, followingIds: string[], page: number = 1, limit: number = 20) {
+  async getFollowingFeed(
+    userId: string,
+    followingIds: string[],
+    page: number = 1,
+    limit: number = 20,
+  ) {
     try {
       const skip = (page - 1) * limit;
-      
+
       const posts = await this.postsCollection
         .find({ userId: { $in: followingIds } })
         .sort({ createdAt: -1 })
@@ -114,8 +119,8 @@ class FeedService {
         .limit(limit)
         .toArray();
 
-      const feedItems = posts.map(post => FeedBuilder.buildPostItem(post));
-      
+      const feedItems = posts.map((post) => FeedBuilder.buildPostItem(post));
+
       return FeedBuilder.buildFeedResponse(feedItems, page, limit);
     } catch (error) {
       this.logger.error('Error getting following feed:', error);

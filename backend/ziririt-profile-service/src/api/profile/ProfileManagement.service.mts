@@ -8,7 +8,7 @@ export interface Profile {
   followersCount: number;
   followingCount: number;
   stepsCount: number;
-  goalsCount: number;
+  journeysCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,7 +35,15 @@ export class ProfileManagementService extends BaseUserService {
   async getProfile(userId: string, viewerId?: string): Promise<ProfileWithUser | null> {
     const result = await this.pool.query<ProfileWithUser>(
       `SELECT 
-         p.*,
+         p.user_id as user_id,
+         p.bio,
+         p.is_private as is_private,
+         p.followers_count as followers_count,
+         p.following_count as following_count,
+         p.steps_count as steps_count,
+         p.journeys_count as journeys_count,
+         p.created_at as created_at,
+         p.updated_at as updated_at,
          u.email,
          u.display_name,
          u.avatar_url,
@@ -62,7 +70,7 @@ export class ProfileManagementService extends BaseUserService {
         bio: undefined,
         followingCount: 0, // Hide following count for private profiles
         stepsCount: 0,     // Hide steps count for private profiles
-        goalsCount: 0,     // Hide goals count for private profiles
+        journeysCount: 0,     // Hide journeys count for private profiles
       };
     }
 

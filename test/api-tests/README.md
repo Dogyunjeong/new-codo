@@ -6,7 +6,7 @@ Comprehensive API testing for the domain-driven microservices architecture using
 
 This test suite validates the refactored domain-driven architecture with:
 - **Auth Service**: OAuth & Authentication domains
-- **Profile Service**: Profile, Goal & Social domains  
+- **Profile Service**: Profile, Journey & Social domains  
 - **Post Service**: Post, Media & Interaction domains
 
 ## Test Structure
@@ -98,7 +98,7 @@ The test suite validates:
 
 Tests use predefined test data:
 - Test User ID: `ff249605-088b-4595-9061-1a0108b73823`
-- Test Goal ID: `0d1d202d-f87d-43c0-95f4-7c6972289944`
+- Test Journey ID: `0d1d202d-f87d-43c0-95f4-7c6972289944`
 - Test Post ID: `post_001`
 
 ## Expected Behavior
@@ -111,7 +111,7 @@ Tests use predefined test data:
 
 ### Profile Service Tests  
 - ✅ Profile domain CRUD operations
-- ✅ Goal domain management
+- ✅ Journey domain management
 - ✅ Social domain relationships
 - ❌ Non-existent resource errors
 

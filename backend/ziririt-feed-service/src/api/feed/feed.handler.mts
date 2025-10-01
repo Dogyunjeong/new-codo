@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import FeedService from './feed.service.mts';
+import FeedService from './Feed.service.mts';
 import { FeedCacheService } from './feedCache.service.mts';
 
 export class FeedHandler {
@@ -50,16 +50,16 @@ export class FeedHandler {
     }
   }
 
-  async getGoalTimeline(req: FastifyRequest, rep: FastifyReply) {
+  async getJourneyTimeline(req: FastifyRequest, rep: FastifyReply) {
     const startTime = Date.now();
     try {
-      const { goalId } = req.params as { goalId: string };
+      const { journeyId } = req.params as { journeyId: string };
       const { page = '1', limit = '20' } = req.query as any;
       const pageNum = parseInt(page, 10);
       const limitNum = parseInt(limit, 10);
 
       // Check cache first
-      const cacheKey = this.feedCacheService.generateCacheKey('goal', goalId, pageNum);
+      const cacheKey = this.feedCacheService.generateCacheKey('journey', journeyId, pageNum);
       const cachedData = await this.feedCacheService.getCachedFeed(cacheKey);
       
       if (cachedData) {
@@ -72,7 +72,7 @@ export class FeedHandler {
       }
 
       // Get fresh data
-      const feedData = await this.feedService.getGoalTimeline(goalId, pageNum, limitNum);
+      const feedData = await (this.feedService as any).getJourneyTimeline(journeyId, pageNum, limitNum);
       
       // Cache the result
       await this.feedCacheService.setCachedFeed(cacheKey, feedData);
@@ -84,7 +84,7 @@ export class FeedHandler {
         responseTime: `${responseTime}ms`,
       });
     } catch (error) {
-      console.error('Error getting goal timeline:', error);
+      console.error('Error getting journey timeline:', error);
       return rep.code(500).send({ error: 'Failed to get timeline' });
     }
   }

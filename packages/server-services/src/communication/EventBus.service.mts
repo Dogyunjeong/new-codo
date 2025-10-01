@@ -263,11 +263,11 @@ export const EventTypes = {
   USER_FOLLOWED: 'user.followed',
   USER_UNFOLLOWED: 'user.unfollowed',
 
-  // Goal events
-  GOAL_CREATED: 'goal.created',
-  GOAL_UPDATED: 'goal.updated',
-  GOAL_COMPLETED: 'goal.completed',
-  GOAL_DELETED: 'goal.deleted',
+  // Journey events
+  JOURNEY_CREATED: 'journey.created',
+  JOURNEY_UPDATED: 'journey.updated',
+  JOURNEY_COMPLETED: 'journey.completed',
+  JOURNEY_DELETED: 'journey.deleted',
 
   // Post events
   POST_CREATED: 'post.created',

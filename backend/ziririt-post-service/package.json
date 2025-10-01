@@ -1,7 +1,7 @@
 {
   "name": "ziririt-post-service",
   "version": "1.0.0",
-  "description": "Post service for Ziririt Goal Sharing App - Handles progress posts, media uploads, likes, and comments",
+  "description": "Post service for Ziririt Journey Sharing App - Handles progress posts, media uploads, likes, and comments",
   "packageManager": "yarn@4.0.2",
   "type": "module",
   "scripts": {

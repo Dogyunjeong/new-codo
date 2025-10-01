@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,17 +10,17 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-} from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-import { GoogleSigninButton } from '@react-native-google-signin/google-signin'
-import { theme } from '../../constants/theme'
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import { theme } from '../../constants/theme';
 
 interface LoginScreenProps {
-  onLogin: (email: string, password: string) => Promise<void>
-  onSignup: () => void
-  onForgotPassword: () => void
-  onGoogleLogin?: () => Promise<void>
-  onAppleLogin?: () => Promise<void>
+  onLogin: (email: string, password: string) => Promise<void>;
+  onSignup: () => void;
+  onForgotPassword: () => void;
+  onGoogleLogin?: () => Promise<void>;
+  onAppleLogin?: () => Promise<void>;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
@@ -30,90 +30,86 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onGoogleLogin,
   onAppleLogin,
 }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [isAppleLoading, setIsAppleLoading] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {}
-    
+    const newErrors: { email?: string; password?: string } = {};
+
     if (!email) {
-      newErrors.email = 'Email is required'
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid'
+      newErrors.email = 'Email is invalid';
     }
-    
+
     if (!password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = 'Password is required';
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+      newErrors.password = 'Password must be at least 6 characters';
     }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async () => {
-    if (!validateForm()) return
-    
-    setIsLoading(true)
+    if (!validateForm()) return;
+
+    setIsLoading(true);
     try {
-      await onLogin(email, password)
+      await onLogin(email, password);
     } catch (error: any) {
-      Alert.alert(
-        'Login Failed',
-        error.message || 'Please check your credentials and try again.'
-      )
+      Alert.alert('Login Failed', error.message || 'Please check your credentials and try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = async () => {
     if (!onGoogleLogin) {
-      Alert.alert('Error', 'Google Sign-In is not configured')
-      return
+      Alert.alert('Error', 'Google Sign-In is not configured');
+      return;
     }
-    
-    setIsGoogleLoading(true)
+
+    setIsGoogleLoading(true);
     try {
-      await onGoogleLogin()
+      await onGoogleLogin();
     } catch (error: any) {
       Alert.alert(
         'Google Sign-In Failed',
-        error.message || 'An error occurred during Google sign-in'
-      )
+        error.message || 'An error occurred during Google sign-in',
+      );
     } finally {
-      setIsGoogleLoading(false)
+      setIsGoogleLoading(false);
     }
-  }
-  
+  };
+
   const handleAppleLogin = async () => {
     if (onAppleLogin) {
-      setIsAppleLoading(true)
+      setIsAppleLoading(true);
       try {
-        await onAppleLogin()
+        await onAppleLogin();
       } catch (error: any) {
         Alert.alert(
           'Apple Sign-In Failed',
-          error.message || 'An error occurred during Apple sign-in'
-        )
+          error.message || 'An error occurred during Apple sign-in',
+        );
       } finally {
-        setIsAppleLoading(false)
+        setIsAppleLoading(false);
       }
     } else {
-      Alert.alert('Coming Soon', 'Apple login will be available soon')
+      Alert.alert('Coming Soon', 'Apple login will be available soon');
     }
-  }
-  
+  };
+
   const handleFacebookLogin = () => {
-    Alert.alert('Coming Soon', 'Facebook login will be available soon')
-  }
-  
+    Alert.alert('Coming Soon', 'Facebook login will be available soon');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -135,16 +131,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 placeholderTextColor={theme.colors.tertiaryText}
                 value={email}
                 onChangeText={(text) => {
-                  setEmail(text)
-                  setErrors({ ...errors, email: undefined })
+                  setEmail(text);
+                  setErrors({ ...errors, email: undefined });
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              {errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
 
             <View style={styles.inputContainer}>
@@ -155,8 +149,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   placeholderTextColor={theme.colors.tertiaryText}
                   value={password}
                   onChangeText={(text) => {
-                    setPassword(text)
-                    setErrors({ ...errors, password: undefined })
+                    setPassword(text);
+                    setErrors({ ...errors, password: undefined });
                   }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
@@ -172,15 +166,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   />
                 </TouchableOpacity>
               </View>
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
-              )}
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
-            <TouchableOpacity
-              style={styles.forgotPassword}
-              onPress={onForgotPassword}
-            >
+            <TouchableOpacity style={styles.forgotPassword} onPress={onForgotPassword}>
               <Text style={styles.forgotPasswordText}>Forgot password?</Text>
             </TouchableOpacity>
 
@@ -210,10 +199,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 onPress={handleGoogleLogin}
                 disabled={isGoogleLoading || isLoading}
               />
-              
+
               <View style={styles.otherSocialButtons}>
                 <TouchableOpacity
-                  style={[styles.socialButton, (isAppleLoading || isLoading) && styles.socialButtonDisabled]}
+                  style={[
+                    styles.socialButton,
+                    (isAppleLoading || isLoading) && styles.socialButtonDisabled,
+                  ]}
                   onPress={handleAppleLogin}
                   disabled={isAppleLoading || isLoading}
                 >
@@ -243,8 +235,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -435,4 +427,4 @@ const styles = StyleSheet.create({
     color: theme.colors.secondaryText,
     marginBottom: theme.spacing.lg,
   },
-})
+});

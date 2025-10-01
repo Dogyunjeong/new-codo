@@ -8,7 +8,7 @@ export interface User {
   followersCount: number
   followingCount: number
   postsCount: number
-  goalsCount: number
+  journeysCount: number
   isFollowing?: boolean
   createdAt: string
   updatedAt: string
@@ -25,14 +25,14 @@ export interface Post {
   sharesCount: number
   isLiked?: boolean
   isBookmarked?: boolean
-  goalId?: string
-  goal?: Goal
+  journeyId?: string
+  journey?: Journey
   stepNumber?: number
   createdAt: string
   updatedAt: string
 }
 
-export interface Goal {
+export interface Journey {
   id: string
   userId: string
   user: User
@@ -54,7 +54,7 @@ export interface Goal {
 
 export interface Milestone {
   id: string
-  goalId: string
+  journeyId: string
   title: string
   description?: string
   targetDate?: string
@@ -66,7 +66,7 @@ export interface Milestone {
 
 export interface Step {
   id: string
-  goalId: string
+  journeyId: string
   userId: string
   title: string
   description: string
@@ -95,7 +95,7 @@ export interface Comment {
 export interface Notification {
   id: string
   userId: string
-  type: 'like' | 'comment' | 'follow' | 'goal_invite' | 'milestone_achieved' | 'mention'
+  type: 'like' | 'comment' | 'follow' | 'journey_invite' | 'milestone_achieved' | 'mention'
   title: string
   message: string
   isRead: boolean
@@ -103,7 +103,7 @@ export interface Notification {
   relatedUser?: User
   relatedPostId?: string
   relatedPost?: Post
-  relatedGoalId?: string
-  relatedGoal?: Goal
+  relatedJourneyId?: string
+  relatedJourney?: Journey
   createdAt: string
 }

@@ -13,9 +13,7 @@ interface UserParams {
   userId: string;
 }
 
-interface GoalParams {
-  goalId: string;
-}
+interface JourneyParams { journeyId: string }
 
 interface HashtagParams {
   hashtag: string;
@@ -122,15 +120,15 @@ export class PostHandler {
     }
   }
 
-  async getGoalPosts(request: FastifyRequest<{ Params: GoalParams; Querystring: QueryParams }>, reply: FastifyReply) {
+  async getJourneyPosts(request: FastifyRequest<{ Params: JourneyParams; Querystring: QueryParams }>, reply: FastifyReply) {
     try {
-      const { goalId } = request.params;
+      const { journeyId } = request.params as any;
 
       const { page = '1', limit = '20' } = request.query;
       const viewerId = (request as any).user?.userId;
 
-      const result = await this.postService.getPostsByGoal(
-        goalId,
+      const result = await this.postService.getPostsByJourney(
+        journeyId,
         parseInt(page),
         parseInt(limit),
         viewerId
@@ -138,8 +136,8 @@ export class PostHandler {
 
       reply.send(result);
     } catch (error) {
-      console.error('Error fetching goal posts:', error);
-      reply.code(500).send({ error: 'Failed to fetch goal posts' });
+      console.error('Error fetching journey posts:', error);
+      reply.code(500).send({ error: 'Failed to fetch journey posts' });
     }
   }
 

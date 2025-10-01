@@ -99,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Check for stored tokens
       const token = await SecureStorage.getAuthToken()
+      const refreshToken = await SecureStorage.getRefreshToken()
       const userData = await SecureStorage.getUserData()
       
       if (token && userData) {
@@ -122,6 +123,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.error('Failed to refresh session:', error)
             await clearAuthData()
           }
+        }
+      } else if (!token && refreshToken) {
+        // No access token but have refresh token: attempt silent refresh
+        try {
+          await refreshSession()
+        } catch (error) {
+          console.error('Silent refresh failed:', error)
+          await clearAuthData()
         }
       }
     } catch (error) {

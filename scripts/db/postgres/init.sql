@@ -1,4 +1,4 @@
--- PostgreSQL initialization script for Ziririt Goal Sharing App
+-- PostgreSQL initialization script for Ziririt Journey Sharing App
 -- This script sets up the initial database schema for auth and profile services
 
 -- Enable UUID extension
@@ -52,13 +52,13 @@ CREATE TABLE IF NOT EXISTS profiles (
     followers_count INTEGER DEFAULT 0,
     following_count INTEGER DEFAULT 0,
     steps_count INTEGER DEFAULT 0,
-    goals_count INTEGER DEFAULT 0,
+    journeys_count INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create goals table for user goals
-CREATE TABLE IF NOT EXISTS goals (
+-- Create journeys table for user journeys
+CREATE TABLE IF NOT EXISTS journeys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
@@ -87,8 +87,8 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_
 CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_refresh_token ON user_sessions(refresh_token_hash);
 CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
-CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
-CREATE INDEX IF NOT EXISTS idx_goals_created ON goals(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_journeys_user ON journeys(user_id);
+CREATE INDEX IF NOT EXISTS idx_journeys_created ON journeys(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
 
@@ -101,7 +101,7 @@ INSERT INTO users (id, username, email, display_name, firebase_uid, email_verifi
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert corresponding profiles
-INSERT INTO profiles (user_id, bio, is_private, followers_count, following_count, steps_count, goals_count)
+INSERT INTO profiles (user_id, bio, is_private, followers_count, following_count, steps_count, journeys_count)
 SELECT 
     u.id,
     CASE 
@@ -129,13 +129,13 @@ SELECT
         WHEN u.username = 'alice_goals' THEN 3
         WHEN u.username = 'bob_progress' THEN 2
         WHEN u.username = 'charlie_journey' THEN 2
-    END as goals_count
+    END as journeys_count
 FROM users u
 ON CONFLICT (user_id) DO NOTHING;
 
--- Insert sample goals
--- Insert goals; assign a stable UUID for "Strength Training Journey" to satisfy tests
-INSERT INTO goals (id, user_id, title, description, is_private, steps_count)
+-- Insert sample journeys
+-- Assign a stable UUID for "Strength Training Journey" to satisfy tests
+INSERT INTO journeys (id, user_id, title, description, is_private, steps_count)
 SELECT 
     CASE 
       WHEN goal_data.title = 'Strength Training Journey' THEN 'f679548c-09c9-468c-a02d-44ab598e35bc'::uuid
@@ -184,4 +184,4 @@ $$ language 'plpgsql';
 -- Create triggers to automatically update updated_at
 CREATE OR REPLACE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE OR REPLACE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE OR REPLACE TRIGGER update_goals_updated_at BEFORE UPDATE ON goals FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_journeys_updated_at BEFORE UPDATE ON journeys FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

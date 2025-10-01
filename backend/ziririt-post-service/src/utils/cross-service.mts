@@ -30,13 +30,13 @@ export async function getUserProfile(userId: string): Promise<any> {
 }
 
 /**
- * Get goal information via Profile Service
+ * Get journey information via Profile Service
  */
-export async function getGoalInfo(goalId: string): Promise<any> {
+export async function getJourneyInfo(journeyId: string): Promise<any> {
   try {
-    return await profileServiceController.getGoal(goalId);
+    return await profileServiceController.getJourney(journeyId);
   } catch (error) {
-    throw new Error(`Failed to get goal info: ${goalId}`);
+    throw new Error(`Failed to get journey info: ${journeyId}`);
   }
 }
 

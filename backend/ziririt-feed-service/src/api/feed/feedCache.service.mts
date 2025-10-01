@@ -49,9 +49,9 @@ export class FeedCacheService {
     }
   }
 
-  async invalidateGoalFeed(goalId: string): Promise<number> {
+  async invalidateJourneyFeed(journeyId: string): Promise<number> {
     try {
-      const pattern = `feed:goal:${goalId}:*`;
+      const pattern = `feed:journey:${journeyId}:*`;
       const keys = await this.redisClient.keys(pattern);
       
       if (keys.length > 0) {

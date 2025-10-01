@@ -13,18 +13,19 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { useRouter, useFocusEffect } from 'expo-router'
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { theme } from '../src/constants/theme'
 import { PostService } from '../src/services/PostService'
-import { Goal } from '../src/services/post/types'
+import { Journey } from '../src/services/post/types'
 import { useAuth } from '../src/contexts/AuthContext'
 
 
 export default function CreateStepScreen() {
   const router = useRouter()
+  const params = useLocalSearchParams()
   const { user } = useAuth()
   const postService = PostService.getInstance()
-  const [availableGoals, setAvailableGoals] = useState<Goal[]>([])
+  const [availableJourneys, setAvailableJourneys] = useState<Journey[]>([])
   const [selectedGoal, setSelectedGoal] = useState<string>('')
   const [stepTitle, setStepTitle] = useState('')
   const [stepDescription, setStepDescription] = useState('')
@@ -35,30 +36,38 @@ export default function CreateStepScreen() {
     loadGoals()
   }, [])
 
-  // Reload goals when screen gains focus (e.g., after creating a new journey)
+  // Reload journeys when screen gains focus (e.g., after creating a new journey)
   useFocusEffect(
     useCallback(() => {
       loadGoals()
     }, [])
   )
 
+  // Preselect goal if passed from journey page
+  useEffect(() => {
+    const passedGoalId = (params.goalId as string) || (params.journeyId as string)
+    if (passedGoalId) {
+      setSelectedGoal(passedGoalId)
+    }
+  }, [params.goalId, params.journeyId])
+
   const loadGoals = async () => {
     try {
-      console.log('Loading goals for user:', user?.userId, user?.email)
-      const goals = await postService.getUserGoals()
-      console.log('Loaded goals:', goals)
+      console.log('Loading journeys for user:', user?.userId, user?.email)
+      const goals = await (postService.getUserJourneys?.() || postService.getUserGoals?.())
+      console.log('Loaded journeys:', goals)
       
       // Add default emoji and color if not present
-      const goalsWithDefaults = goals.map(goal => ({
+      const journeysWithDefaults = goals.map(goal => ({
         ...goal,
         emoji: goal.emoji || '🎯',
         color: goal.color || '#3B82F6',
         progress: goal.progress || 0
       }))
       
-      setAvailableGoals(goalsWithDefaults)
+      setAvailableJourneys(journeysWithDefaults)
     } catch (error) {
-      console.error('Failed to load goals:', error)
+      console.error('Failed to load journeys:', error)
     }
   }
 
@@ -69,7 +78,7 @@ export default function CreateStepScreen() {
     try {
       console.log('Creating post with title:', stepTitle)
       const post = await postService.createPost({
-        goalId: selectedGoal,
+        journeyId: selectedGoal,
         title: stepTitle,
         content: stepDescription,
       })
@@ -115,9 +124,9 @@ export default function CreateStepScreen() {
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select Goal</Text>
+            <Text style={styles.sectionTitle}>Select Journey</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.goalsScroll}>
-              {availableGoals.map((goal) => (
+              {availableJourneys.map((goal) => (
                 <TouchableOpacity
                   key={goal.id}
                   style={[

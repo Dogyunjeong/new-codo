@@ -4,7 +4,7 @@ This file provides guidance to Gemini when working with code in this repository.
 
 ## Project Overview
 
-Ziririt - A social platform for goal sharing and progress tracking. Built with microservices architecture, React Native mobile client, and TypeScript throughout.
+Ziririt - A social platform for journey sharing and progress tracking. Built with microservices architecture, React Native mobile client, and TypeScript throughout.
 
 ## Commands
 
@@ -89,7 +89,7 @@ yarn e2e:test:all      # Run all tests with screenshots
 ├── backend/                    # Microservices
 │   ├── api-gateway/           # NGINX-based API gateway
 │   ├── ziririt-auth-service/  # Authentication & JWT
-│   ├── ziririt-profile-service/ # User profiles & goals
+│   ├── ziririt-profile-service/ # User profiles & journeys
 │   ├── ziririt-post-service/  # Posts, comments, likes
 │   └── ziririt-feed-service/  # Feed generation & caching
 ├── frontend/

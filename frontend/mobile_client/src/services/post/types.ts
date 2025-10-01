@@ -33,7 +33,7 @@ export interface InspiredBy {
   avatar: string;
 }
 
-export interface Goal {
+export interface Journey {
   id: string;
   userId: string;
   title: string;
@@ -46,11 +46,12 @@ export interface Goal {
   color?: string;
   progress?: number;
 }
+// Backward-compat alias (to be removed):
 
 export interface Post {
   id: string;
   user: PostUser;
-  goalId?: string;
+  journeyId?: string;
   categories?: PostCategory[];
   title: string;
   content: string;
@@ -64,7 +65,7 @@ export interface Post {
 }
 
 export interface CreatePostData {
-  goalId: string;
+  journeyId: string;
   title: string;
   content: string;
   media?: PostMedia;

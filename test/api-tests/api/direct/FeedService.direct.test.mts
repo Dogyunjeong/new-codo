@@ -60,11 +60,11 @@ describe('Feed Service Direct API Tests', () => {
       const goalId = 'goal_strength_id';
       
       // First call
-      const response1 = await fetch(`${FEED_SERVICE_URL}/api/feed/goal/${goalId}?page=1`);
+      const response1 = await fetch(`${FEED_SERVICE_URL}/api/feed/journey/${goalId}?page=1`);
       const data1 = await response1.json();
 
       // Second call should be cached
-      const response2 = await fetch(`${FEED_SERVICE_URL}/api/feed/goal/${goalId}?page=1`);
+      const response2 = await fetch(`${FEED_SERVICE_URL}/api/feed/journey/${goalId}?page=1`);
       const data2 = await response2.json();
 
       expect(response1.status).toBe(200);
@@ -117,7 +117,7 @@ describe('Feed Service Direct API Tests', () => {
 
     it('should handle goal timeline within performance target (<500ms)', async () => {
       const startTime = Date.now();
-      const response = await fetch(`${FEED_SERVICE_URL}/api/feed/goal/goal_spanish_id?page=1`);
+      const response = await fetch(`${FEED_SERVICE_URL}/api/feed/journey/journey_spanish_id?page=1`);
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -274,7 +274,7 @@ describe('Feed Service Direct API Tests', () => {
 
     it('should return timeline for specific goal', async () => {
       const goalId = 'goal_meditation_id';
-      const response = await fetch(`${FEED_SERVICE_URL}/api/feed/goal/${goalId}?page=1`);
+      const response = await fetch(`${FEED_SERVICE_URL}/api/feed/journey/${goalId}?page=1`);
       const data = await response.json();
 
       expect(response.status).toBe(200);

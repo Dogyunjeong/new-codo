@@ -311,6 +311,41 @@ export class TokenManager {
   }
 
   /**
+   * Get a valid token, attempting refresh if needed
+   */
+  async getValidToken(): Promise<string | null> {
+    const token = await SecureStorage.getAuthToken();
+    if (token && this.isTokenValid(token)) {
+      return token;
+    }
+    // If no token or invalid, try refresh
+    try {
+      const result = await this.refreshToken();
+      return result.token;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Get stored refresh token
+   */
+  async getRefreshToken(): Promise<string | null> {
+    return await SecureStorage.getRefreshToken();
+  }
+
+  /**
+   * Validate current access token
+   */
+  async validateToken(): Promise<boolean> {
+    const token = await SecureStorage.getAuthToken();
+    if (!token) {
+      return false;
+    }
+    return this.isTokenValid(token);
+  }
+
+  /**
    * Set access token (used after login)
    */
   async setAccessToken(token: string, refreshToken?: string): Promise<void> {

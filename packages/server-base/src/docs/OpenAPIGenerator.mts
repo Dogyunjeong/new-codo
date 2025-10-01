@@ -254,7 +254,7 @@ export class ProfileServiceAPIGenerator extends OpenAPIGenerator {
     super({
       title: 'Profile Service API',
       version: '1.0.0',
-      description: 'API for managing user profiles, goals, and social relationships',
+      description: 'API for managing user profiles, journeys, and social relationships',
       servers: [
         {
           url: 'http://localhost:4102',
@@ -304,10 +304,10 @@ export class ProfileServiceAPIGenerator extends OpenAPIGenerator {
           minimum: 0,
           description: 'Number of users being followed'
         },
-        goals_count: {
+        journeys_count: {
           type: 'integer',
           minimum: 0,
-          description: 'Number of goals'
+          description: 'Number of journeys'
         },
         created_at: {
           type: 'string',
@@ -337,14 +337,14 @@ export class ProfileServiceAPIGenerator extends OpenAPIGenerator {
       }
     });
 
-    this.addSchema('Goal', {
+    this.addSchema('Journey', {
       type: 'object',
       required: ['id', 'user_id', 'title'],
       properties: {
         id: {
           type: 'string',
           format: 'uuid',
-          description: 'Goal ID'
+          description: 'Journey ID'
         },
         user_id: {
           type: 'string',
@@ -355,26 +355,26 @@ export class ProfileServiceAPIGenerator extends OpenAPIGenerator {
           type: 'string',
           minLength: 1,
           maxLength: 200,
-          description: 'Goal title'
+          description: 'Journey title'
         },
         description: {
           type: 'string',
           maxLength: 1000,
-          description: 'Goal description'
+          description: 'Journey description'
         },
         is_private: {
           type: 'boolean',
-          description: 'Whether the goal is private'
+          description: 'Whether the journey is private'
         },
         created_at: {
           type: 'string',
           format: 'date-time',
-          description: 'Goal creation timestamp'
+          description: 'Journey creation timestamp'
         },
         updated_at: {
           type: 'string',
           format: 'date-time',
-          description: 'Goal last update timestamp'
+          description: 'Journey last update timestamp'
         }
       }
     });

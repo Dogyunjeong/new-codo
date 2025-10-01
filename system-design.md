@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ziririt is a goal-sharing social platform focused on progress tracking and continuous growth. Users create goals, share progress updates, and engage with others' journeys. The platform emphasizes ongoing progress rather than goal completion, fostering a community of continuous improvement and inspiration.
+Ziririt is a journey-sharing social platform focused on progress tracking and continuous growth. Users create journeys, share progress updates, and engage with others' journeys. The platform emphasizes ongoing progress rather than completion, fostering a community of continuous improvement and inspiration.
 
 ## System Architecture
 
@@ -45,7 +45,7 @@ The system follows a microservices pattern with four core services:
 
 1. **API Gateway** - Request routing, rate limiting, CORS
 2. **Auth Service** - User authentication and management
-3. **Profile Service** - User profiles, goals, social relationships
+3. **Profile Service** - User profiles, journeys, social relationships
 4. **Post Service** - Progress posts, comments, likes, media
 5. **Feed Service** - Feed generation and caching
 
@@ -112,13 +112,13 @@ CREATE TABLE profiles (
   followers_count INTEGER DEFAULT 0,
   following_count INTEGER DEFAULT 0,
   steps_count INTEGER DEFAULT 0,
-  goals_count INTEGER DEFAULT 0,
+  journeys_count INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Goals table (Profile Service)
-CREATE TABLE goals (
+-- Journeys table (Profile Service)
+CREATE TABLE journeys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(200) NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE follows (
   _id: ObjectId,
   id: String,           // UUID
   userId: String,       // User who created
-  goalId: String,       // Associated goal
+  journeyId: String,       // Associated journey
   content: String,      // Post content (max 500 chars)
   mediaFiles: [{
     id: String,
@@ -198,7 +198,7 @@ CREATE TABLE follows (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_provider ON users(provider, provider_id);
 
--- Goals
+-- Journeys
 CREATE INDEX idx_goals_user ON goals(user_id);
 CREATE INDEX idx_goals_created ON goals(created_at DESC);
 
@@ -211,7 +211,7 @@ CREATE INDEX idx_follows_following ON follows(following_id);
 ```javascript
 // Posts collection
 db.posts.createIndex({ "userId": 1, "createdAt": -1 });
-db.posts.createIndex({ "goalId": 1, "progressDate": -1 });
+db.posts.createIndex({ "journeyId": 1, "progressDate": -1 });
 db.posts.createIndex({ "createdAt": -1 });
 db.posts.createIndex({ "hashtags": 1 });
 
@@ -276,11 +276,11 @@ GET  /auth/me              # Get current user info
 ### 3. Profile Service (Port 4102)
 
 **Technology**: Fastify + PostgreSQL
-**Database**: PostgreSQL (profiles, goals, follows)
+**Database**: PostgreSQL (profiles, journeys, follows)
 
 **Key Features**:
 - User profile management
-- Goal CRUD operations
+- Journey CRUD operations
 - Social relationships (follow/unfollow)
 - Privacy controls
 - Social statistics
@@ -289,7 +289,7 @@ GET  /auth/me              # Get current user info
 ```
 GET    /profiles/:userId           # Get user profile
 PUT    /profiles/:userId           # Update profile
-GET    /profiles/:userId/goals     # Get user's goals
+GET    /profiles/:userId/journeys  # Get user's journeys
 GET    /profiles/:userId/followers # Get followers list
 GET    /profiles/:userId/following # Get following list
 POST   /social/follow/:userId      # Follow a user
@@ -306,7 +306,7 @@ GET    /social/relationship/:userId # Check relationship status
 - Progress post creation and management
 - Media upload and processing
 - Social interactions (likes, comments)
-- Post timeline for goals
+- Post timeline for journeys
 - Social statistics caching
 
 **API Endpoints**:
@@ -315,7 +315,7 @@ POST   /posts                     # Create progress post
 GET    /posts/:postId             # Get single post
 PUT    /posts/:postId             # Update post
 DELETE /posts/:postId             # Delete post
-GET    /posts/goal/:goalId        # Get posts for a goal
+GET    /posts/journey/:journeyId  # Get posts for a journey
 POST   /posts/:postId/like        # Like a post
 DELETE /posts/:postId/like        # Unlike a post
 POST   /posts/:postId/comments    # Add comment
@@ -336,7 +336,7 @@ POST   /media/upload              # Upload media files
 
 **Key Features**:
 - Home feed generation
-- Goal timeline feeds
+- Journey timeline feeds
 - Redis caching for performance
 - Feed refresh and invalidation
 - Cross-service data aggregation
@@ -344,7 +344,7 @@ POST   /media/upload              # Upload media files
 **API Endpoints**:
 ```
 GET    /feed/home                 # Get user's home feed
-GET    /feed/goal/:goalId         # Get goal timeline
+GET    /feed/journey/:journeyId   # Get journey timeline
 POST   /feed/refresh              # Refresh user's feed cache
 ```
 

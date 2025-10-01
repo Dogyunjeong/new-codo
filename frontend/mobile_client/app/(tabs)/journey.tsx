@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { theme } from '../../src/constants/theme'
 import { PostService } from '../../src/services/PostService'
-import { Goal } from '../../src/services/post/types'
 import { useAuth } from '../../src/contexts/AuthContext'
 import { JourneyCard, JourneyData } from '../../src/components/profile/JourneyCard'
 
@@ -23,8 +22,8 @@ export default function JourneyScreen() {
 
   const loadJourneys = async () => {
     try {
-      const goals = await postService.getUserGoals()
-      const journeyData: JourneyData[] = goals.map(goal => ({
+      const journeysRaw = await postService.getUserJourneys?.() || postService.getUserGoals()
+      const journeyData: JourneyData[] = journeysRaw.map((goal: any) => ({
         id: goal.id,
         title: goal.title,
         description: goal.description || '',

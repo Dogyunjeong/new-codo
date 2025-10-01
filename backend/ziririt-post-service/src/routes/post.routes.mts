@@ -7,9 +7,9 @@ const postService = new PostService();
 // Request schemas
 const createPostSchema = {
   type: 'object',
-  required: ['goalId', 'content'],
+  required: ['journeyId', 'content'],
   properties: {
-    goalId: { type: 'string' },
+    journeyId: { type: 'string' },
     content: { type: 'string', minLength: 1, maxLength: 500 },
     mediaFiles: { 
       type: 'array',
@@ -197,14 +197,14 @@ export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
     },
   });
 
-  // Get posts by goal
+  // Get posts by journey
   fastify.get<{ 
-    Params: { goalId: string }, 
+    Params: { journeyId: string }, 
     Querystring: { page?: string, limit?: string } 
-  }>('/goal/:goalId', {
+  }>('/journey/:journeyId', {
     handler: async (request, reply) => {
       try {
-        const { goalId } = request.params;
+        const { journeyId } = request.params as any;
         const page = parseInt(request.query.page || '1', 10);
         const limit = Math.min(parseInt(request.query.limit || '20', 10), 100);
         
@@ -216,13 +216,13 @@ export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
           viewerId = undefined;
         }
 
-        const result = await postService.getPostsByGoal(goalId, page, limit, viewerId);
+        const result = await postService.getPostsByJourney(journeyId, page, limit, viewerId);
         
         return reply.code(200).send(result);
       } catch (error) {
-        request.log.error('Get goal posts error:', error);
+        request.log.error('Get journey posts error:', error);
         return reply.code(500).send({ 
-          error: 'Failed to get goal posts',
+          error: 'Failed to get journey posts',
           message: error instanceof Error ? error.message : 'Unknown error'
         });
       }

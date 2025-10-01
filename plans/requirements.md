@@ -1,8 +1,8 @@
-# Project Requirements: Goal Sharing Social App
+# Project Requirements: Journey Sharing Social App
 
 ## Project Overview
 
-A social platform where users can create goals, share progress updates, and interact with others' journeys. Similar to Threads but focused on continuous progress and growth rather than goal completion. We believe progress is a part of growing.
+A social platform where users can create journeys, share progress updates, and interact with others' journeys. Similar to Threads but focused on continuous progress and growth rather than journey completion. We believe progress is a part of growing.
 
 ## Functional Requirements
 
@@ -14,9 +14,9 @@ A social platform where users can create goals, share progress updates, and inte
 - **Inspiration Chains**: Blockchain-like system where inspired posts can create chains of motivation
 - **Goal Journeys**: Each goal represents an ongoing journey without time constraints
 
-#### Goal Management
+#### Journey Management
 
-- **Create Goals**: Users can create multiple personal goals with titles and descriptions (no time limits)
+- **Create Journeys**: Users can create multiple personal journeys with titles and descriptions (no time limits)
 - **Continuous Progress**: Focus on ongoing progress rather than completion
 - **Progress Journey**: Visual timeline of progress posts for each goal (chronologically ordered by actual progress date)
 
@@ -29,8 +29,8 @@ A social platform where users can create goals, share progress updates, and inte
 
 #### Progress Sharing (Posts)
 
-- **Create Progress Posts**: Share updates with photos/videos and limited text for specific goals
-- **Goal Association**: Each progress post must be linked to a specific goal
+- **Create Progress Posts**: Share updates with photos/videos and limited text for specific journeys
+- **Journey Association**: Each progress post must be linked to a specific journey
 - **Media Support**: Upload images and videos to document progress
 - **Text Limits**: Character limit for post descriptions (e.g., 500 characters)
 - **Timestamps**: Automatic or custom date/time tracking for progress posts (supports past dates for timeline organization)
@@ -43,7 +43,7 @@ A social platform where users can create goals, share progress updates, and inte
 - **Follow Users**: Follow other users to see their progress
 - **Inspiration Feature**: Special type of post that quotes others' progress posts with optional commentary
 - **Inspiration Chains**: Create blockchain-like chains where inspirations can quote other inspirations, creating viral motivation threads
-- **Explore Goals**: Browse and discover other users' goals and progress
+- **Explore Journeys**: Browse and discover other users' journeys and progress
 - **Journey Discovery**: Discover curated hero journeys that showcase inspiring transformations
 - **Engagement**: Like, comment, and share progress posts
 - **Progress Discovery**: Find inspiring progress stories from other users
@@ -51,16 +51,16 @@ A social platform where users can create goals, share progress updates, and inte
 #### Discovery & Feed
 
 - **Home Feed**: Chronological feed of followed users' progress
-- **Explore Page**: Discover trending goals, progress posts, and featured journeys
-- **Search**: Find users, goals, and specific progress updates
-- **Recommendations**: Suggest goals and users
+- **Explore Page**: Discover trending journeys, progress posts, and featured journeys
+- **Search**: Find users, journeys, and specific progress updates
+- **Recommendations**: Suggest journeys and users
 
 ### User Management
 
 - **User Registration/Login**: Social authentication only (Google, Apple, etc.)
 - **User Profiles**: Display followers, steps (progress posts count), goal list, and journeys
 - **Profile Customization**: Bio, profile picture, goal highlights
-- **Privacy Settings**: Control visibility of goals and progress
+- **Privacy Settings**: Control visibility of journeys and progress
 
 ## Technical Requirements
 
@@ -75,21 +75,21 @@ A social platform where users can create goals, share progress updates, and inte
 
 ### Backend
 
-- **Microservices Architecture**: Separate Fastify services for auth, profiles/goals, feed, and posts using shared base-server package
+- **Microservices Architecture**: Separate Fastify services for auth, profiles/journeys, feed, and posts using shared base-server package
 - **Hybrid Database Strategy**: PostgreSQL for structured data, MongoDB for high-volume posts
 - **User Authentication**: Social login integration (OAuth)
 - **Data Storage**: Multi-database approach optimized for different data types
 - **API Design**: RESTful API for mobile and web clients
 - **Real-time Features**: WebSocket support for live updates
 - **Media Storage**: Cloud storage for images and videos
-- **Search Engine**: Full-text search for goals and posts across databases
+- **Search Engine**: Full-text search for journeys and posts across databases
 
 ### Database Architecture
 
 #### PostgreSQL (Structured Data)
 
 - **Users**: Profile data, authentication, settings, session management
-- **Goals**: Goal details, privacy settings, user associations
+- **Journeys**: Journey details, privacy settings, user associations
 - **Relationships**: User follows, goal associations, user social stats
 - **Inspiration Chains**: Chain relationships with hierarchical queries and depth tracking
 - **Analytics**: User engagement metrics, trending calculations
@@ -163,7 +163,7 @@ A social platform where users can create goals, share progress updates, and inte
 
 ### Phase 1: Core Foundation (Weeks 1-8)
 
-- **Goal Management**: Create, edit, delete goals with privacy settings
+- **Journey Management**: Create, edit, delete journeys with privacy settings
 - **Progress Posts (Steps)**: Basic posting with text and images, custom timestamps
 - **User Profiles**: Display followers, steps count, goal list
 - **Social Features**: Follow/unfollow users, basic likes and comments
@@ -181,7 +181,7 @@ A social platform where users can create goals, share progress updates, and inte
 
 ### Phase 3: Discovery & Engagement (Weeks 17-24)
 
-- **Search & Discovery**: Full-text search across users, goals, posts, journeys
+- **Search & Discovery**: Full-text search across users, journeys, posts, journeys
 - **Explore Page**: Trending content, featured journeys, goal recommendations
 - **Real-time Features**: Live notifications, WebSocket updates for feeds
 - **Enhanced Interactions**: Nested comments, reaction types, journey ratings
@@ -216,7 +216,7 @@ A social platform where users can create goals, share progress updates, and inte
 ### Microservice Data Distribution
 
 - **Auth Service**: PostgreSQL (users, sessions, authentication)
-- **Profile/Goal Service**: PostgreSQL (profiles, goals, user relationships)
+- **Profile/Journey Service**: PostgreSQL (profiles, journeys, user relationships)
 - **Post/Inspiration Service**: MongoDB (posts, comments, media, basic inspirations)
 - **Feed Service**: MongoDB + Redis (cached feeds, content discovery)
 

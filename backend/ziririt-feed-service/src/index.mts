@@ -4,6 +4,7 @@ import { getBaseEnvironment } from '@base/server-base';
 import FeedService from './api/feed/Feed.service.mts';
 import { FeedCacheService } from './api/feed/feedCache.service.mts';
 import { FeedHandler } from './api/feed/feed.handler.mts';
+import { authMiddleware } from './middleware/auth.middleware.mts';
 
 const env = getBaseEnvironment();
 const PORT = parseInt(process.env.PORT || '4104');
@@ -106,11 +107,15 @@ const feedHandler = new FeedHandler({
 });
 
 // Register API routes
-server.get('/api/feed/home', feedHandler.getHomeFeed.bind(feedHandler));
-server.get('/api/feed/goal/:goalId', feedHandler.getGoalTimeline.bind(feedHandler));
+server.get('/api/feed/home', { preHandler: authMiddleware }, feedHandler.getHomeFeed.bind(feedHandler));
+server.get('/api/feed/journey/:journeyId', async (req, rep) => {
+  const { journeyId } = req.params as any;
+  (req as any).params = { journeyId };
+  return feedHandler.getJourneyTimeline.bind(feedHandler)(req as any, rep as any);
+});
 server.get('/api/feed/user/:userId', feedHandler.getUserFeed.bind(feedHandler));
 server.get('/api/feed/hashtag/:hashtag', feedHandler.getHashtagFeed.bind(feedHandler));
-server.post('/api/feed/refresh', feedHandler.refreshFeed.bind(feedHandler));
+server.post('/api/feed/refresh', { preHandler: authMiddleware }, feedHandler.refreshFeed.bind(feedHandler));
 
 
 // Start server

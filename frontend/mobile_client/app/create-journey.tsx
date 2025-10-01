@@ -49,17 +49,24 @@ export default function CreateJourneyScreen() {
 
     setIsCreating(true)
     try {
-      const goal = await postService.createGoal({
+      const goal = await (postService.createJourney ? postService.createJourney({
         title: journeyTitle,
         description: journeyDescription,
         isPrivate,
         emoji: selectedEmoji,
         color: selectedColor,
         progress: 0,
-      })
+      }) : postService.createGoal({
+        title: journeyTitle,
+        description: journeyDescription,
+        isPrivate,
+        emoji: selectedEmoji,
+        color: selectedColor,
+        progress: 0,
+      }))
       
       console.log('Journey created successfully:', goal.id)
-      router.back()
+      router.replace({ pathname: '/journey', params: { journeyId: goal.id } })
     } catch (error) {
       console.error('Failed to create journey:', error)
       Alert.alert('Error', 'Failed to create journey. Please try again.')
@@ -104,7 +111,7 @@ export default function CreateJourneyScreen() {
             <View style={styles.descriptionContainer}>
               <TextInput
                 style={styles.descriptionInput}
-                placeholder="Describe your journey goals and milestones..."
+                placeholder="Describe your journey and milestones..."
                 placeholderTextColor={theme.colors.textTertiary}
                 value={journeyDescription}
                 onChangeText={setJourneyDescription}

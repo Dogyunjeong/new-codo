@@ -10,12 +10,12 @@ export class PostService {
   }
 
   async createPost(userId: string, postData: CreatePostRequest): Promise<Post> {
-    const { goalId, content, mediaFiles, hashtags, isMilestone = false, progressDate } = postData;
+    const { journeyId, content, mediaFiles, hashtags, isMilestone = false, progressDate } = postData;
     
     const post: Post = {
       id: uuidv4(),
       userId,
-      goalId,
+      journeyId,
       content,
       mediaFiles: mediaFiles ? [] : undefined, // TODO: Link to actual media files
       hashtags: hashtags?.map(tag => tag.startsWith('#') ? tag : `#${tag}`),
@@ -41,7 +41,7 @@ export class PostService {
       return null;
     }
 
-    // TODO: Add privacy checks based on goal privacy and user relationships
+    // TODO: Add privacy checks based on journey privacy and user relationships
     return post;
   }
 
@@ -49,7 +49,7 @@ export class PostService {
     const collection = this.db.getCollection<Post>('posts');
     const skip = (page - 1) * limit;
 
-    // TODO: Add privacy checks based on user relationships and goal privacy
+    // TODO: Add privacy checks based on user relationships and journey privacy
     const posts = await collection
       .find({ userId })
       .sort({ createdAt: -1 })
@@ -69,13 +69,13 @@ export class PostService {
     };
   }
 
-  async getPostsByGoal(goalId: string, page: number = 1, limit: number = 20, viewerId?: string): Promise<PaginatedResponse<Post>> {
+  async getPostsByJourney(journeyId: string, page: number = 1, limit: number = 20, viewerId?: string): Promise<PaginatedResponse<Post>> {
     const collection = this.db.getCollection<Post>('posts');
     const skip = (page - 1) * limit;
 
-    // TODO: Add privacy checks based on goal privacy and user relationships
+    // TODO: Add privacy checks based on journey privacy and user relationships
     const posts = await collection
-      .find({ goalId })
+      .find({ journeyId })
       .sort({ progressDate: -1 })
       .skip(skip)
       .limit(limit)
