@@ -1,13 +1,13 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { InteractionHandler } from './interaction.handler.mts';
 import { InteractionManagementService } from './InteractionManagement.service.mts';
-import { MongoConnectionService, createFirebaseAuthMiddleware } from '@base/server-services';
+import { MongoConnectionService } from '@base/server-services';
+import { createFirebaseAuthMiddleware } from '@base/server-base';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Get auth middleware instance
 const config = getAppConfig();
-const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
-const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
+const authenticateUser = createFirebaseAuthMiddleware(config.authServiceUrl) as any;
 
 // v0.1 routes under /api/posts/:postId/*
 export const interactionV01Routes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
@@ -42,4 +42,3 @@ export const interactionV01Routes: FastifyPluginCallback = (fastify: FastifyInst
 
   done();
 };
-

@@ -18,9 +18,26 @@ export interface OAuthConfig {
 }
 
 export interface BackendConfig {
+  /**
+   * The single API gateway URL - all service calls go through this
+   */
+  apiGatewayUrl: string;
+
+  /**
+   * @deprecated Use apiGatewayUrl instead. Kept for backward compatibility.
+   */
   authServiceUrl: string;
+  /**
+   * @deprecated Use apiGatewayUrl instead. Kept for backward compatibility.
+   */
   profileServiceUrl: string;
+  /**
+   * @deprecated Use apiGatewayUrl instead. Kept for backward compatibility.
+   */
   postServiceUrl: string;
+  /**
+   * @deprecated Use apiGatewayUrl instead. Kept for backward compatibility.
+   */
   feedServiceUrl: string;
 }
 
@@ -54,15 +71,18 @@ export interface AppConfig {
  */
 export const getFirebaseConfig = (): FirebaseConfig => {
   const config = Constants.expoConfig?.extra || {};
-  
+
   return {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || config.firebaseApiKey || '',
     authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || config.firebaseAuthDomain || '',
     projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || config.firebaseProjectId || '',
-    storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || config.firebaseStorageBucket || '',
-    messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || config.firebaseMessagingSenderId || '',
+    storageBucket:
+      process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || config.firebaseStorageBucket || '',
+    messagingSenderId:
+      process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || config.firebaseMessagingSenderId || '',
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || config.firebaseAppId || '',
-    measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || config.firebaseMeasurementId,
+    measurementId:
+      process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || config.firebaseMeasurementId,
   };
 };
 
@@ -71,26 +91,47 @@ export const getFirebaseConfig = (): FirebaseConfig => {
  */
 export const getOAuthConfig = (): OAuthConfig => {
   const config = Constants.expoConfig?.extra || {};
-  
+
   return {
-    googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || config.googleWebClientId || '',
-    googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || config.googleIosClientId || '',
-    googleAndroidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || config.googleAndroidClientId || '',
+    googleWebClientId:
+      process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || config.googleWebClientId || '',
+    googleIosClientId:
+      process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || config.googleIosClientId || '',
+    googleAndroidClientId:
+      process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || config.googleAndroidClientId || '',
     appleServiceId: process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || config.appleServiceId || '',
   };
 };
 
 /**
  * Get backend service URLs
+ *
+ * The frontend should only communicate with the API gateway.
+ * The gateway routes requests to appropriate microservices:
+ * - /api/auth/* → Auth Service
+ * - /api/profiles/* → Profile Service
+ * - /api/journeys/* → Profile Service
+ * - /api/posts/* → Post Service
+ * - /api/media/* → Post Service
+ * - /api/feed/* → Feed Service
  */
 export const getBackendConfig = (): BackendConfig => {
   const config = Constants.expoConfig?.extra || {};
-  
+
+  // Primary: Use API gateway URL (recommended)
+  // For Android emulator: 10.0.2.2 maps to host machine's localhost
+  // For iOS simulator: localhost works directly
+  const defaultGatewayUrl = 'http://10.0.2.2:8080';
+  const apiGatewayUrl =
+    process.env.EXPO_PUBLIC_API_GATEWAY_URL || config.apiGatewayUrl || defaultGatewayUrl;
+
   return {
-    authServiceUrl: process.env.EXPO_PUBLIC_AUTH_SERVICE_URL || config.authServiceUrl || 'http://localhost:4101',
-    profileServiceUrl: process.env.EXPO_PUBLIC_PROFILE_SERVICE_URL || config.profileServiceUrl || 'http://localhost:4102',
-    postServiceUrl: process.env.EXPO_PUBLIC_POST_SERVICE_URL || config.postServiceUrl || 'http://localhost:4103',
-    feedServiceUrl: process.env.EXPO_PUBLIC_FEED_SERVICE_URL || config.feedServiceUrl || 'http://localhost:4104',
+    apiGatewayUrl,
+    // All services use the same gateway URL - the gateway handles routing
+    authServiceUrl: apiGatewayUrl,
+    profileServiceUrl: apiGatewayUrl,
+    postServiceUrl: apiGatewayUrl,
+    feedServiceUrl: apiGatewayUrl,
   };
 };
 
@@ -99,13 +140,20 @@ export const getBackendConfig = (): BackendConfig => {
  */
 export const getFeatureFlags = (): FeatureFlags => {
   const config = Constants.expoConfig?.extra || {};
-  
+
   return {
-    enableGoogleLogin: process.env.EXPO_PUBLIC_ENABLE_GOOGLE_LOGIN === 'true' || config.enableGoogleLogin || false,
-    enableAppleLogin: process.env.EXPO_PUBLIC_ENABLE_APPLE_LOGIN === 'true' || config.enableAppleLogin || false,
-    enableEmailLogin: process.env.EXPO_PUBLIC_ENABLE_EMAIL_LOGIN === 'true' || config.enableEmailLogin || true,
-    enableBiometricAuth: process.env.EXPO_PUBLIC_ENABLE_BIOMETRIC_AUTH === 'true' || config.enableBiometricAuth || false,
-    enableAnalytics: process.env.EXPO_PUBLIC_ENABLE_ANALYTICS === 'true' || config.enableAnalytics || false,
+    enableGoogleLogin:
+      process.env.EXPO_PUBLIC_ENABLE_GOOGLE_LOGIN === 'true' || config.enableGoogleLogin || false,
+    enableAppleLogin:
+      process.env.EXPO_PUBLIC_ENABLE_APPLE_LOGIN === 'true' || config.enableAppleLogin || false,
+    enableEmailLogin:
+      process.env.EXPO_PUBLIC_ENABLE_EMAIL_LOGIN === 'true' || config.enableEmailLogin || true,
+    enableBiometricAuth:
+      process.env.EXPO_PUBLIC_ENABLE_BIOMETRIC_AUTH === 'true' ||
+      config.enableBiometricAuth ||
+      false,
+    enableAnalytics:
+      process.env.EXPO_PUBLIC_ENABLE_ANALYTICS === 'true' || config.enableAnalytics || false,
   };
 };
 
@@ -114,14 +162,19 @@ export const getFeatureFlags = (): FeatureFlags => {
  */
 export const getAppSettings = (): AppSettings => {
   const config = Constants.expoConfig?.extra || {};
-  
+
   return {
     appName: process.env.EXPO_PUBLIC_APP_NAME || config.appName || 'Ziririt',
     appVersion: process.env.EXPO_PUBLIC_APP_VERSION || config.appVersion || '1.0.0',
     apiTimeout: parseInt(process.env.EXPO_PUBLIC_API_TIMEOUT || config.apiTimeout || '30000', 10),
-    maxRetryAttempts: parseInt(process.env.EXPO_PUBLIC_MAX_RETRY_ATTEMPTS || config.maxRetryAttempts || '3', 10),
+    maxRetryAttempts: parseInt(
+      process.env.EXPO_PUBLIC_MAX_RETRY_ATTEMPTS || config.maxRetryAttempts || '3',
+      10
+    ),
     debugMode: process.env.EXPO_PUBLIC_DEBUG_MODE === 'true' || config.debugMode || __DEV__,
-    logLevel: (process.env.EXPO_PUBLIC_LOG_LEVEL || config.logLevel || 'info') as AppSettings['logLevel'],
+    logLevel: (process.env.EXPO_PUBLIC_LOG_LEVEL ||
+      config.logLevel ||
+      'info') as AppSettings['logLevel'],
   };
 };
 
@@ -146,11 +199,11 @@ export const validateConfig = (config: AppConfig): boolean => {
     config.firebase.apiKey,
     config.firebase.authDomain,
     config.firebase.projectId,
-    config.backend.authServiceUrl,
+    config.backend.apiGatewayUrl,
   ];
 
-  const missingFields = requiredFields.filter(field => !field);
-  
+  const missingFields = requiredFields.filter((field) => !field);
+
   if (missingFields.length > 0) {
     console.error('Missing required configuration fields:', missingFields);
     return false;
@@ -164,10 +217,10 @@ export const validateConfig = (config: AppConfig): boolean => {
  */
 export const getEnvironment = (): 'development' | 'staging' | 'production' => {
   const env = Constants.expoConfig?.extra?.environment;
-  
+
   if (env === 'production') return 'production';
   if (env === 'staging') return 'staging';
-  
+
   return __DEV__ ? 'development' : 'production';
 };
 

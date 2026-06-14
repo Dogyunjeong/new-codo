@@ -1,12 +1,13 @@
-import { AuthController } from '@base/shared-api-controllers';
+/**
+ * AuthService - Main authentication service
+ *
+ * Uses ApiClientManager's shared AuthController to ensure
+ * auth handlers are properly configured.
+ */
+
 import { AuthProvider, AuthUser, AuthResponse, SignUpData } from './auth/types';
-import {
-  User as FirebaseUser,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithCredential,
-} from 'firebase/auth';
-import { Platform, NativeModules } from 'react-native';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { NativeModules, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import {
   GoogleSignin,
@@ -21,24 +22,28 @@ import { EmailAuthService } from './auth/EmailAuthService';
 import { GoogleAuthService } from './auth/GoogleAuthService';
 import { TokenManager } from './auth/TokenManager';
 import { SecureStorage } from './storage/SecureStorage';
+import { ApiClientManager } from './api/ApiClientManager';
 import { getBackendConfig, getOAuthConfig } from '../config/firebase.config';
 import * as Device from 'expo-device';
 
+// Re-export types for convenience
+export { AuthProvider, AuthUser, AuthResponse, SignUpData } from './auth/types';
 
 export class AuthService {
   private static instance: AuthService;
-  private authController: AuthController;
+  private apiClientManager: ApiClientManager;
   private tokenManager: TokenManager;
-  private deviceId: string;
-  private authStateUnsubscribe: (() => void) | null = null;
 
   private constructor() {
-    const backend = getBackendConfig();
-    this.authController = new AuthController({ baseURL: backend.authServiceUrl });
+    this.apiClientManager = ApiClientManager.getInstance();
     this.tokenManager = TokenManager.getInstance();
-    this.deviceId = this.getDeviceId();
-    this.initializeAuthListener();
     this.configureGoogleSignIn();
+
+    // Auth error handler is set by AuthContext — do not override it here
+  }
+
+  private get authController() {
+    return this.apiClientManager.authController;
   }
 
   /**
@@ -49,10 +54,11 @@ export class AuthService {
       const config = getOAuthConfig();
       const isExpoGo = Constants?.appOwnership === 'expo';
       const hasNativeModule = !!(NativeModules as any)?.RNGoogleSignin;
+
       if (isExpoGo || !hasNativeModule) {
         if (__DEV__) {
           console.log(
-            'Google Sign-In: native module not available (Expo Go or missing). Skipping configuration.',
+            '[AuthService] Google Sign-In: native module not available (Expo Go or missing). Skipping configuration.',
           );
         }
         return;
@@ -60,7 +66,7 @@ export class AuthService {
 
       // Skip if no OAuth config
       if (!config.googleWebClientId || config.googleWebClientId === '') {
-        console.log('Google Sign-In: No web client ID configured');
+        console.log('[AuthService] Google Sign-In: No web client ID configured');
         return;
       }
 
@@ -72,9 +78,9 @@ export class AuthService {
         forceCodeForRefreshToken: true,
       });
 
-      console.log('Google Sign-In configured with native module');
+      console.log('[AuthService] Google Sign-In configured with native module');
     } catch (error) {
-      console.error('Error configuring Google Sign-In:', error);
+      console.error('[AuthService] Error configuring Google Sign-In:', error);
       // Don't throw in development
       if (!__DEV__) {
         throw error;
@@ -93,31 +99,6 @@ export class AuthService {
   }
 
   /**
-   * Get device ID for authentication
-   */
-  private getDeviceId(): string {
-    if (Device.isDevice) {
-      return Device.modelId || Device.osBuildId || 'unknown-device';
-    }
-    return 'simulator-' + Math.random().toString(36).substr(2, 9);
-  }
-
-  /**
-   * Initialize Firebase auth state listener
-   */
-  private initializeAuthListener(): void {
-    const auth = getFirebaseAuth();
-    this.authStateUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        console.log('Firebase auth state changed: User signed in', firebaseUser.email);
-        // Token refresh will be handled by TokenManager
-      } else {
-        console.log('Firebase auth state changed: User signed out');
-      }
-    });
-  }
-
-  /**
    * Sign in with email and password
    */
   async signInWithEmail(email: string, password: string): Promise<AuthResponse> {
@@ -125,7 +106,7 @@ export class AuthService {
       const firebaseResult = await EmailAuthService.signIn(email, password);
       return this.exchangeFirebaseToken(firebaseResult.idToken, AuthProvider.EMAIL);
     } catch (error: any) {
-      console.error('Email sign-in error:', error);
+      console.error('[AuthService] Email sign-in error:', error);
       throw error;
     }
   }
@@ -139,59 +120,57 @@ export class AuthService {
       const firebaseResult = await EmailAuthService.signUp(data);
 
       // Exchange Firebase token for backend JWT
-      const response = await this.exchangeFirebaseToken(
-        firebaseResult.idToken,
-        AuthProvider.EMAIL,
-        {
-          isNewUser: true,
-          displayName: data.displayName,
-        },
-      );
+      const response = await this.exchangeFirebaseToken(firebaseResult.idToken, AuthProvider.EMAIL, {
+        isNewUser: true,
+        displayName: data.displayName,
+      });
 
       return response;
     } catch (error: any) {
-      console.error('Email sign-up error:', error);
+      console.error('[AuthService] Email sign-up error:', error);
       throw error;
     }
   }
 
   /**
    * Sign in with Google using native Google Sign-In module
-   * Tries One-Tap Sign-In first on Android, then falls back to regular sign-in
+   * Tries One-Tap Sign-In first on Android, then falls back to regular sign-in.
    */
   async signInWithGoogle(useOneTap: boolean = true): Promise<AuthResponse> {
     try {
       const hasNativeModule = !!(NativeModules as any)?.RNGoogleSignin;
+      const oauthConfig = getOAuthConfig();
+
       if (!hasNativeModule) {
         throw new Error(
           'Google Sign-In is not available in Expo Go. Please build and run a development client.',
         );
       }
+
       let idToken: string | undefined;
       let isNewUser = false;
 
-      // Try One-Tap Sign-In first if requested (Android only)
+      // One-Tap path avoids some native OAuth client mismatches on Android.
       if (useOneTap && Platform.OS === 'android') {
         try {
-          const response = await GoogleOneTapSignIn.signIn({
-            webClientId: getOAuthConfig().googleWebClientId,
+          const oneTapResponse = await GoogleOneTapSignIn.signIn({
+            webClientId: oauthConfig.googleWebClientId,
           });
 
-          if (isSuccessResponse(response)) {
-            idToken = response.data.idToken;
-          } else if (isNoSavedCredentialFoundResponse(response)) {
-            // Fall back to regular sign-in
-            console.log('No saved credentials for One-Tap, using regular sign-in');
+          if (isSuccessResponse(oneTapResponse)) {
+            idToken = oneTapResponse.data.idToken;
+          } else if (isNoSavedCredentialFoundResponse(oneTapResponse)) {
+            console.log('[AuthService] No saved One-Tap credential, falling back to regular Google sign-in');
           }
-        } catch (error) {
-          console.log('One-Tap sign-in not available, falling back to regular sign-in');
+        } catch {
+          console.log('[AuthService] One-Tap unavailable, falling back to regular Google sign-in');
         }
       }
 
-      // If One-Tap didn't work or wasn't attempted, use regular sign-in
       if (!idToken) {
+        // Regular Google Sign-In path
         await GoogleSignin.hasPlayServices();
-        const userInfo = await GoogleSignin.signIn();
+        await GoogleSignin.signIn();
         const tokens = await GoogleSignin.getTokens();
         idToken = tokens.idToken;
 
@@ -202,10 +181,14 @@ export class AuthService {
         // Sign in to Firebase to check if new user
         const credential = GoogleAuthProvider.credential(idToken);
         const userCredential = await signInWithCredential(getFirebaseAuth(), credential);
-        isNewUser = userCredential.additionalUserInfo?.isNewUser || false;
+        isNewUser = !!(userCredential as any)?.additionalUserInfo?.isNewUser;
 
         // Get Firebase ID token for backend
         idToken = await userCredential.user.getIdToken();
+      }
+
+      if (!idToken) {
+        throw new Error('No ID token received from Google');
       }
 
       // Exchange Firebase token for backend JWT
@@ -217,11 +200,17 @@ export class AuthService {
     } catch (error: any) {
       // Handle cancellation
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log('Google sign-in cancelled');
+        console.log('[AuthService] Google sign-in cancelled');
         throw new Error('Sign-in was cancelled');
       }
 
-      console.error('Google sign-in error:', error);
+      if (error.code === statusCodes.DEVELOPER_ERROR) {
+        throw new Error(
+          'Google OAuth client is not found for this app build. Check Google OAuth client IDs and rebuild the app.',
+        );
+      }
+
+      console.error('[AuthService] Google sign-in error:', error);
       throw error;
     }
   }
@@ -231,8 +220,8 @@ export class AuthService {
    */
   async signInWithApple(): Promise<AuthResponse> {
     try {
-      // Check availability and sign in with Apple
       const isAvailable = await AppleAuthService.isAvailable();
+
       if (!isAvailable) {
         throw new Error('Apple Sign-In is not available on this device');
       }
@@ -249,7 +238,7 @@ export class AuthService {
 
       return response;
     } catch (error) {
-      console.error('Apple sign-in error:', error);
+      console.error('[AuthService] Apple sign-in error:', error);
       throw error;
     }
   }
@@ -267,14 +256,15 @@ export class AuthService {
   ): Promise<AuthResponse> {
     try {
       // Call backend to verify and exchange Firebase token for JWT
-      const response = await fetch(`${getBackendConfig().authServiceUrl}/api/auth/verify`, {
+      // All requests go through the API gateway
+      const response = await fetch(`${getBackendConfig().apiGatewayUrl}/api/auth/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           idToken: firebaseToken,
-          deviceId: this.deviceId,
+          deviceId: this.apiClientManager.deviceId,
           userAgent: `mobile-${Device.osName}-${Device.osVersion}`,
         }),
       });
@@ -286,24 +276,21 @@ export class AuthService {
 
       const data = await response.json();
 
-      // Store tokens in secure storage
-      await SecureStorage.setAuthToken(data.accessToken);
-      if (data.refreshToken) {
-        await SecureStorage.setRefreshToken(data.refreshToken);
-      }
+      // Token storage and HTTP client update is handled by AuthContext.handleAuthSuccess
+      // to avoid duplicate writes
 
       // Convert response to AuthResponse format
       const authResponse: AuthResponse = {
         token: data.accessToken,
         refreshToken: data.refreshToken,
         user: {
-          userId: data.user.id,
+          userId: data.user.userId || data.user.id,
           email: data.user.email,
           displayName: data.user.displayName,
           photoURL: data.user.photoUrl,
           isVerified: data.user.isVerified,
           provider,
-          firebaseUid: data.user.firebaseUid,
+          firebaseUid: data.user.firebaseUid || data.user.userId || data.user.id,
         },
         isNewUser: additionalData?.isNewUser,
       };
@@ -313,7 +300,7 @@ export class AuthService {
 
       return authResponse;
     } catch (error) {
-      console.error('Token exchange error:', error);
+      console.error('[AuthService] Token exchange error:', error);
       throw new Error('Failed to authenticate with backend');
     }
   }
@@ -321,13 +308,34 @@ export class AuthService {
   /**
    * Refresh authentication token
    */
-  async refreshToken(refreshToken?: string): Promise<AuthResponse> {
+  async refreshToken(): Promise<AuthResponse> {
     try {
       // Use TokenManager for refresh
       const result = await this.tokenManager.refreshToken();
 
-      // Get current user data
-      const userData = await this.getCurrentUser();
+      const refreshedUserId = result.user?.userId || result.user?.id || result.user?.firebaseUid;
+      const refreshedUserData = result.user && refreshedUserId
+        ? {
+            userId: refreshedUserId,
+            email: result.user.email ?? null,
+            displayName: result.user.displayName ?? null,
+            photoURL: result.user.photoURL || result.user.photoUrl || null,
+            isVerified: !!result.user.isVerified,
+            provider: this.normalizeProvider(result.user.provider),
+            firebaseUid: result.user.firebaseUid || refreshedUserId,
+          }
+        : null;
+
+      // Fallback order: refresh response -> secure storage -> Firebase
+      const storedUserData = (await SecureStorage.getUserData()) as AuthUser | null;
+      const firebaseUserData = await this.getCurrentUser();
+      const userData = refreshedUserData || storedUserData || firebaseUserData;
+
+      if (!userData) {
+        throw new Error('No user data available after token refresh');
+      }
+
+      await SecureStorage.setUserData(userData);
 
       return {
         token: result.token,
@@ -335,9 +343,19 @@ export class AuthService {
         user: userData,
       };
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error('[AuthService] Token refresh error:', error);
       throw error;
     }
+  }
+
+  private normalizeProvider(provider?: string): AuthProvider {
+    if (provider === AuthProvider.GOOGLE) {
+      return AuthProvider.GOOGLE;
+    }
+    if (provider === AuthProvider.APPLE) {
+      return AuthProvider.APPLE;
+    }
+    return AuthProvider.EMAIL;
   }
 
   /**
@@ -357,29 +375,19 @@ export class AuthService {
           await GoogleAuthService.signOut();
         }
 
-        // Apple doesn't require specific sign-out
-
         // Sign out from Firebase
         await auth.signOut();
       }
 
-      // Clear tokens
-      await this.tokenManager.clearTokens();
+      // Clear tokens from all HTTP clients
+      await this.apiClientManager.clearTokens();
 
-      // Call backend logout if we have a refresh token
-      try {
-        const refreshToken = await this.tokenManager.getRefreshToken();
-        if (refreshToken) {
-          await this.authController.logout(refreshToken);
-        }
-      } catch (error) {
-        // Continue even if backend logout fails
-        console.error('Backend logout error:', error);
-      }
+      // Clear token manager timers
+      this.tokenManager.clearRefreshTimer();
 
-      console.log('User signed out successfully');
+      console.log('[AuthService] User signed out successfully');
     } catch (error) {
-      console.error('Sign-out error:', error);
+      console.error('[AuthService] Sign-out error:', error);
       throw error;
     }
   }
@@ -390,7 +398,10 @@ export class AuthService {
   async verifyToken(): Promise<boolean> {
     try {
       const isValid = await this.tokenManager.validateToken();
-      if (!isValid) return false;
+
+      if (!isValid) {
+        return false;
+      }
 
       // Also verify with backend
       await this.authController.verifyToken();
@@ -408,10 +419,13 @@ export class AuthService {
       const auth = getFirebaseAuth();
       const firebaseUser = auth.currentUser;
 
-      if (!firebaseUser) return null;
+      if (!firebaseUser) {
+        return null;
+      }
 
       // Get provider
       let provider: AuthProvider = AuthProvider.EMAIL;
+
       if (firebaseUser.providerData.some((p) => p.providerId === 'google.com')) {
         provider = AuthProvider.GOOGLE;
       } else if (firebaseUser.providerData.some((p) => p.providerId === 'apple.com')) {
@@ -428,7 +442,7 @@ export class AuthService {
         firebaseUid: firebaseUser.uid,
       };
     } catch (error) {
-      console.error('Error getting current user:', error);
+      console.error('[AuthService] Error getting current user:', error);
       return null;
     }
   }
@@ -438,22 +452,23 @@ export class AuthService {
    */
   async getAccessToken(): Promise<string | null> {
     try {
-      // Use TokenManager's getAccessToken which handles validation and refresh
-      const token = await this.tokenManager.getAccessToken();
-      
+      // Use ApiClientManager's method which handles validation and refresh
+      const token = await this.apiClientManager.getValidAccessToken();
+
       if (!token) {
         // If no stored token, try to get from Firebase
         const auth = getFirebaseAuth();
         const currentUser = auth.currentUser;
+
         if (currentUser) {
           const idToken = await currentUser.getIdToken();
           return idToken;
         }
       }
-      
+
       return token;
     } catch (error) {
-      console.error('Error getting access token:', error);
+      console.error('[AuthService] Error getting access token:', error);
       return null;
     }
   }
@@ -462,7 +477,7 @@ export class AuthService {
    * Set access token for API calls
    */
   setAccessToken(token: string): void {
-    this.authController.setAccessToken(token);
+    this.apiClientManager.setAccessToken(token);
   }
 
   /**
@@ -528,15 +543,10 @@ export class AuthService {
     }
   }
 
-
   /**
    * Clean up resources
    */
   cleanup(): void {
-    if (this.authStateUnsubscribe) {
-      this.authStateUnsubscribe();
-      this.authStateUnsubscribe = null;
-    }
     this.tokenManager.cleanup();
   }
 }

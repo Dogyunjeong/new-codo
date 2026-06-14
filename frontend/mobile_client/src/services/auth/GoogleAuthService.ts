@@ -13,9 +13,9 @@ export class GoogleAuthService {
    */
   static async signOut(): Promise<void> {
     try {
-      // Check if Google Sign-In is available
-      const isSignedIn = await GoogleSignin.isSignedIn();
-      if (isSignedIn) {
+      // Check if user is signed in by checking current user
+      const currentUser = await GoogleSignin.getCurrentUser();
+      if (currentUser) {
         await GoogleSignin.signOut();
         console.log('Google Sign-Out successful');
       }
@@ -91,10 +91,10 @@ export class GoogleAuthService {
 
       // Unlink Google provider
       await unlink(currentUser, 'google.com');
-      
+
       // Sign out from Google if signed in
-      const isSignedIn = await GoogleSignin.isSignedIn();
-      if (isSignedIn) {
+      const googleUser = await GoogleSignin.getCurrentUser();
+      if (googleUser) {
         await GoogleSignin.signOut();
       }
       
@@ -110,8 +110,8 @@ export class GoogleAuthService {
    */
   static async revokeAccess(): Promise<void> {
     try {
-      const isSignedIn = await GoogleSignin.isSignedIn();
-      if (isSignedIn) {
+      const currentUser = await GoogleSignin.getCurrentUser();
+      if (currentUser) {
         await GoogleSignin.revokeAccess();
         console.log('Google access revoked');
       }
@@ -139,11 +139,7 @@ export class GoogleAuthService {
    */
   static async getCurrentUser(): Promise<any> {
     try {
-      const isSignedIn = await GoogleSignin.isSignedIn();
-      if (isSignedIn) {
-        return await GoogleSignin.getCurrentUser();
-      }
-      return null;
+      return await GoogleSignin.getCurrentUser();
     } catch (error) {
       console.error('Error getting current Google user:', error);
       return null;

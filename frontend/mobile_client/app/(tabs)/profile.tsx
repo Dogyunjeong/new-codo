@@ -6,13 +6,13 @@ import {
   Text,
   StyleSheet,
   StatusBar,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   Dimensions,
   Alert,
   RefreshControl,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { ProfileHeader } from '../../src/components/profile/ProfileHeader'
 import { ProfileStats } from '../../src/components/profile/ProfileStats'
 import { ProfileTags } from '../../src/components/profile/ProfileTags'
@@ -23,7 +23,7 @@ import { theme } from '../../src/constants/theme'
 import { useAuth } from '../../src/contexts/AuthContext'
 import { PostService } from '../../src/services/PostService'
 import { ProfileService } from '../../src/services/ProfileService'
-import { Post, Journey } from '../../src/services/post/types'
+import { mapJourneysToJourneyData } from '../../src/utils/journeyMapper'
 
 const { height: screenHeight } = Dimensions.get('window')
 const TAB_BAR_HEIGHT = 50
@@ -47,7 +47,6 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      console.log('User not authenticated, redirecting to login')
       router.replace('/auth/login')
       return
     }
@@ -71,30 +70,12 @@ export default function ProfileScreen() {
 
   const loadUserJourneys = async () => {
     if (!user) {
-      console.log('No user found for loading journeys')
       return
     }
     
     try {
-      const journeysRaw = await (profileService.getUserJourneys?.(user.userId) || profileService.getUserGoals?.(user.userId))
-      console.log('Loaded journeys:', journeysRaw.length, 'journeys:', journeysRaw)
-      
-      // Convert to JourneyData format
-      const journeys: JourneyData[] = journeysRaw.map((goal: Journey) => ({
-        id: goal.id,
-        title: goal.title,
-        description: goal.description || '',
-        date: new Date(goal.createdAt).toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
-        }),
-        steps: goal.progress || 0,
-        status: goal.isPrivate ? 'Ongoing' : 'Active' as 'Active' | 'Ongoing',
-        image: goal.emoji ? undefined : 'https://picsum.photos/200',
-      }))
-      
-      setUserJourneys(journeys)
+      const journeysRaw = await profileService.getUserJourneys(user.userId)
+      setUserJourneys(mapJourneysToJourneyData(journeysRaw))
     } catch (error) {
       console.error('Failed to load journeys:', error)
       setUserJourneys([])
@@ -103,20 +84,12 @@ export default function ProfileScreen() {
 
   const loadUserPosts = async () => {
     if (!user) {
-      console.log('No user found in auth context')
       return
     }
     
     try {
-      console.log('Loading posts for user:', {
-        userId: user.userId,
-        email: user.email,
-        displayName: user.displayName,
-        fullUser: user
-      })
       const posts = await postService.getPosts(user.userId)
-      console.log('Loaded posts:', posts.length, 'posts:', posts)
-      
+
       // Convert posts to StepData format
       const steps: StepData[] = posts.map(post => ({
         id: post.id,
@@ -168,17 +141,11 @@ export default function ProfileScreen() {
   }
 
 
-  const handleStatPress = (stat: 'steps' | 'following' | 'followers') => {
-    console.log('Stat pressed:', stat)
-  }
+  const handleStatPress = (stat: 'steps' | 'following' | 'followers') => {}
 
-  const handleTagPress = (tag: string) => {
-    console.log('Tag pressed:', tag)
-  }
+  const handleTagPress = (tag: string) => {}
 
-  const handleEditPress = () => {
-    console.log('Edit profile')
-  }
+  const handleEditPress = () => {}
 
   const handleSettingsPress = () => {
     Alert.alert(
@@ -212,12 +179,9 @@ export default function ProfileScreen() {
     )
   }
 
-  const handleViewAllJourneys = () => {
-    console.log('View all journeys')
-  }
+  const handleViewAllJourneys = () => {}
 
   const handleJourneyPress = (journey: JourneyData) => {
-    console.log('Journey pressed:', journey.title)
     router.push(`/journey?journeyId=${journey.id}`)
   }
 
@@ -238,11 +202,11 @@ export default function ProfileScreen() {
   const renderStep = ({ item }: { item: StepData }) => (
     <StepCard
       step={item}
-      onLike={() => console.log('Like', item.id)}
-      onComment={() => console.log('Comment', item.id)}
-      onSave={() => console.log('Save', item.id)}
-      onShare={() => console.log('Share', item.id)}
-      onMore={() => console.log('More', item.id)}
+      onLike={() => {}}
+      onComment={() => {}}
+      onSave={() => {}}
+      onShare={() => {}}
+      onMore={() => {}}
     />
   )
 

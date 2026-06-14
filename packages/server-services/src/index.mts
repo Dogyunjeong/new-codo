@@ -9,9 +9,6 @@ export * from './database/MongoConnection.service.mts';
 // Auth services
 export * from './auth/JWT.service.mts';
 
-// Middleware
-export * from './middleware/firebase-auth.middleware.mts';
-
 // Monitoring services
 export * from './monitoring/Logger.service.mts';
 export * from './monitoring/Metrics.service.mts';

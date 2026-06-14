@@ -49,21 +49,14 @@ export default function CreateJourneyScreen() {
 
     setIsCreating(true)
     try {
-      const goal = await (postService.createJourney ? postService.createJourney({
+      const goal = await postService.createJourney({
         title: journeyTitle,
         description: journeyDescription,
         isPrivate,
         emoji: selectedEmoji,
         color: selectedColor,
         progress: 0,
-      }) : postService.createGoal({
-        title: journeyTitle,
-        description: journeyDescription,
-        isPrivate,
-        emoji: selectedEmoji,
-        color: selectedColor,
-        progress: 0,
-      }))
+      })
       
       console.log('Journey created successfully:', goal.id)
       router.replace({ pathname: '/journey', params: { journeyId: goal.id } })

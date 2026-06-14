@@ -1,6 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { JourneyManagementService, CreateJourneyData, UpdateJourneyData } from './JourneyManagement.service.mts';
-import { AuthenticatedRequest } from '@base/server-services';
+
+type AuthenticatedRequest = FastifyRequest & {
+  user?: {
+    userId: string;
+    email?: string;
+    firebaseUid?: string;
+  };
+};
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

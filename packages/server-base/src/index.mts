@@ -15,9 +15,18 @@ export { HealthController } from './handlers/patterns/HealthController.mts';
 export { AuthMiddleware } from './middleware/AuthMiddleware.mts';
 export { MonitoringMiddleware } from './middleware/MonitoringMiddleware.mts';
 export { ValidationMiddleware } from './middleware/ValidationMiddleware.mts';
+export {
+  createFirebaseAuthMiddleware,
+  getUserIdFromRequest,
+  getFirebaseUidFromRequest,
+  type AuthenticatedRequest,
+} from './middleware/FirebaseAuthMiddleware.mts';
 
 // Export docs
 export { OpenAPIGenerator } from './docs/OpenAPIGenerator.mts';
+
+// Route config type for mono-service pattern
+export type { RouteConfig } from './types/RouteConfig.mts';
 
 export interface ServerI18n {
   t(key: string, defaultMessage: string, options?: { [key: string]: string | string[] }): string;

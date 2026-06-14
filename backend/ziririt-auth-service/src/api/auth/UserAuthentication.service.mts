@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { JWTService, TokenResponse } from '@base/server-services';
 import { UserRegistrationService } from './UserRegistration.service.mts';
 import { RefreshTokenService } from './RefreshToken.service.mts';
+import { SessionManagementService } from './SessionManagement.service.mts';
 import { GoogleOAuthService, GoogleAuthData } from '../oauth/GoogleOAuth.service.mts';
 import { AppleOAuthService, AppleAuthData } from '../oauth/AppleOAuth.service.mts';
 import { EmailPasswordAuthService, EmailPasswordAuthData, EmailPasswordSignupData } from './EmailPasswordAuth.service.mts';
@@ -28,6 +29,7 @@ export interface FirebaseUserData {
 export class UserAuthenticationService {
   private userRegistrationService: UserRegistrationService;
   private refreshTokenService: RefreshTokenService;
+  private sessionService: SessionManagementService;
   private jwtService: JWTService;
   private googleOAuthService: GoogleOAuthService;
   private appleOAuthService: AppleOAuthService;
@@ -36,6 +38,7 @@ export class UserAuthenticationService {
   constructor(pool: Pool, config: AuthConfig) {
     this.userRegistrationService = new UserRegistrationService(pool);
     this.refreshTokenService = new RefreshTokenService(pool);
+    this.sessionService = new SessionManagementService(pool);
     this.jwtService = new JWTService({
       accessTokenSecret: config.jwtSecret,
       refreshTokenSecret: config.jwtRefreshSecret,
@@ -60,7 +63,7 @@ export class UserAuthenticationService {
 
       // Generate tokens
       const tokenId = uuidv4();
-      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+      const tokenResponse = this.jwtService.generateTokenPair(this.buildTokenUser(user), tokenId);
 
       // Store refresh token
       await this.refreshTokenService.create({
@@ -88,7 +91,7 @@ export class UserAuthenticationService {
 
       // Generate tokens
       const tokenId = uuidv4();
-      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+      const tokenResponse = this.jwtService.generateTokenPair(this.buildTokenUser(user), tokenId);
 
       // Store refresh token
       await this.refreshTokenService.create({
@@ -105,35 +108,48 @@ export class UserAuthenticationService {
 
   async refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
     try {
-      // Verify refresh token
+      // Verify refresh token JWT signature
       const tokenVerification = this.jwtService.verifyRefreshToken(refreshToken);
       if (!tokenVerification.valid || !tokenVerification.payload) {
         throw new Error('Invalid refresh token');
       }
 
-      // Check if refresh token exists in database
-      const storedToken = await this.refreshTokenService.findByToken(refreshToken);
-      if (!storedToken) {
+      // Check for refresh token in user_sessions table (Firebase auth flow)
+      const session = await this.sessionService.validateSession(refreshToken);
+
+      // If not in sessions, check refresh_tokens table (legacy/direct auth flow)
+      const storedToken = session ? null : await this.refreshTokenService.findByToken(refreshToken);
+
+      if (!session && !storedToken) {
         throw new Error('Refresh token not found or expired');
       }
 
+      // Get user ID from either session or stored token
+      const userId = session ? session.userId : storedToken!.userId;
+
       // Get user
-      const user = await this.userRegistrationService.findById(tokenVerification.payload.userId);
+      const user = await this.userRegistrationService.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
 
       // Generate new tokens
       const tokenId = uuidv4();
-      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+      const tokenResponse = this.jwtService.generateTokenPair(this.buildTokenUser(user), tokenId);
 
-      // Delete old refresh token and create new one
-      await this.refreshTokenService.deleteByToken(refreshToken);
-      await this.refreshTokenService.create({
-        userId: user.id,
-        token: tokenResponse.refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      });
+      // Rotate tokens based on storage type
+      if (session) {
+        // Rotate session refresh token
+        await this.sessionService.rotateRefreshToken(refreshToken, tokenResponse.refreshToken);
+      } else {
+        // Delete old refresh token and create new one in refresh_tokens table
+        await this.refreshTokenService.deleteByToken(refreshToken);
+        await this.refreshTokenService.create({
+          userId: user.id,
+          token: tokenResponse.refreshToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        });
+      }
 
       return tokenResponse;
     } catch (error) {
@@ -143,7 +159,11 @@ export class UserAuthenticationService {
 
   async logout(refreshToken: string): Promise<void> {
     try {
-      await this.refreshTokenService.deleteByToken(refreshToken);
+      // Try to invalidate from both storage systems
+      await Promise.all([
+        this.sessionService.invalidateSession(refreshToken).catch(() => {}),
+        this.refreshTokenService.deleteByToken(refreshToken).catch(() => {}),
+      ]);
     } catch (error) {
       // Log error but don't throw to prevent information leakage
       console.error('Logout error:', error);
@@ -157,7 +177,7 @@ export class UserAuthenticationService {
 
       // Generate tokens
       const tokenId = uuidv4();
-      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+      const tokenResponse = this.jwtService.generateTokenPair(this.buildTokenUser(user), tokenId);
 
       // Store refresh token
       await this.refreshTokenService.create({
@@ -169,10 +189,12 @@ export class UserAuthenticationService {
       return {
         ...tokenResponse,
         user: {
+          id: user.id,
           userId: user.id,
           email: user.email,
           displayName: user.display_name,
           isVerified: user.is_verified,
+          firebaseUid: user.firebase_uid || user.firebaseUid,
         },
       };
     } catch (error) {
@@ -187,7 +209,7 @@ export class UserAuthenticationService {
 
       // Generate tokens
       const tokenId = uuidv4();
-      const tokenResponse = this.jwtService.generateTokenPair(user, tokenId);
+      const tokenResponse = this.jwtService.generateTokenPair(this.buildTokenUser(user), tokenId);
 
       // Store refresh token
       await this.refreshTokenService.create({
@@ -199,10 +221,12 @@ export class UserAuthenticationService {
       return {
         ...tokenResponse,
         user: {
+          id: user.id,
           userId: user.id,
           email: user.email,
           displayName: user.display_name,
           isVerified: user.is_verified,
+          firebaseUid: user.firebase_uid || user.firebaseUid,
         },
       };
     } catch (error) {
@@ -252,22 +276,41 @@ export class UserAuthenticationService {
   }
 
   generateAccessToken(user: any): string {
-    const tokenId = uuidv4();
     const tokenData = {
       userId: user.id,
       email: user.email,
       displayName: user.display_name || user.displayName,
       isVerified: user.email_verified || user.emailVerified || false,
+      firebaseUid: user.firebase_uid || user.firebaseUid,
+      provider: user.provider,
     };
-    return this.jwtService.generateAccessToken(tokenData, tokenId);
+    return this.jwtService.generateAccessToken(tokenData);
   }
 
   generateRefreshToken(user: any): string {
     const tokenId = uuidv4();
     const tokenData = {
       userId: user.id,
-      email: user.email,
+      tokenId,
     };
-    return this.jwtService.generateRefreshToken(tokenData, tokenId);
+    return this.jwtService.generateRefreshToken(tokenData);
+  }
+
+  private buildTokenUser(user: any): {
+    id: string;
+    email: string;
+    displayName: string;
+    isVerified: boolean;
+    firebaseUid?: string;
+    provider?: string;
+  } {
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: user.display_name || user.displayName || user.username || user.email,
+      isVerified: user.is_verified ?? user.isVerified ?? user.email_verified ?? user.emailVerified ?? false,
+      firebaseUid: user.firebase_uid || user.firebaseUid,
+      provider: user.provider,
+    };
   }
 }

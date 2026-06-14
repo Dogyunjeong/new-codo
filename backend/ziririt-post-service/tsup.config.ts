@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig(() => {
   return {
-    entry: ['src/index.mts'],
+    entry: ['src/index.mts', 'src/routes/index.mts'],
     target: 'node22',
     format: ['esm'],
     noExternal: [/@base\/.+$/],

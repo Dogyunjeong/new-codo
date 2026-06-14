@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { ProfileHandler } from './profile.handler.mts';
 import { ProfileManagementService } from './ProfileManagement.service.mts';
-import { PostgresConnectionService, createFirebaseAuthMiddleware } from '@base/server-services';
+import { PostgresConnectionService } from '@base/server-services';
+import { createFirebaseAuthMiddleware } from '@base/server-base';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas
@@ -15,8 +16,7 @@ const updateProfileSchema = {
 
 // Get auth middleware instance
 const config = getAppConfig();
-const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
-const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
+const authenticateUser = createFirebaseAuthMiddleware(config.authServiceUrl) as any;
 
 export const profileRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   // Initialize services

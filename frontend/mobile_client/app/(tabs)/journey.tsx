@@ -7,6 +7,7 @@ import { theme } from '../../src/constants/theme'
 import { PostService } from '../../src/services/PostService'
 import { useAuth } from '../../src/contexts/AuthContext'
 import { JourneyCard, JourneyData } from '../../src/components/profile/JourneyCard'
+import { mapJourneysToJourneyData } from '../../src/utils/journeyMapper'
 
 export default function JourneyScreen() {
   const router = useRouter()
@@ -22,18 +23,8 @@ export default function JourneyScreen() {
 
   const loadJourneys = async () => {
     try {
-      const journeysRaw = await postService.getUserJourneys?.() || postService.getUserGoals()
-      const journeyData: JourneyData[] = journeysRaw.map((goal: any) => ({
-        id: goal.id,
-        title: goal.title,
-        description: goal.description || '',
-        date: goal.createdAt ? new Date(goal.createdAt).toLocaleDateString() : 'Today',
-        steps: 0, // TODO: Get actual step count from backend
-        status: 'Active' as const,
-        image: undefined,
-        imageCaption: undefined,
-      }))
-      setJourneys(journeyData)
+      const journeysRaw = await postService.getUserJourneys()
+      setJourneys(mapJourneysToJourneyData(journeysRaw))
     } catch (error) {
       console.error('Failed to load journeys:', error)
     } finally {
@@ -52,8 +43,7 @@ export default function JourneyScreen() {
   }
 
   const handleJourneyPress = (journey: JourneyData) => {
-    console.log('Journey pressed:', journey.id)
-    // TODO: Navigate to journey detail screen
+    router.push(`/journey?journeyId=${journey.id}`)
   }
 
   if (isLoading) {

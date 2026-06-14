@@ -8,18 +8,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  SafeAreaView,
+  ActivityIndicator,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { StoryBar } from '../../src/components/feed/StoryBar'
 import { TabBar } from '../../src/components/common/TabBar'
 import { PostCard, PostData } from '../../src/components/feed/PostCard'
 import { useAddStepModal } from '../../src/contexts/AddStepModalContext'
 import { theme } from '../../src/constants/theme'
-import { PostService } from '../../src/services/PostService'
 import { FeedService } from '../../src/services/FeedService'
-import { Post } from '../../src/services/post/types'
 import { useAuth } from '../../src/contexts/AuthContext'
+import { mapRawPostsToPostData } from '../../src/utils/postMapper'
 
 
 const tabs = [
@@ -32,18 +32,42 @@ const tabs = [
 export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState('for-you')
   const [refreshing, setRefreshing] = useState(false)
+  const [isFeedLoading, setIsFeedLoading] = useState(false)
+  const [feedError, setFeedError] = useState<string | null>(null)
   const [posts, setPosts] = useState<PostData[]>([])
   const { showModal } = useAddStepModal()
   const { user, isAuthenticated } = useAuth()
-  const postService = PostService.getInstance()
   const feedService = FeedService.getInstance()
+
+  const loadPosts = useCallback(async (withLoading: boolean = true) => {
+    try {
+      if (withLoading) {
+        setIsFeedLoading(true)
+      }
+      setFeedError(null)
+
+      const fetchedPosts = await feedService.getHomeFeed()
+      setPosts(mapRawPostsToPostData(fetchedPosts))
+    } catch (error) {
+      console.error('Failed to load posts:', error)
+      setPosts([])
+      setFeedError(error instanceof Error ? error.message : 'Failed to load feed')
+    } finally {
+      if (withLoading) {
+        setIsFeedLoading(false)
+      }
+    }
+  }, [feedService])
 
   useEffect(() => {
     // Only load posts if user is authenticated
     if (isAuthenticated) {
       loadPosts()
+      return
     }
-  }, [isAuthenticated])
+    setPosts([])
+    setFeedError(null)
+  }, [isAuthenticated, loadPosts])
 
   // Reload posts when screen comes into focus (e.g., after creating a post)
   useFocusEffect(
@@ -52,60 +76,42 @@ export default function HomeScreen() {
       if (isAuthenticated) {
         loadPosts()
       }
-    }, [isAuthenticated])
+    }, [isAuthenticated, loadPosts])
   )
-
-  const loadPosts = async () => {
-    try {
-      // Try to fetch from feed service first, fallback to post service if needed
-      let fetchedPosts: any[] = [];
-      
-      try {
-        // Attempt to get feed from backend feed service
-        fetchedPosts = await feedService.getHomeFeed();
-      } catch (feedError) {
-        console.log('Feed service not available, falling back to post service');
-        // Fallback to post service if feed service fails
-        fetchedPosts = await postService.getPosts();
-      }
-      
-      const mappedPosts: PostData[] = fetchedPosts.map((post: any) => ({
-        id: post.id || post._id,
-        user: {
-          // Handle both structures: post.user object or just post.userId
-          name: post.user?.name || post.userName || 'Unknown User',
-          avatar: post.user?.avatar || post.userAvatar || 'https://i.pravatar.cc/150',
-          meta: post.user?.meta || post.userMeta || '',
-        },
-        categories: post.categories || [],
-        title: post.title || '',
-        content: post.content || '',
-        steps: post.steps,
-        media: post.media || post.mediaFiles?.[0],
-        tags: post.tags || post.hashtags?.map((tag: string) => ({
-          label: tag,
-          type: 'hashtag' as const
-        })),
-        engagement: post.engagement || {
-          likes: post.likesCount || 0,
-          comments: post.commentsCount || 0,
-          relates: 0,
-          isLiked: false,
-        },
-        inspiredBy: post.inspiredBy,
-      }))
-      setPosts(mappedPosts)
-    } catch (error) {
-      console.error('Failed to load posts:', error)
-      // Set empty posts array on error
-      setPosts([])
-    }
-  }
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadPosts()
+    await loadPosts(false)
     setRefreshing(false)
+  }
+
+  const renderEmptyState = () => {
+    if (isFeedLoading) {
+      return (
+        <View style={styles.emptyState}>
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+          <Text style={styles.emptyText}>Loading feed...</Text>
+        </View>
+      )
+    }
+
+    if (feedError) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.errorTitle}>Couldn&apos;t load feed</Text>
+          <Text style={styles.errorText}>{feedError}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => loadPosts()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )
+    }
+
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyText}>No posts yet</Text>
+      </View>
+    )
   }
 
   const renderHeader = () => (
@@ -140,11 +146,11 @@ export default function HomeScreen() {
   const renderPost = ({ item }: { item: PostData }) => (
     <PostCard
       post={item}
-      onLike={() => console.log('Like', item.id)}
-      onComment={() => console.log('Comment', item.id)}
-      onRelate={() => console.log('Relate', item.id)}
-      onUserPress={() => console.log('User press', item.user.name)}
-      onMorePress={() => console.log('More', item.id)}
+      onLike={() => {}}
+      onComment={() => {}}
+      onRelate={() => {}}
+      onUserPress={() => {}}
+      onMorePress={() => {}}
     />
   )
 
@@ -154,9 +160,10 @@ export default function HomeScreen() {
       
       <FlatList
         data={posts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || `post-${index}`}
         renderItem={renderPost}
         ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyState}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -193,5 +200,37 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: theme.spacing.xs,
+  },
+  emptyState: {
+    paddingVertical: theme.spacing.xxl,
+    paddingHorizontal: theme.spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    ...theme.typography.body,
+    color: theme.colors.secondaryText,
+    marginTop: theme.spacing.sm,
+  },
+  errorTitle: {
+    ...theme.typography.sectionTitle,
+    color: theme.colors.primaryText,
+    marginBottom: theme.spacing.xs,
+  },
+  errorText: {
+    ...theme.typography.body,
+    color: theme.colors.secondaryText,
+    textAlign: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  retryButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
+  },
+  retryButtonText: {
+    ...theme.typography.button,
+    color: theme.colors.white,
   },
 })

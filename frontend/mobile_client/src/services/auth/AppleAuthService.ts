@@ -248,13 +248,13 @@ export class AppleAuthService {
    */
   private static async generateNonce(length: number = 32): Promise<string> {
     const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    const randomBytes = await Crypto.getRandomBytesAsync(length);
     let nonce = '';
-    
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * charset.length);
-      nonce += charset[randomIndex];
-    }
-    
+
+    randomBytes.forEach((byte) => {
+      nonce += charset[byte % charset.length];
+    });
+
     return nonce;
   }
 

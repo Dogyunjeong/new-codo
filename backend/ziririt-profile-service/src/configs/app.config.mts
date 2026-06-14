@@ -6,6 +6,7 @@ export interface AppConfig {
   port: number;
   hostUrl: string;
   databaseUrl: string;
+  authServiceUrl: string;
   nodeEnv: string;
   
   // Profile-specific configurations
@@ -23,6 +24,7 @@ export const getAppConfig = (): AppConfig => {
     port: parseInt(process.env.PORT || String(env.HTTP_PORT) || '4102', 10),
     hostUrl: env.HOST_URL || 'localhost',
     databaseUrl: env.DATABASE_URL || 'postgresql://ziririt_user:ziririt_password@localhost:5432/ziririt_db',
+    authServiceUrl: env.AUTH_SERVICE_URL || 'http://ziririt-auth-service:4101',
     nodeEnv: env.NODE_ENV || 'development',
     
     // Profile-specific configurations

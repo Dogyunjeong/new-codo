@@ -2,6 +2,12 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import FeedService from './Feed.service.mts';
 import { FeedCacheService } from './feedCache.service.mts';
 
+type AuthenticatedRequest = FastifyRequest & {
+  user?: {
+    userId: string;
+  };
+};
+
 export class FeedHandler {
   private feedService: FeedService;
   private feedCacheService: FeedCacheService;
@@ -14,7 +20,10 @@ export class FeedHandler {
   async getHomeFeed(req: FastifyRequest, rep: FastifyReply) {
     const startTime = Date.now();
     try {
-      const userId = (req.headers as any)['x-user-id'] || 'anonymous';
+      const userId = (req as AuthenticatedRequest).user?.userId || (req as any).userId;
+      if (!userId) {
+        return rep.code(401).send({ error: 'Authentication required' });
+      }
       const { page = '1', limit = '20' } = req.query as any;
       const pageNum = parseInt(page, 10);
       const limitNum = parseInt(limit, 10);
@@ -170,7 +179,10 @@ export class FeedHandler {
   async refreshFeed(req: FastifyRequest, rep: FastifyReply) {
     const startTime = Date.now();
     try {
-      const userId = (req.headers as any)['x-user-id'] || 'anonymous';
+      const userId = (req as AuthenticatedRequest).user?.userId || (req as any).userId;
+      if (!userId) {
+        return rep.code(401).send({ error: 'Authentication required' });
+      }
       
       // Invalidate user's cached feeds
       const clearedEntries = await this.feedCacheService.invalidateUserFeed(userId);

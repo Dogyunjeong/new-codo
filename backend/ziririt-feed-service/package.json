@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "description": "Feed generation and caching service for Ziririt",
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./routes": {
+      "import": "./dist/routes/index.js"
+    }
+  },
   "type": "module",
   "scripts": {
     "build": "tsup-node",

@@ -30,6 +30,7 @@ export default function CreateStepScreen() {
   const [stepTitle, setStepTitle] = useState('')
   const [stepDescription, setStepDescription] = useState('')
   const [selectedImages, setSelectedImages] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(true)
   const [isPosting, setIsPosting] = useState(false)
 
   useEffect(() => {
@@ -53,9 +54,7 @@ export default function CreateStepScreen() {
 
   const loadGoals = async () => {
     try {
-      console.log('Loading journeys for user:', user?.userId, user?.email)
-      const goals = await (postService.getUserJourneys?.() || postService.getUserGoals?.())
-      console.log('Loaded journeys:', goals)
+      const goals = await postService.getUserJourneys()
       
       // Add default emoji and color if not present
       const journeysWithDefaults = goals.map(goal => ({
@@ -76,13 +75,11 @@ export default function CreateStepScreen() {
     
     setIsPosting(true)
     try {
-      console.log('Creating post with title:', stepTitle)
       const post = await postService.createPost({
         journeyId: selectedGoal,
         title: stepTitle,
         content: stepDescription,
       })
-      console.log('Post created successfully:', post.id)
       
       // Brief delay to ensure state updates propagate
       setTimeout(() => {
@@ -96,9 +93,7 @@ export default function CreateStepScreen() {
     }
   }
 
-  const handleAddImage = () => {
-    console.log('Add image')
-  }
+  const handleAddImage = () => {}
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -212,27 +207,29 @@ export default function CreateStepScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sharing Options</Text>
             <View style={styles.sharingOptions}>
-              <TouchableOpacity style={styles.sharingOption}>
+              <TouchableOpacity style={styles.sharingOption} onPress={() => setIsPublic(true)}>
                 <View style={styles.sharingIconContainer}>
-                  <Ionicons name="earth" size={20} color={theme.colors.primary} />
+                  <Ionicons name="earth" size={20} color={isPublic ? theme.colors.primary : theme.colors.textSecondary} />
                 </View>
                 <View style={styles.sharingTextContainer}>
                   <Text style={styles.sharingTitle}>Public</Text>
                   <Text style={styles.sharingDescription}>Anyone can see this step</Text>
                 </View>
-                <View style={styles.radioOuter}>
-                  <View style={styles.radioInner} />
+                <View style={[styles.radioOuter, isPublic && styles.radioSelected]}>
+                  {isPublic && <View style={styles.radioInner} />}
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.sharingOption}>
+              <TouchableOpacity style={styles.sharingOption} onPress={() => setIsPublic(false)}>
                 <View style={styles.sharingIconContainer}>
-                  <Ionicons name="people" size={20} color={theme.colors.textSecondary} />
+                  <Ionicons name="people" size={20} color={!isPublic ? theme.colors.primary : theme.colors.textSecondary} />
                 </View>
                 <View style={styles.sharingTextContainer}>
                   <Text style={styles.sharingTitle}>Followers Only</Text>
                   <Text style={styles.sharingDescription}>Only your followers can see</Text>
                 </View>
-                <View style={styles.radioOuter} />
+                <View style={[styles.radioOuter, !isPublic && styles.radioSelected]}>
+                  {!isPublic && <View style={styles.radioInner} />}
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -470,6 +467,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  radioSelected: {
+    borderColor: theme.colors.primary,
   },
   radioInner: {
     width: 10,

@@ -1,0 +1,81 @@
+services:
+  # PostgreSQL Database for Auth & Profile Services
+  postgres:
+    image: postgres:15-alpine
+    container_name: ziririt-postgres
+    env_file:
+      - ./local.env
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../scripts/db/postgres:/docker-entrypoint-initdb.d
+    networks:
+      - ziririt-network
+
+  # MongoDB Database for Posts & Feed Services
+  mongodb:
+    image: mongo:7.0
+    container_name: ziririt-mongodb
+    env_file:
+      - ./local.env
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+      - ../../scripts/db/mongodb:/docker-entrypoint-initdb.d
+    networks:
+      - ziririt-network
+
+  # Redis for Caching & Sessions
+  redis:
+    image: redis:7.2-alpine
+    container_name: ziririt-redis
+    command: redis-server --requirepass ziririt_password
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - ziririt-network
+
+  # Mono Service (all routes aggregated)
+  ziririt-mono-service:
+    build:
+      context: ../../
+      dockerfile: backend/Dockerfile.mono.local
+    container_name: ziririt-mono-service
+    ports:
+      - '4100:4100'
+    env_file:
+      - ./local.mono.env
+    environment:
+      NODE_ENV: development
+      PORT: 4100
+      SERVICE_NAME: ziririt-mono-service
+      GOOGLE_APPLICATION_CREDENTIALS: /base/keys/gcp-dev-key.json
+    volumes:
+      - ../keys:/base/keys:ro
+      - ../../backend/ziririt-mono-service/src:/base/backend/ziririt-mono-service/src
+      - ../../backend/ziririt-auth-service/src:/base/backend/ziririt-auth-service/src
+      - ../../backend/ziririt-profile-service/src:/base/backend/ziririt-profile-service/src
+      - ../../backend/ziririt-post-service/src:/base/backend/ziririt-post-service/src
+      - ../../backend/ziririt-feed-service/src:/base/backend/ziririt-feed-service/src
+      - ../../packages:/base/packages:ro
+      - media_storage:/app/media
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+    networks:
+      - ziririt-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  media_storage:
+
+networks:
+  ziririt-network:
+    driver: bridge

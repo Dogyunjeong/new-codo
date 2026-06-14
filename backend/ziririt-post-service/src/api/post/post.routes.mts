@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { PostHandler } from './post.handler.mts';
 import { PostManagementService } from './PostManagement.service.mts';
-import { MongoConnectionService, createFirebaseAuthMiddleware } from '@base/server-services';
+import { MongoConnectionService } from '@base/server-services';
+import { createFirebaseAuthMiddleware } from '@base/server-base';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 const createPostSchema = {
@@ -41,8 +42,7 @@ const updatePostSchema = {
 
 // Get auth middleware instance
 const config = getAppConfig();
-const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
-const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
+const authenticateUser = createFirebaseAuthMiddleware(config.authServiceUrl) as any;
 
 export const postRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   const mongoConnection = MongoConnectionService.getInstance({ uri: config.databaseUrl });

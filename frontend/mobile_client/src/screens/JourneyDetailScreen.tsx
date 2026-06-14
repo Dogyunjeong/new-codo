@@ -17,6 +17,7 @@ import { FeedService } from '../../src/services/FeedService'
 import { Journey } from '../../src/services/post/types'
 import { PostCard, PostData } from '../../src/components/feed/PostCard'
 import { useAuth } from '../../src/contexts/AuthContext'
+import { mapRawPostsToPostData } from '../utils/postMapper'
 
 export default function JourneyDetailScreen() {
   const router = useRouter()
@@ -41,7 +42,7 @@ export default function JourneyDetailScreen() {
 
   const loadJourneyDetails = async () => {
     try {
-      const data = await (profileService.getJourney ? profileService.getJourney(journeyId) : profileService.getGoal(journeyId))
+      const data = await profileService.getJourney(journeyId)
       if (data) setJourney(data)
     } catch (error) {
       console.error('Failed to load journey:', error)
@@ -53,27 +54,10 @@ export default function JourneyDetailScreen() {
     try {
       setLoading(true)
       const journeyPosts = await (feedService as any).getJourneyTimeline(journeyId)
-      const mapped: PostData[] = journeyPosts.map((post: any) => ({
-        id: post.id || post._id,
-        user: {
-          name: post.user?.name || post.userName || user?.displayName || 'Unknown User',
-          avatar: post.user?.avatar || post.userAvatar || 'https://i.pravatar.cc/150',
-          meta: post.user?.meta || post.userMeta || '',
-        },
-        categories: post.categories || [],
-        title: post.title || '',
-        content: post.content || '',
-        steps: post.steps,
-        media: post.media || post.mediaFiles?.[0],
-        tags: post.tags || post.hashtags?.map((tag: string) => ({ label: tag, type: 'hashtag' as const })),
-        engagement: post.engagement || {
-          likes: post.likesCount || 0,
-          comments: post.commentsCount || 0,
-          relates: 0,
-          isLiked: false,
-        },
-        inspiredBy: post.inspiredBy,
-      }))
+      const mapped = mapRawPostsToPostData(journeyPosts, {
+        name: user?.displayName,
+        avatar: undefined,
+      })
       setPosts(mapped)
     } catch (error) {
       console.error('Failed to load journey posts:', error)
@@ -103,7 +87,7 @@ export default function JourneyDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await (profileService.deleteJourney ? profileService.deleteJourney(journeyId) : profileService.deleteGoal(journeyId))
+              await profileService.deleteJourney(journeyId)
               router.back()
             } catch (error) {
               Alert.alert('Error', 'Failed to delete journey')

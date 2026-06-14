@@ -94,9 +94,11 @@ async function authenticateToken(request: FastifyRequest, reply: FastifyReply) {
 
     const token = authHeader.substring(7);
     const config = getAppConfig();
-    const dbConnection = PostgresConnectionService.getInstance({ connectionString: config.databaseUrl });
+    const dbConnection = PostgresConnectionService.getInstance({
+      connectionString: config.databaseUrl,
+    });
     const authService = new UserAuthenticationService(dbConnection.getPool(), config);
-    
+
     const verification = authService.verifyAccessToken(token);
 
     if (!verification.valid || !verification.payload) {
@@ -113,7 +115,9 @@ async function authenticateToken(request: FastifyRequest, reply: FastifyReply) {
 export const authRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   // Initialize services
   const config = getAppConfig();
-  const dbConnection = PostgresConnectionService.getInstance({ connectionString: config.databaseUrl });
+  const dbConnection = PostgresConnectionService.getInstance({
+    connectionString: config.databaseUrl,
+  });
   const authService = new UserAuthenticationService(dbConnection.getPool(), config);
   const authHandler = new AuthHandler(authService);
 
@@ -188,8 +192,8 @@ export const authRoutes: FastifyPluginCallback = (fastify: FastifyInstance, opti
           email: user.email,
           displayName: user.displayName,
           isVerified: user.isVerified,
-          firebaseUid: user.firebaseUid,
-        }
+          firebaseUid: user.firebaseUid || user.userId,
+        },
       });
     },
   });

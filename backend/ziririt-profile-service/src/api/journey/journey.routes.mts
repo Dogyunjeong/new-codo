@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
 import { JourneyHandler } from './journey.handler.mts';
 import { JourneyManagementService } from './JourneyManagement.service.mts';
-import { PostgresConnectionService, createFirebaseAuthMiddleware, AuthenticatedRequest } from '@base/server-services';
+import { PostgresConnectionService } from '@base/server-services';
+import { createFirebaseAuthMiddleware } from '@base/server-base';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 // Request schemas
@@ -26,8 +27,7 @@ const updateGoalSchema = {
 
 // Get auth middleware instance
 const config = getAppConfig();
-const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4101';
-const authenticateUser = createFirebaseAuthMiddleware(authServiceUrl);
+const authenticateUser = createFirebaseAuthMiddleware(config.authServiceUrl) as any;
 
 export const journeyRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   // Initialize services

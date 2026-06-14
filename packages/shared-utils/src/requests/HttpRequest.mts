@@ -17,6 +17,9 @@ export interface IRequest {
   getBaseUrl: () => string;
   setBaseUrl: (baseUrl: string) => void;
   setAccessToken: (accessToken: string) => void;
+  clearAccessToken?: () => void;
+  setTokenRefreshHandler?: (handler: () => Promise<string | null>) => void;
+  setAuthErrorHandler?: (handler: () => void) => void;
   request<T = any>(config: RequestConfig): Promise<ResponseType<T>>;
   get<T = any>(url: string, config?: RequestConfig): Promise<ResponseType<T>>;
   delete<T = any>(url: string, config?: RequestConfig): Promise<ResponseType<T>>;
@@ -31,13 +34,104 @@ class HttpRequest implements IRequest {
   private _instance: AxiosInstance;
   private _baseURl?: string;
   private _fallbackUrls: string[] = [];
+  private _isRefreshing = false;
+  private _refreshSubscribers: Array<{ resolve: (token: string) => void; reject: (error: any) => void }> = [];
+  private _onTokenRefresh?: () => Promise<string | null>;
+  private _onAuthError?: () => void;
+
   constructor({ baseURL, timeout }: { baseURL?: string; timeout?: number } = {}) {
     this._instance = axios.create({ baseURL, timeout });
     this._baseURl = baseURL;
+    this._setupInterceptors();
   }
 
   public setAccessToken = (accessToken: string) => {
     this._instance.defaults.headers.Authorization = `Bearer ${accessToken}`;
+  };
+
+  public clearAccessToken = () => {
+    delete this._instance.defaults.headers.Authorization;
+    if (this._instance.defaults.headers.common) {
+      delete this._instance.defaults.headers.common.Authorization;
+    }
+  };
+
+  public setTokenRefreshHandler = (handler: () => Promise<string | null>) => {
+    this._onTokenRefresh = handler;
+  };
+
+  public setAuthErrorHandler = (handler: () => void) => {
+    this._onAuthError = handler;
+  };
+
+  private _setupInterceptors = () => {
+    // Response interceptor to handle 401 errors
+    this._instance.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        // Check if error is 401 and we haven't retried yet
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (this._isRefreshing) {
+            // Wait for the token refresh to complete
+            return new Promise((resolve, reject) => {
+              this._refreshSubscribers.push({
+                resolve: (token: string) => {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                  resolve(this._instance(originalRequest));
+                },
+                reject,
+              });
+            });
+          }
+
+          originalRequest._retry = true;
+          this._isRefreshing = true;
+
+          try {
+            // Try to refresh the token
+            if (!this._onTokenRefresh) {
+              throw new Error('No token refresh handler configured');
+            }
+
+            const newToken = await this._onTokenRefresh();
+
+            if (!newToken) {
+              throw new Error('Token refresh returned null');
+            }
+
+            // Update the authorization header
+            this.setAccessToken(newToken);
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+            // Retry all queued requests
+            this._refreshSubscribers.forEach((subscriber) => subscriber.resolve(newToken));
+            this._refreshSubscribers = [];
+
+            // Retry the original request
+            return this._instance(originalRequest);
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+
+            // Reject all queued requests
+            this._refreshSubscribers.forEach((subscriber) => subscriber.reject(refreshError));
+            this._refreshSubscribers = [];
+
+            // Call auth error handler to logout user
+            if (this._onAuthError) {
+              this._onAuthError();
+            }
+
+            return Promise.reject(refreshError);
+          } finally {
+            this._isRefreshing = false;
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
   };
 
   private _useFallback = async (fn: (url: string) => Promise<any>, err: Error): Promise<any> => {

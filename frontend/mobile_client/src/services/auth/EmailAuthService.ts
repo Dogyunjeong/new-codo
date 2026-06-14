@@ -1,4 +1,4 @@
-import { 
+import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -7,6 +7,7 @@ import {
   updatePassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
+  fetchSignInMethodsForEmail,
   UserCredential,
   User,
   AuthError,
@@ -409,22 +410,12 @@ export class EmailAuthService {
   static async isEmailRegistered(email: string): Promise<boolean> {
     try {
       this.validateEmail(email);
-      
-      // Try to create a user with a dummy password
-      // If email exists, it will throw an error
+
       const auth = getFirebaseAuth();
-      await createUserWithEmailAndPassword(auth, email, 'dummy_check_123456');
-      
-      // If we get here, email doesn't exist (but we created a user, so delete it)
-      if (auth.currentUser) {
-        await auth.currentUser.delete();
-      }
-      return false;
-    } catch (error: any) {
-      if (error.code === 'auth/email-already-in-use') {
-        return true;
-      }
-      // For other errors, assume email doesn't exist
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      return methods.length > 0;
+    } catch (error) {
+      console.error('Error checking email registration:', error);
       return false;
     }
   }

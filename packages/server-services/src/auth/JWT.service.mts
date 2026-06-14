@@ -5,6 +5,8 @@ export interface JWTPayload {
   email: string;
   displayName: string;
   isVerified: boolean;
+  firebaseUid?: string;
+  provider?: string;
   iat: number;
   exp: number;
 }
@@ -22,9 +24,11 @@ export interface TokenResponse {
   expiresIn: number;
   user: {
     id: string;
+    userId?: string;
     email: string;
     displayName: string;
     isVerified: boolean;
+    firebaseUid?: string;
   };
 }
 
@@ -69,12 +73,16 @@ export class JWTService {
     email: string;
     displayName: string;
     isVerified: boolean;
+    firebaseUid?: string;
+    provider?: string;
   }, tokenId: string): TokenResponse {
     const accessToken = this.generateAccessToken({
       userId: user.id,
       email: user.email,
       displayName: user.displayName,
       isVerified: user.isVerified,
+      firebaseUid: user.firebaseUid,
+      provider: user.provider,
     });
 
     const refreshToken = this.generateRefreshToken({
@@ -94,6 +102,8 @@ export class JWTService {
         email: user.email,
         displayName: user.displayName,
         isVerified: user.isVerified,
+        userId: user.id,
+        firebaseUid: user.firebaseUid,
       },
     };
   }

@@ -23,6 +23,10 @@ class PostController {
     this._httpRequest.setAccessToken(accessToken);
   };
 
+  public getHttpRequest = (): IRequest => {
+    return this._httpRequest;
+  };
+
   // Health Check
   public healthCheck = async (): Promise<unknown> => {
     const response = await this._httpRequest.get<unknown>('/health');

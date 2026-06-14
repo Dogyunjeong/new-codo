@@ -41,6 +41,7 @@ export interface Journey {
   isPrivate?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  stepsCount?: number;
   // UI-specific fields (not from backend)
   emoji?: string;
   color?: string;

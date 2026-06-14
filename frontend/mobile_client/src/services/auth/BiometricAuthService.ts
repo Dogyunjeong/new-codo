@@ -1,7 +1,7 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import { SecureStorage } from '../storage/SecureStorage';
 import { Platform } from 'react-native';
-import { getAppSettings } from '../../config/firebase.config';
+import { getFeatureFlags } from '../../config/firebase.config';
 
 export enum BiometricType {
   FINGERPRINT = 'fingerprint',
@@ -242,9 +242,9 @@ export class BiometricAuthService {
    */
   static async isBiometricEnabled(): Promise<boolean> {
     try {
-      // Check app settings first
-      const appSettings = getAppSettings();
-      if (!appSettings.features?.enableBiometricAuth) {
+      // Check feature flags first
+      const featureFlags = getFeatureFlags();
+      if (!featureFlags.enableBiometricAuth) {
         return false;
       }
 

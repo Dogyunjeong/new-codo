@@ -4,6 +4,14 @@
   "type": "module",
   "description": "Authentication service for Ziririt Journey Sharing App - Handles OAuth and JWT authentication",
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./routes": {
+      "import": "./dist/routes/index.js"
+    }
+  },
   "scripts": {
     "build": "tsup-node",
     "start": "pm2 start ecosystem.config.cjs",

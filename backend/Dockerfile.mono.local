@@ -1,0 +1,26 @@
+# Mono-service Dockerfile - copies all service sources for bundling
+FROM node:22-alpine
+ARG BUILD_CONTEXT=backend/ziririt-mono-service
+
+WORKDIR /base
+COPY package.json yarn.lock .yarnrc.yml tsconfig.json ./
+COPY .yarn ./.yarn
+COPY ./packages ./packages
+COPY ./backend/ziririt-mono-service/ ./backend/ziririt-mono-service/
+COPY ./backend/ziririt-auth-service/ ./backend/ziririt-auth-service/
+COPY ./backend/ziririt-profile-service/ ./backend/ziririt-profile-service/
+COPY ./backend/ziririt-post-service/ ./backend/ziririt-post-service/
+COPY ./backend/ziririt-feed-service/ ./backend/ziririt-feed-service/
+COPY ./backend/ecosystem.config.cjs ./backend/ecosystem.config.cjs
+RUN yarn set version berry
+
+WORKDIR /base/$BUILD_CONTEXT
+RUN yarn install --network-timeout 1000000
+
+# Install tsx globally and pm2 for runtime
+RUN npm install -g tsx pm2
+
+# Build the service
+RUN yarn build
+
+CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]

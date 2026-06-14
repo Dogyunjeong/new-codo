@@ -25,12 +25,12 @@ export class RefreshTokenService {
 
   async create(data: CreateRefreshTokenData): Promise<RefreshToken> {
     const tokenHash = this.hashToken(data.token);
-    
+
     const result = await this.pool.query<RefreshToken>(
       `INSERT INTO refresh_tokens (user_id, token_hash, expires_at, created_at)
        VALUES ($1, $2, $3, NOW())
        RETURNING *`,
-      [data.userId, tokenHash, data.expiresAt]
+      [data.userId, tokenHash, data.expiresAt],
     );
 
     return result.rows[0];
@@ -38,11 +38,11 @@ export class RefreshTokenService {
 
   async findByToken(token: string): Promise<RefreshToken | null> {
     const tokenHash = this.hashToken(token);
-    
+
     const result = await this.pool.query<RefreshToken>(
       `SELECT * FROM refresh_tokens 
        WHERE token_hash = $1 AND expires_at > NOW()`,
-      [tokenHash]
+      [tokenHash],
     );
 
     return result.rows[0] || null;
@@ -50,24 +50,16 @@ export class RefreshTokenService {
 
   async deleteByToken(token: string): Promise<void> {
     const tokenHash = this.hashToken(token);
-    
-    await this.pool.query(
-      'DELETE FROM refresh_tokens WHERE token_hash = $1',
-      [tokenHash]
-    );
+
+    await this.pool.query('DELETE FROM refresh_tokens WHERE token_hash = $1', [tokenHash]);
   }
 
   async deleteByUserId(userId: string): Promise<void> {
-    await this.pool.query(
-      'DELETE FROM refresh_tokens WHERE user_id = $1',
-      [userId]
-    );
+    await this.pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
   }
 
   async deleteExpired(): Promise<void> {
-    await this.pool.query(
-      'DELETE FROM refresh_tokens WHERE expires_at <= NOW()'
-    );
+    await this.pool.query('DELETE FROM refresh_tokens WHERE expires_at <= NOW()');
   }
 
   async findByUserId(userId: string): Promise<RefreshToken[]> {
@@ -75,7 +67,7 @@ export class RefreshTokenService {
       `SELECT * FROM refresh_tokens 
        WHERE user_id = $1 AND expires_at > NOW()
        ORDER BY created_at DESC`,
-      [userId]
+      [userId],
     );
 
     return result.rows;

@@ -1,10 +1,16 @@
-import { User } from 'firebase/auth';
-import { SecureStorage } from '../storage/SecureStorage';
-import { getFirebaseAuth } from '../firebase/firebase.init';
-import { AuthController } from '@base/shared-api-controllers';
-import { getBackendConfig } from '../../config/firebase.config';
+/**
+ * TokenManager - Handles JWT token lifecycle and scheduling
+ *
+ * This is a simplified TokenManager that delegates actual refresh operations
+ * to ApiClientManager. It focuses on:
+ * - Token validation
+ * - Scheduling automatic refresh
+ * - App state handling
+ */
+
 import { AppState, AppStateStatus } from 'react-native';
-import * as Device from 'expo-device';
+import { SecureStorage } from '../storage/SecureStorage';
+import { ApiClientManager } from '../api/ApiClientManager';
 
 interface TokenPayload {
   userId: string;
@@ -18,38 +24,23 @@ interface TokenRefreshResult {
   token: string;
   refreshToken?: string;
   expiresIn: number;
+  user?: any;
 }
 
 /**
- * Token Manager for handling JWT tokens and refresh logic
+ * Token Manager for handling JWT token lifecycle
  */
 export class TokenManager {
   private static instance: TokenManager;
-  private refreshTimer: NodeJS.Timeout | null = null;
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
   private readonly MIN_REFRESH_INTERVAL = 30 * 1000; // 30 seconds minimum between refreshes
-  private lastRefreshTime: number = 0;
-  private isRefreshing: boolean = false;
-  private refreshPromise: Promise<TokenRefreshResult> | null = null;
   private appStateSubscription: any = null;
-  private authController: AuthController;
-  private deviceId: string;
+  private apiClientManager: ApiClientManager;
 
   private constructor() {
-    const backend = getBackendConfig();
-    this.authController = new AuthController({ baseURL: backend.authServiceUrl });
-    this.deviceId = this.getDeviceId();
+    this.apiClientManager = ApiClientManager.getInstance();
     this.setupAppStateListener();
-  }
-
-  /**
-   * Get device ID for authentication
-   */
-  private getDeviceId(): string {
-    if (Device.isDevice) {
-      return Device.modelId || Device.osBuildId || 'unknown-device';
-    }
-    return 'simulator-' + Math.random().toString(36).substr(2, 9);
   }
 
   /**
@@ -68,17 +59,27 @@ export class TokenManager {
   async initialize(): Promise<void> {
     try {
       const token = await SecureStorage.getAuthToken();
-      if (token) {
-        const expiresIn = this.getTokenExpiry(token);
-        if (expiresIn > 0) {
-          await this.scheduleTokenRefresh(expiresIn);
-        } else {
-          // Token expired, try to refresh
-          await this.refreshToken();
-        }
+
+      if (!token) {
+        console.log('[TokenManager] No token found, skipping initialization');
+        return;
+      }
+
+      // Set token on all HTTP clients
+      this.apiClientManager.setAccessToken(token);
+
+      // Schedule refresh based on token expiry
+      const expiresIn = this.getTokenExpiry(token);
+
+      if (expiresIn > 0) {
+        await this.scheduleTokenRefresh(expiresIn);
+      } else {
+        // Token expired, try to refresh immediately
+        console.log('[TokenManager] Token expired, attempting immediate refresh');
+        await this.refreshToken();
       }
     } catch (error) {
-      console.error('Failed to initialize token manager:', error);
+      console.error('[TokenManager] Failed to initialize:', error);
     }
   }
 
@@ -86,12 +87,15 @@ export class TokenManager {
    * Setup app state listener for token refresh
    */
   private setupAppStateListener(): void {
-    this.appStateSubscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active') {
-        // App came to foreground, check if token needs refresh
-        this.checkAndRefreshToken();
+    this.appStateSubscription = AppState.addEventListener(
+      'change',
+      (nextAppState: AppStateStatus) => {
+        if (nextAppState === 'active') {
+          // App came to foreground, check if token needs refresh
+          this.checkAndRefreshToken();
+        }
       }
-    });
+    );
   }
 
   /**
@@ -100,14 +104,19 @@ export class TokenManager {
   private async checkAndRefreshToken(): Promise<void> {
     try {
       const token = await SecureStorage.getAuthToken();
-      if (token) {
-        const expiresIn = this.getTokenExpiry(token);
-        if (expiresIn < this.TOKEN_REFRESH_THRESHOLD) {
-          await this.refreshToken();
-        }
+
+      if (!token) {
+        return;
+      }
+
+      const expiresIn = this.getTokenExpiry(token);
+
+      if (expiresIn < this.TOKEN_REFRESH_THRESHOLD) {
+        console.log('[TokenManager] Token expiring soon, refreshing on app foreground');
+        await this.refreshToken();
       }
     } catch (error) {
-      console.error('Failed to check and refresh token:', error);
+      console.error('[TokenManager] Failed to check and refresh token:', error);
     }
   }
 
@@ -126,97 +135,40 @@ export class TokenManager {
       this.MIN_REFRESH_INTERVAL
     );
 
-    console.log(`Scheduling token refresh in ${refreshTime / 1000} seconds`);
+    console.log(`[TokenManager] Scheduling token refresh in ${refreshTime / 1000} seconds`);
 
     this.refreshTimer = setTimeout(async () => {
       try {
         await this.refreshToken();
       } catch (error) {
-        console.error('Scheduled token refresh failed:', error);
+        console.error('[TokenManager] Scheduled token refresh failed:', error);
       }
     }, refreshTime);
   }
 
   /**
    * Refresh the authentication token
+   * Delegates to ApiClientManager to avoid circular dependencies
    */
   async refreshToken(): Promise<TokenRefreshResult> {
-    // Prevent multiple simultaneous refresh attempts
-    if (this.isRefreshing && this.refreshPromise) {
-      console.log('Token refresh already in progress, waiting...');
-      return this.refreshPromise;
+    console.log('[TokenManager] Refreshing token...');
+
+    const result = await this.apiClientManager.refreshToken();
+
+    if (!result) {
+      throw new Error('Token refresh failed');
     }
 
-    // Check minimum refresh interval
-    const now = Date.now();
-    if (now - this.lastRefreshTime < this.MIN_REFRESH_INTERVAL) {
-      throw new Error('Token refresh attempted too soon');
-    }
+    // Schedule next refresh
+    const expiresIn = this.getTokenExpiry(result.token);
+    await this.scheduleTokenRefresh(expiresIn);
 
-    this.isRefreshing = true;
-    this.lastRefreshTime = now;
-
-    this.refreshPromise = this.performTokenRefresh();
-
-    try {
-      const result = await this.refreshPromise;
-      return result;
-    } finally {
-      this.isRefreshing = false;
-      this.refreshPromise = null;
-    }
-  }
-
-  /**
-   * Perform the actual token refresh
-   */
-  private async performTokenRefresh(): Promise<TokenRefreshResult> {
-    try {
-      const refreshToken = await SecureStorage.getRefreshToken();
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      console.log('Refreshing token...');
-
-      // Call the backend to refresh the token
-      const response = await this.authController.refreshSession({
-        refreshToken,
-        deviceId: this.deviceId,
-      });
-
-      if (!response.data?.token) {
-        throw new Error('Invalid refresh response');
-      }
-
-      // Store new tokens
-      await SecureStorage.setAuthToken(response.data.token);
-      if (response.data.refreshToken) {
-        await SecureStorage.setRefreshToken(response.data.refreshToken);
-      }
-
-      // Calculate expiry time
-      const expiresIn = this.getTokenExpiry(response.data.token);
-
-      // Schedule next refresh
-      await this.scheduleTokenRefresh(expiresIn);
-
-      console.log('Token refreshed successfully');
-
-      return {
-        token: response.data.token,
-        refreshToken: response.data.refreshToken,
-        expiresIn,
-      };
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      
-      // Clear stored tokens on refresh failure
-      await this.clearTokens();
-      
-      throw error;
-    }
+    return {
+      token: result.token,
+      refreshToken: result.refreshToken,
+      expiresIn,
+      user: result.user,
+    };
   }
 
   /**
@@ -225,11 +177,11 @@ export class TokenManager {
   private getTokenExpiry(token: string): number {
     try {
       const payload = this.decodeToken(token);
-      const expiryTime = payload.exp * 1000; // Convert to milliseconds
+      const expiryTime = payload.exp * 1000;
       const now = Date.now();
       return expiryTime - now;
     } catch (error) {
-      console.error('Failed to decode token:', error);
+      console.error('[TokenManager] Failed to decode token:', error);
       return 0;
     }
   }
@@ -244,7 +196,7 @@ export class TokenManager {
       const jsonPayload = decodeURIComponent(
         atob(base64)
           .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
       );
       return JSON.parse(jsonPayload);
@@ -270,8 +222,7 @@ export class TokenManager {
    * Clear stored tokens
    */
   async clearTokens(): Promise<void> {
-    await SecureStorage.clearAuthToken();
-    await SecureStorage.clearRefreshToken();
+    await this.apiClientManager.clearTokens();
     this.clearRefreshTimer();
   }
 
@@ -286,52 +237,24 @@ export class TokenManager {
   }
 
   /**
-   * Get current access token
+   * Get current access token (with validation and auto-refresh if needed)
    */
   async getAccessToken(): Promise<string | null> {
-    const token = await SecureStorage.getAuthToken();
-    
-    if (!token) {
-      return null;
-    }
-
-    // Check if token is still valid
-    if (!this.isTokenValid(token)) {
-      // Try to refresh
-      try {
-        const result = await this.refreshToken();
-        return result.token;
-      } catch (error) {
-        console.error('Failed to refresh expired token:', error);
-        return null;
-      }
-    }
-
-    return token;
+    return this.apiClientManager.getValidAccessToken();
   }
 
   /**
    * Get a valid token, attempting refresh if needed
    */
   async getValidToken(): Promise<string | null> {
-    const token = await SecureStorage.getAuthToken();
-    if (token && this.isTokenValid(token)) {
-      return token;
-    }
-    // If no token or invalid, try refresh
-    try {
-      const result = await this.refreshToken();
-      return result.token;
-    } catch (error) {
-      return null;
-    }
+    return this.apiClientManager.getValidAccessToken();
   }
 
   /**
    * Get stored refresh token
    */
   async getRefreshToken(): Promise<string | null> {
-    return await SecureStorage.getRefreshToken();
+    return SecureStorage.getRefreshToken();
   }
 
   /**
@@ -339,9 +262,11 @@ export class TokenManager {
    */
   async validateToken(): Promise<boolean> {
     const token = await SecureStorage.getAuthToken();
+
     if (!token) {
       return false;
     }
+
     return this.isTokenValid(token);
   }
 
@@ -350,13 +275,17 @@ export class TokenManager {
    */
   async setAccessToken(token: string, refreshToken?: string): Promise<void> {
     await SecureStorage.setAuthToken(token);
-    
+
     if (refreshToken) {
       await SecureStorage.setRefreshToken(refreshToken);
     }
 
+    // Update all HTTP clients
+    this.apiClientManager.setAccessToken(token);
+
     // Schedule refresh
     const expiresIn = this.getTokenExpiry(token);
+
     if (expiresIn > 0) {
       await this.scheduleTokenRefresh(expiresIn);
     }
@@ -367,6 +296,7 @@ export class TokenManager {
    */
   cleanup(): void {
     this.clearRefreshTimer();
+
     if (this.appStateSubscription) {
       this.appStateSubscription.remove();
       this.appStateSubscription = null;

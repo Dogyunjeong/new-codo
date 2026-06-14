@@ -4,6 +4,15 @@
   "description": "Post service for Ziririt Journey Sharing App - Handles progress posts, media uploads, likes, and comments",
   "packageManager": "yarn@4.0.2",
   "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./routes": {
+      "import": "./dist/routes/index.js"
+    }
+  },
   "scripts": {
     "build": "tsup-node",
     "start": "pm2 start ecosystem.config.cjs",

@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } 
 import { InteractionHandler } from './interaction.handler.mts';
 import { InteractionManagementService } from './InteractionManagement.service.mts';
 import { MongoConnectionService } from '@base/server-services';
+import { createFirebaseAuthMiddleware } from '@base/server-base';
 import { getAppConfig } from '../../configs/app.config.mts';
 
 const createCommentSchema = {
@@ -21,19 +22,8 @@ const updateCommentSchema = {
   }
 };
 
-async function authenticateUser(request: FastifyRequest, reply: FastifyReply) {
-  const authHeader = request.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return reply.code(401).send({ error: 'Missing or invalid authorization header' });
-  }
-  
-  const token = authHeader.substring(7);
-  if (!token) {
-    return reply.code(401).send({ error: 'Invalid token' });
-  }
-  
-  (request as any).user = { userId: 'mock-user-id' };
-}
+const config = getAppConfig();
+const authenticateUser = createFirebaseAuthMiddleware(config.authServiceUrl) as any;
 
 export const interactionRoutes: FastifyPluginCallback = (fastify: FastifyInstance, options, done) => {
   // Deprecation notice for legacy interaction routes
@@ -42,7 +32,6 @@ export const interactionRoutes: FastifyPluginCallback = (fastify: FastifyInstanc
     fastify.log.warn({ path: request.url }, 'Using deprecated /api/interactions route');
     next();
   });
-  const config = getAppConfig();
   const mongoConnection = MongoConnectionService.getInstance({ uri: config.databaseUrl });
   const interactionService = new InteractionManagementService(mongoConnection);
   const interactionHandler = new InteractionHandler(interactionService);
